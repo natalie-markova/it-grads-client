@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../finaly/it-connect/client/node_modules"
+		},
+		{
+			"path": "../../finaly/it-connect/client/public"
+		},
+		{
+			"path": "../../finaly/it-connect/client/src"
+		}
+	],
+	"settings": {}
+}
