@@ -37,6 +37,18 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                     >
                         Главная
                     </NavLink>
+                    <NavLink
+                        to='/interview/setup'   
+                        className={({ isActive }) => 
+                            `text-white/80 no-underline font-medium px-4 py-2 rounded-lg transition-all duration-300 ${
+                                isActive 
+                                    ? 'text-orange-400 bg-orange-500/10' 
+                                    : 'hover:text-white hover:bg-white/10'
+                            }`
+                        }
+                    >
+                    Симулятор интервью
+                    </NavLink>
                     <button 
                         onClick={logoutHandler} 
                         className="bg-red-500/20 border border-red-500/40 rounded-lg px-4 py-2 text-red-400 font-medium cursor-pointer transition-all duration-300 hover:bg-red-500/30 hover:border-red-500/60"

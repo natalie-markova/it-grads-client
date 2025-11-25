@@ -7,6 +7,11 @@ import Home from './components/pages/Home/Home';
 import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
 import App from "./App";
 import './index.css';
+import InterviewSetupPage from './components/pages/Interview/InterviewSetupPage';
+import InterviewPage from './components/pages/Interview/InterviewPage';
+import InterviewResultsPage from './components/pages/Interview/InterviewResultsPage';
+import { Provider } from 'react-redux';
+import { store } from './store';
 
 const router = createBrowserRouter([
   {
@@ -31,11 +36,35 @@ const router = createBrowserRouter([
         <ProtectedRoute>
           <Main />
         </ProtectedRoute>,
-      }
+      },
+      {
+        path: "/interview/setup",
+        element:
+        <ProtectedRoute>
+          <InterviewSetupPage />
+        </ProtectedRoute>,
+      },
+      {
+        path: "/interview/:sessionId ",
+        element:
+        <ProtectedRoute>
+          <InterviewPage />
+        </ProtectedRoute>,
+      },
+      {
+        path: "/interview/:sessionId/results",
+        element:
+        <ProtectedRoute>
+          <InterviewResultsPage/>
+        </ProtectedRoute>,
+      },
+
     ]}
   ]);
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 root.render(
-  <RouterProvider router={router} />
+  <Provider store={store}>
+    <RouterProvider router={router} />
+  </Provider>
 );
