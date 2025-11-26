@@ -11,7 +11,8 @@ const App = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await axios("http://localhost:5001/api/tokens/refresh",
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+        const response = await axios(`${apiUrl}/tokens/refresh`,
           {
             withCredentials: true,
           }
