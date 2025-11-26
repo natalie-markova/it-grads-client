@@ -15,7 +15,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
         .then((response) => {
             if (response.status === 200) {
                 setUser(null)
-                navigate("/login");
+                navigate("/");
             }
         })
         .catch((err) => console.error(err));
