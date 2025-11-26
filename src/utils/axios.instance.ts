@@ -1,7 +1,9 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
 export const $api = axios.create({
-   baseURL: 'http://localhost:5001/api',
+   baseURL: API_URL,
    withCredentials: true
 });
 
@@ -26,7 +28,7 @@ $api.interceptors.response.use((response) => {
    }, async (error: AxiosError) => {
        const prevRequest = error.config as InternalAxiosRequestConfig & { sent?: boolean }
        if (error.response && error.response.status === 403 && !prevRequest.sent) {
-           const refreshResponse = await axios("http://localhost:5001/api/tokens/refresh", { withCredentials: true })
+           const refreshResponse = await axios(`${API_URL}/tokens/refresh`, { withCredentials: true })
            if (refreshResponse.data && typeof refreshResponse.data.accessToken === 'string') {
                accessToken = refreshResponse.data.accessToken
                prevRequest.sent = true
