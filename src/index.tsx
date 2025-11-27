@@ -17,6 +17,8 @@ import Interview from './components/pages/Interview/Interview';
 import AI from './components/pages/AI/AI';
 import Jobs from './components/pages/Jobs/Jobs';
 import Profile from './components/pages/Profile/Profile';
+import CompaniesRating from './components/pages/CompaniesRating/CompaniesRating';
+import CompanyDetails from './components/pages/CompanyDetails/CompanyDetails';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import InterviewHub from './components/pages/Interview/InterviewHub';
@@ -104,6 +106,14 @@ const router = createBrowserRouter([
         <ProtectedRoute>
           <Profile />
         </ProtectedRoute>,
+      },
+      {
+        path: "/companies",
+        element: <CompaniesRating />,
+      },
+      {
+        path: "/companies/:id",
+        element: <CompanyDetails />,
       },
 
     ]}

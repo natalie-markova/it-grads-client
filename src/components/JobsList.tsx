@@ -98,7 +98,6 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
     
     const matchesSalary = filters.salaryUnlimited || 
       !filters.salary ||
-      filters.salaryUnlimited ||
       job.salary.toLowerCase().includes(filters.salary.toLowerCase())
     
     const matchesTechnology = filters.technology.length === 0 ||
@@ -125,7 +124,7 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
     if (onApply) {
       onApply(jobId)
     }
-    alert('Отклик отправлен!')
+    // Toast notification will be shown in Jobs.tsx
   }
 
   const clearFilters = () => {
@@ -134,12 +133,12 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
       workFormat: [],
       region: '',
       experience: '',
-      salaryMin: '',
-      salaryMax: '',
+      salary: '',
       salaryUnlimited: false,
       technology: [],
       programmingLanguages: [],
       additionalSkills: [],
+      additionalSkillsCustom: '',
       englishLevel: '',
       companySize: '',
       industry: '',
@@ -182,8 +181,7 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
           filters.englishLevel ||
           filters.companySize ||
           filters.industry ||
-          filters.salaryMin ||
-          filters.salaryMax) && (
+          filters.salary) && (
           <div className="mt-4 pt-4 border-t border-dark-surface">
             <div className="flex flex-wrap gap-2 items-center">
               <span className="text-gray-400 text-sm">Активные фильтры:</span>
@@ -211,9 +209,9 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
                    filters.experience === 'lead' ? 'Team Lead/Tech Lead' : filters.experience}
                 </span>
               )}
-              {(filters.salaryMin || filters.salaryMax) && !filters.salaryUnlimited && (
+              {filters.salary && !filters.salaryUnlimited && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Зарплата: {filters.salaryMin || '0'} - {filters.salaryMax || '∞'}
+                  Зарплата: {filters.salary}
                 </span>
               )}
               {filters.technology.length > 0 && (
