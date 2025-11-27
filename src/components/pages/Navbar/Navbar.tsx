@@ -15,14 +15,19 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
     const navigate = useNavigate()
     const userType = user?.role || null
 
-    const isActive = (path: string) => location.pathname === path
+    const isActive = (path: string) => {
+    if (path === '/home') {
+      return location.pathname === '/home' || location.pathname === '/'
+    }
+    return location.pathname.startsWith(path)
+  }
 
     const navLinks = [
         { path: '/home', label: 'Главная' },
-        { path: '/home', label: 'Навыки и Проекты' },
-        { path: '/interview/setup', label: 'Собеседования' },
-        { path: '/home', label: 'ИИ и Автоматизация' },
-        { path: '/home', label: 'Вакансии' },
+        { path: '/skills', label: 'Навыки и Проекты' },
+        { path: '/interview', label: 'Собеседования' },
+        { path: '/ai', label: 'ИИ и Автоматизация' },
+        { path: '/jobs', label: 'Вакансии' },
     ]
 
     function logoutHandler() {
@@ -70,7 +75,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                         {user && userType ? (
                             <>
                                 <Link
-                                    to="/main"
+                                    to={userType === 'graduate' ? "/profile/graduate" : "/profile/employer"}
                                     className="text-gray-300 hover:text-accent-cyan px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
                                 >
                                     <UserCircle className="h-4 w-4" />
@@ -137,7 +142,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                             {user && userType ? (
                                 <>
                                     <Link
-                                        to="/main"
+                                        to={userType === 'graduate' ? "/profile/graduate" : "/profile/employer"}
                                         onClick={() => setIsOpen(false)}
                                         className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-accent-cyan hover:bg-dark-card"
                                     >
