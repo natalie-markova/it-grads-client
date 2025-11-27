@@ -1,7 +1,10 @@
 import { FormEvent, useState } from "react";
+import { Link } from "react-router-dom";
+import { UserPlus, Mail, Lock, User } from 'lucide-react';
 import { $api, setAccessToken } from "../../../utils/axios.instance";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { OutletContext } from "../../../types";
+import toast from "react-hot-toast";
 
 function Registration() {
     const { setUser } = useOutletContext<OutletContext>();
@@ -28,76 +31,127 @@ function Registration() {
         })
         .catch(error => {
             console.error("Что-то пошло не так:", error.response?.data || error.message);
-            alert("Ошибка регистрации. Пользователь с такими данными уже зарегестрирован.")
+            toast.error("Ошибка регистрации. Пользователь с такими данными уже зарегестрирован.")
         });
     }
     
     return (
-        <div className="flex justify-center items-center min-h-[80vh] p-8">
-            <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-10 w-full max-w-md shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-                <h2 className="text-white text-3xl font-bold mb-8 text-center">Регистрация</h2>
-                <form onSubmit={submitHandler} className="flex flex-col gap-6">
-                    <div className="flex flex-col gap-2">
-                        <label htmlFor="login" className="text-white/80 text-sm font-medium">Логин:</label>
-                        <input 
-                            type="text" 
-                            id="login" 
-                            name="login" 
-                            className="bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white text-base transition-all duration-300 w-full focus:outline-none focus:border-orange-500/80 focus:bg-white/10 focus:ring-4 focus:ring-orange-500/10 placeholder:text-white/40"
-                            required 
-                        />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <label htmlFor="email" className="text-white/80 text-sm font-medium">Эл.почта:</label>
-                        <input 
-                            type="email" 
-                            id="email" 
-                            name="email" 
-                            className="bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white text-base transition-all duration-300 w-full focus:outline-none focus:border-orange-500/80 focus:bg-white/10 focus:ring-4 focus:ring-orange-500/10 placeholder:text-white/40"
-                            required 
-                        />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <label htmlFor="password" className="text-white/80 text-sm font-medium">Пароль:</label>
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password" 
-                            className="bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white text-base transition-all duration-300 w-full focus:outline-none focus:border-orange-500/80 focus:bg-white/10 focus:ring-4 focus:ring-orange-500/10 placeholder:text-white/40"
-                            required 
-                        />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <label className="text-white/80 text-sm font-medium">Роль:</label>
-                        <div className="flex gap-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input 
-                                    type="radio" 
-                                    name="role" 
-                                    value="graduate"
-                                    checked={role === 'graduate'}
-                                    onChange={(e) => setRole(e.target.value as 'graduate' | 'employer')}
-                                    className="w-4 h-4 text-orange-500 focus:ring-orange-500"
-                                    required
-                                />
-                                <span className="text-white/80">Выпускник</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input 
-                                    type="radio" 
-                                    name="role" 
-                                    value="employer"
-                                    checked={role === 'employer'}
-                                    onChange={(e) => setRole(e.target.value as 'graduate' | 'employer')}
-                                    className="w-4 h-4 text-orange-500 focus:ring-orange-500"
-                                    required
-                                />
-                                <span className="text-white/80">Работодатель</span>
-                            </label>
+        <div className="min-h-screen flex items-center justify-center bg-dark-bg py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full">
+                <div className="text-center mb-8">
+                    <div className="flex justify-center mb-4">
+                        <div className="bg-accent-cyan p-3 rounded-lg">
+                            <UserPlus className="h-8 w-8 text-dark-bg" />
                         </div>
                     </div>
-                    <button type="submit" className="bg-gradient-to-r from-orange-600 to-orange-500 border-none rounded-lg px-6 py-3.5 text-white text-base font-semibold cursor-pointer transition-all duration-300 mt-2 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(234,88,12,0.4)] active:translate-y-0">Зарегистрироваться</button>
-                </form>
+                    <h2 className="text-3xl font-bold text-white">Создать аккаунт</h2>
+                    <p className="mt-2 text-sm text-gray-300">
+                        Уже есть аккаунт?{' '}
+                        <Link to="/login" className="font-medium text-accent-cyan hover:text-accent-blue">
+                            Войдите
+                        </Link>
+                    </p>
+                </div>
+
+                <div className="card">
+                    <form onSubmit={submitHandler} className="space-y-6">
+                        <div>
+                            <label htmlFor="login" className="block text-sm font-medium text-gray-300 mb-2">
+                                Логин
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <User className="h-5 w-5 text-gray-500" />
+                                </div>
+                                <input
+                                    type="text"
+                                    id="login"
+                                    name="login"
+                                    required
+                                    className="input-field pl-10"
+                                    placeholder="Ваш логин"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                                Email
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Mail className="h-5 w-5 text-gray-500" />
+                                </div>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    required
+                                    className="input-field pl-10"
+                                    placeholder="your@email.com"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                                Пароль
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-gray-500" />
+                                </div>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    required
+                                    className="input-field pl-10"
+                                    placeholder="••••••••"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Роль
+                            </label>
+                            <div className="flex gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="radio" 
+                                        name="role" 
+                                        value="graduate"
+                                        checked={role === 'graduate'}
+                                        onChange={(e) => setRole(e.target.value as 'graduate' | 'employer')}
+                                        className="h-4 w-4 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-surface"
+                                        required
+                                    />
+                                    <span className="text-gray-300">Выпускник</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="radio" 
+                                        name="role" 
+                                        value="employer"
+                                        checked={role === 'employer'}
+                                        onChange={(e) => setRole(e.target.value as 'graduate' | 'employer')}
+                                        className="h-4 w-4 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-surface"
+                                        required
+                                    />
+                                    <span className="text-gray-300">Работодатель</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            className="btn-primary w-full"
+                        >
+                            Создать аккаунт
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     );
