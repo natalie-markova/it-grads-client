@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import JobsList, { Job } from '../../../components/JobsList'
+import JobsList, { type Job } from '../../../components/JobsList'
 import Section from '../../ui/Section'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
 
@@ -29,9 +29,15 @@ const Jobs = () => {
           experience: job.experience || 'junior',
           createdAt: job.created_at || new Date().toISOString(),
         })))
+      } else if (response.status === 404) {
+        // Эндпоинт не найден - показываем пустой список
+        console.log('Jobs endpoint not found, showing empty list')
+        setJobs([])
       }
     } catch (error) {
       console.error('Error loading jobs:', error)
+      // В случае ошибки показываем пустой список
+      setJobs([])
     }
   }
 
