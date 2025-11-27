@@ -3,6 +3,7 @@ import { Save, Edit2, X } from 'lucide-react'
 import Card from './ui/Card'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { User } from '../types'
+import toast from 'react-hot-toast'
 
 interface Skill {
   category: string
@@ -358,7 +359,7 @@ const SkillsRadar = ({ userId, user, onSave }: SkillsRadarProps) => {
     })
 
     if (!actualUserId) {
-      alert('Необходимо войти в систему для сохранения навыков')
+      toast.error('Необходимо войти в систему для сохранения навыков')
       return
     }
 
@@ -374,18 +375,18 @@ const SkillsRadar = ({ userId, user, onSave }: SkillsRadarProps) => {
       })
 
       if (response.ok) {
-        alert('Навыки успешно сохранены!')
+        toast.success('Навыки успешно сохранены!')
         setIsEditing(false)
         await loadSkills()
         if (onSave) {
           onSave(skillsArray)
         }
       } else {
-        alert('Ошибка при сохранении навыков')
+        toast.error('Ошибка при сохранении навыков')
       }
     } catch (error) {
       console.error('Error saving skills:', error)
-      alert('Ошибка при сохранении навыков')
+      toast.error('Ошибка при сохранении навыков')
     }
   }
 

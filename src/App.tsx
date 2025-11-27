@@ -3,7 +3,7 @@ import axios from "axios";
 import Navbar from "./components/pages/Navbar/Navbar";
 import Footer from "./components/Footer";
 import { Outlet } from "react-router-dom";
-import { User, OutletContext } from "./types";
+import { type User, type OutletContext } from "./types";
 import { Toaster } from "react-hot-toast";
 
 const App = () => {
