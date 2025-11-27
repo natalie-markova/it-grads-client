@@ -6,6 +6,7 @@ import Card from '../../ui/Card'
 import SkillsRadar from '../../../components/SkillsRadar'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
 import { type OutletContext } from '../../../types'
+import toast from 'react-hot-toast'
 
 const Skills = () => {
   const { user } = useOutletContext<OutletContext>()
@@ -19,7 +20,7 @@ const Skills = () => {
       return
     }
     // Here would be the GitHub API integration
-    alert(`Анализ репозитория ${githubUrl} начат!`)
+    toast.success(`Анализ репозитория ${githubUrl} начат!`)
   }
 
   return (
