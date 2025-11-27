@@ -54,7 +54,7 @@ export default function InterviewSetupPage() {
       });
 
       dispatch(setSession(session));
-      navigate(`/interview/${session.id}`);
+      navigate(`/interview/ai/${session.id}`);
     } catch (err) {
       setError('Не удалось создать сессию');
       console.error(err);
