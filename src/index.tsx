@@ -10,6 +10,8 @@ import './index.css';
 import InterviewSetupPage from './components/pages/Interview/InterviewSetupPage';
 import InterviewPage from './components/pages/Interview/InterviewPage';
 import InterviewResultsPage from './components/pages/Interview/InterviewResultsPage';
+import Help from './components/pages/Help/Help';
+import FAQ from './components/pages/FAQ/FAQ';
 import { Provider } from 'react-redux';
 import { store } from './store';
 
@@ -57,6 +59,14 @@ const router = createBrowserRouter([
         <ProtectedRoute>
           <InterviewResultsPage/>
         </ProtectedRoute>,
+      },
+      {
+        path: "/help",
+        element: <Help />
+      },
+      {
+        path: "/faq",
+        element: <FAQ />
       },
 
     ]}
