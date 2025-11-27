@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Navbar from "./components/pages/Navbar/Navbar";
+import Footer from "./components/Footer";
 import { Outlet } from "react-router-dom";
 import { User, OutletContext } from "./types";
+import { Toaster } from "react-hot-toast";
 
 const App = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -41,14 +43,36 @@ const App = () => {
   const contextValue: OutletContext = { user, setUser };
   
   return (
-    <>
-      <nav className="flex gap-24">
-        <Navbar user={user} setUser={setUser}/> 
-      </nav>
-      <main className="p-8 text-white/90 leading-relaxed">
+    <div className="min-h-screen flex flex-col bg-dark-bg">
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#1f2937',
+            color: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+      <Navbar user={user} setUser={setUser}/> 
+      <main className="flex-grow">
         <Outlet context={contextValue}/>
       </main>
-    </>
+      <Footer />
+    </div>
   );
 };
 

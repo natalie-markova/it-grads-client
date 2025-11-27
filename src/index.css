@@ -10,20 +10,136 @@
   }
 
   body {
-    margin: 0;
-    color: #fff;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-      sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    background: linear-gradient(135deg, #2b3038 0%, #767f8c 50%, #3a3f47 100%);
-    background-attachment: fixed;
-    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    background-color: #0a0a0a;
+    color: #ffffff;
+    line-height: 1.6;
   }
 
-  #root {
-    min-height: 100vh;
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent-cyan text-dark-bg px-6 py-3 rounded-lg font-medium text-base hover:bg-accent-cyan/90 transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-dark-surface text-white px-6 py-3 rounded-lg font-medium text-base hover:bg-dark-card transition-colors border border-gray-700;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 bg-dark-surface border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:border-transparent;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-accent-cyan to-accent-blue;
+  }
+
+  .card {
+    @apply bg-dark-card border border-dark-surface rounded-xl p-6 shadow-card;
+  }
+
+  .feature-card {
+    @apply bg-dark-card border border-dark-surface rounded-xl p-6 shadow-card hover:shadow-glow-cyan transition-shadow;
+  }
+
+  .section-title {
+    @apply text-[24px] md:text-[28px] font-bold text-white mb-4;
+  }
+
+  .section-subtitle {
+    @apply text-base text-[#b0b0b0] max-w-2xl;
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #00a8c4 #1a1a1a;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #00a8c4;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #0077a3;
+  }
+  
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .animate-spin-slow {
+    animation: spin-slow 20s linear infinite;
+  }
+
+  /* Scroll Driven Animations */
+  .scroll-animate-item {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  .scroll-animate-item.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Fade in from left */
+  .scroll-fade-left {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  .scroll-fade-left.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Fade in from right */
+  .scroll-fade-right {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  .scroll-fade-right.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Scale in */
+  .scroll-scale {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  .scroll-scale.visible {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

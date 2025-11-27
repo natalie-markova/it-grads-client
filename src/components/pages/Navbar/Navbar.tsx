@@ -1,4 +1,6 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Menu, X, Users, LogIn, UserCircle, LogOut } from 'lucide-react'
 import { $api } from "../../../utils/axios.instance";
 import { User } from "../../../types";
 
@@ -8,96 +10,178 @@ interface NavbarProps {
 }
 
 const Navbar = ({ user, setUser }: NavbarProps) => {
-    const navigate = useNavigate();
-    
+    const [isOpen, setIsOpen] = useState(false)
+    const location = useLocation()
+    const navigate = useNavigate()
+    const userType = user?.role || null
+
+    const isActive = (path: string) => {
+    if (path === '/home') {
+      return location.pathname === '/home' || location.pathname === '/'
+    }
+    return location.pathname.startsWith(path)
+  }
+
+    const navLinks = [
+        { path: '/home', label: 'Главная' },
+        { path: '/skills', label: 'Навыки и Проекты' },
+        { path: '/interview', label: 'Собеседования' },
+        { path: '/ai', label: 'ИИ и Автоматизация' },
+        { path: '/jobs', label: 'Вакансии' },
+    ]
+
     function logoutHandler() {
         $api("/users/logout")
         .then((response) => {
             if (response.status === 200) {
                 setUser(null)
-                navigate("/");
+                navigate("/home");
             }
         })
         .catch((err) => console.error(err));
     }
-    
+
     return (
-        <nav className="flex gap-6 items-center px-8 py-4 bg-white/5 backdrop-blur-lg border-b border-white/10 rounded-b-xl">
-            {user ? (
-                <>
-                    <NavLink 
-                        to="/main" 
-                        className={({ isActive }) => 
-                            `text-white/80 no-underline font-medium px-4 py-2 rounded-lg transition-all duration-300 ${
-                                isActive 
-                                    ? 'text-orange-400 bg-orange-500/10' 
-                                    : 'hover:text-white hover:bg-white/10'
-                            }`
-                        }
-                    >
-                        Главная
-                    </NavLink>
-                    <NavLink
-                        to='/interview/setup'   
-                        className={({ isActive }) => 
-                            `text-white/80 no-underline font-medium px-4 py-2 rounded-lg transition-all duration-300 ${
-                                isActive 
-                                    ? 'text-orange-400 bg-orange-500/10' 
-                                    : 'hover:text-white hover:bg-white/10'
-                            }`
-                        }
-                    >
-                    Симулятор интервью
-                    </NavLink>
-                    <button 
-                        onClick={logoutHandler} 
-                        className="bg-red-500/20 border border-red-500/40 rounded-lg px-4 py-2 text-red-400 font-medium cursor-pointer transition-all duration-300 hover:bg-red-500/30 hover:border-red-500/60"
-                    >
-                        Выход
-                    </button>
-                </>
-            ) : (
-                <>
-                    <NavLink 
-                        to="/home" 
-                        className={({ isActive }) => 
-                            `text-white/80 no-underline font-medium px-4 py-2 rounded-lg transition-all duration-300 ${
-                                isActive 
-                                    ? 'text-orange-400 bg-orange-500/10' 
-                                    : 'hover:text-white hover:bg-white/10'
-                            }`
-                        }
-                    >
-                        Домашняя
-                    </NavLink>
-                    <NavLink 
-                        to="/registration" 
-                        className={({ isActive }) => 
-                            `text-white/80 no-underline font-medium px-4 py-2 rounded-lg transition-all duration-300 ${
-                                isActive 
-                                    ? 'text-orange-400 bg-orange-500/10' 
-                                    : 'hover:text-white hover:bg-white/10'
-                            }`
-                        }
-                    >
-                        Регистрация
-                    </NavLink>
-                    <NavLink 
-                        to="/login" 
-                        className={({ isActive }) => 
-                            `text-white/80 no-underline font-medium px-4 py-2 rounded-lg transition-all duration-300 ${
-                                isActive 
-                                    ? 'text-orange-400 bg-orange-500/10' 
-                                    : 'hover:text-white hover:bg-white/10'
-                            }`
-                        }
-                    >
-                        Войти на сайт
-                    </NavLink>
-                </>
+        <nav className="bg-dark-surface shadow-lg border-b border-dark-card sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                    {/* Logo */}
+                    <Link to="/home" className="flex items-center space-x-2">
+                        <div className="bg-accent-cyan p-2 rounded-lg">
+                            <Users className="h-6 w-6 text-dark-bg" />
+                        </div>
+                        <span className="text-xl font-bold text-white">IT-Grads</span>
+                    </Link>
+
+                    {/* Desktop Navigation */}
+                    <div className="hidden md:flex items-center space-x-8">
+                        {navLinks.map((link) => (
+                            <Link
+                                key={link.path}
+                                to={link.path}
+                                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                                    isActive(link.path)
+                                        ? 'text-accent-cyan bg-dark-card'
+                                        : 'text-gray-300 hover:text-accent-cyan hover:bg-dark-card'
+                                }`}
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
+                    </div>
+
+                    {/* Auth Buttons */}
+                    <div className="hidden md:flex items-center space-x-4">
+                        {user && userType ? (
+                            <>
+                                <Link
+                                    to={userType === 'graduate' ? "/profile/graduate" : "/profile/employer"}
+                                    className="text-gray-300 hover:text-accent-cyan px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
+                                >
+                                    <UserCircle className="h-4 w-4" />
+                                    <span>Профиль</span>
+                                </Link>
+                                <button
+                                    onClick={logoutHandler}
+                                    className="text-gray-300 hover:text-accent-cyan px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
+                                >
+                                    <LogOut className="h-4 w-4" />
+                                    <span>Выйти</span>
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <Link
+                                    to="/login"
+                                    className="text-gray-300 hover:text-accent-cyan px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
+                                >
+                                    <LogIn className="h-4 w-4" />
+                                    <span>Войти</span>
+                                </Link>
+                                <Link
+                                    to="/registration"
+                                    className="btn-primary text-sm"
+                                >
+                                    Регистрация
+                                </Link>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Mobile menu button */}
+                    <div className="md:hidden">
+                        <button
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="text-gray-300 hover:text-accent-cyan focus:outline-none"
+                        >
+                            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Navigation */}
+            {isOpen && (
+                <div className="md:hidden border-t border-dark-card">
+                    <div className="px-2 pt-2 pb-3 space-y-1">
+                        {navLinks.map((link) => (
+                            <Link
+                                key={link.path}
+                                to={link.path}
+                                onClick={() => setIsOpen(false)}
+                                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                                    isActive(link.path)
+                                        ? 'text-accent-cyan bg-dark-card'
+                                        : 'text-gray-300 hover:text-accent-cyan hover:bg-dark-card'
+                                }`}
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
+                        <div className="pt-4 space-y-2">
+                            {user && userType ? (
+                                <>
+                                    <Link
+                                        to={userType === 'graduate' ? "/profile/graduate" : "/profile/employer"}
+                                        onClick={() => setIsOpen(false)}
+                                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-accent-cyan hover:bg-dark-card"
+                                    >
+                                        Профиль
+                                    </Link>
+                                    <button
+                                        onClick={() => {
+                                            logoutHandler()
+                                            setIsOpen(false)
+                                        }}
+                                        className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-accent-cyan hover:bg-dark-card"
+                                    >
+                                        Выйти
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <Link
+                                        to="/login"
+                                        onClick={() => setIsOpen(false)}
+                                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-accent-cyan hover:bg-dark-card"
+                                    >
+                                        Войти
+                                    </Link>
+                                    <Link
+                                        to="/registration"
+                                        onClick={() => setIsOpen(false)}
+                                        className="block px-3 py-2 rounded-md text-base font-medium bg-accent-cyan text-dark-bg text-center"
+                                    >
+                                        Регистрация
+                                    </Link>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
         </nav>
-    );
-};
+    )
+}
 
-export default Navbar;
+export default Navbar
