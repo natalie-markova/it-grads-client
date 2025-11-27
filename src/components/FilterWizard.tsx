@@ -457,7 +457,9 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
           <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Языки программирования</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              
+              {/* Список предустановленных языков программирования */}
+              <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                 {programmingLanguages.map(lang => (
                   <label
                     key={lang}
@@ -529,7 +531,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
               </div>
 
               {/* Список предустановленных навыков */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+              <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                 {additionalSkills.map(skill => (
                   <label
                     key={skill}
@@ -587,7 +589,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
   return (
     <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
-      <Card className="max-w-4xl w-full max-h-[90vh] flex flex-col">
+      <Card className="max-w-6xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center mb-6 pb-4 border-b border-dark-surface">
           <div>

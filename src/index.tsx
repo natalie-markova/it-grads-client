@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import Main from './components/pages/Main/Main';
 import Login from './components/pages/Login/Login';
 import Registration from './components/pages/Registration/Registration';
@@ -25,6 +25,10 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
+      {
+        index: true,
+        element: <Navigate to="/home" replace />
+      },
       {
         path: "/home",
         element: <Home />
