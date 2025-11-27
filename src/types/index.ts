@@ -34,30 +34,25 @@ export interface InterviewConfig  {
   questionsCount: number;
 }
 
-export interface InterviewQuestion {
+export interface InterviewMessage {
   id: number;
-  question: string;
-  difficulty: Level;
-  technology: string;
-  hints?: string[];
-}
-
-export interface InterviewAnswer {
-  questionId: number;
-  answer: string;
-  score?: number; // 0-100
-  feedback?: string;
-  timestamp: string;
+  sessionId: number;
+  role: 'assistant' | 'user';
+  content: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface InterviewSession {
   id: number;
-  graduateId: number;
-  config: InterviewConfig;
+  userId: number;
+  direction: Direction;
+  technologies: string[];
+  level: Level;
+  questionsCount: number;
   status: InterviewStatus;
   currentQuestionIndex: number;
-  questions: InterviewQuestion[];
-  answers: InterviewAnswer[];
+  messages?: InterviewMessage[];
   totalScore?: number;
   recommendations?: string[];
   createdAt: string;

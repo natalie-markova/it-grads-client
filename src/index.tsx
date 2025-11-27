@@ -45,7 +45,7 @@ const router = createBrowserRouter([
         </ProtectedRoute>,
       },
       {
-        path: "/interview/:sessionId ",
+        path: "/interview/:sessionId",
         element:
         <ProtectedRoute>
           <InterviewPage />
