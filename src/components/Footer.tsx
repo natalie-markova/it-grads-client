@@ -1,7 +1,17 @@
 import { Link } from 'react-router-dom'
-import { Linkedin, Github, Mail, Phone } from 'lucide-react'
+import { Mail, Phone } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 const Footer = () => {
+  const handlePhoneClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    toast.success('Открывается приложение для звонка...')
+    // Открываем звонок после небольшой задержки, чтобы показать toast
+    setTimeout(() => {
+      window.location.href = 'tel:+79991234567'
+    }, 500)
+  }
+
   return (
     <footer className="bg-dark-surface text-gray-300 border-t border-dark-card">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -30,7 +40,7 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/interview/setup" className="hover:text-accent-cyan transition-colors text-gray-400">
+                <Link to="/interview" className="hover:text-accent-cyan transition-colors text-gray-400">
                   Собеседования
                 </Link>
               </li>
@@ -65,18 +75,18 @@ const Footer = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center space-x-2 text-gray-400">
                 <Mail className="h-4 w-4 text-accent-cyan" />
-                <span>info@itgrads.com</span>
+                <a href="mailto:info@itgrads.com" className="hover:text-accent-cyan transition-colors">
+                  info@itgrads.com
+                </a>
               </li>
               <li className="flex items-center space-x-2 text-gray-400">
                 <Phone className="h-4 w-4 text-accent-cyan" />
-                <span>+7 (999) 123-45-67</span>
-              </li>
-              <li className="flex items-center space-x-4 pt-2">
-                <a href="#" className="hover:text-accent-cyan transition-colors text-gray-400">
-                  <Linkedin className="h-5 w-5" />
-                </a>
-                <a href="#" className="hover:text-accent-cyan transition-colors text-gray-400">
-                  <Github className="h-5 w-5" />
+                <a 
+                  href="tel:+79991234567" 
+                  onClick={handlePhoneClick}
+                  className="hover:text-accent-cyan transition-colors"
+                >
+                  +7 (999) 123-45-67
                 </a>
               </li>
             </ul>

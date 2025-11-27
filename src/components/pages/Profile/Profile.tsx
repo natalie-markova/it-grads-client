@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Edit, Trash2, X, Send, MoreVertical } from 'lucide-react'
+import { Edit, Trash2, X, Send, Mail, Phone, MapPin, Calendar, GraduationCap, Briefcase, Code, Github, Linkedin, Globe, Award, MessageCircle } from 'lucide-react'
 import Card from '../../ui/Card'
 import Section from '../../ui/Section'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
 import { User, OutletContext } from '../../../types'
+import toast from 'react-hot-toast'
 
 interface Profile {
   photo: string
@@ -16,6 +17,22 @@ interface Profile {
   education: string
   experience: string
   about: string
+  email?: string
+  phone?: string
+  github?: string
+  linkedin?: string
+  portfolio?: string
+  skills?: string[]
+  projects?: Project[]
+}
+
+interface Project {
+  id: string
+  name: string
+  description: string
+  technologies: string[]
+  link?: string
+  githubLink?: string
 }
 
 interface Application {
@@ -156,6 +173,57 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
           required
         />
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+          <input
+            type="email"
+            value={formData.email || ''}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="input-field"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Телефон</label>
+          <input
+            type="text"
+            value={formData.phone || ''}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            className="input-field"
+            placeholder="+7 (999) 123-45-67"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">GitHub</label>
+          <input
+            type="url"
+            value={formData.github || ''}
+            onChange={(e) => setFormData({ ...formData, github: e.target.value })}
+            className="input-field"
+            placeholder="https://github.com/username"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">LinkedIn</label>
+          <input
+            type="url"
+            value={formData.linkedin || ''}
+            onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+            className="input-field"
+            placeholder="https://linkedin.com/in/username"
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-300 mb-2">Портфолио</label>
+          <input
+            type="url"
+            value={formData.portfolio || ''}
+            onChange={(e) => setFormData({ ...formData, portfolio: e.target.value })}
+            className="input-field"
+            placeholder="https://your-portfolio.com"
+          />
+        </div>
+      </div>
       <div className="flex gap-2">
         <button type="submit" className="btn-primary">
           Сохранить
@@ -179,15 +247,16 @@ const GraduateProfile = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null)
   const [messageText, setMessageText] = useState('')
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+  const [editingMessageText, setEditingMessageText] = useState<string>('')
 
   useEffect(() => {
     if (!user || user?.role !== 'graduate') {
-      navigate('/login')
+        navigate('/login')
       return
     }
-    loadProfile()
-    loadApplications()
-    loadChats()
+      loadProfile()
+      loadApplications()
+      loadChats()
   }, [user])
 
   const loadProfile = async () => {
@@ -199,7 +268,7 @@ const GraduateProfile = () => {
       })
       if (response.ok) {
         const data = await response.json()
-        setProfile({
+        const loadedProfile = {
           photo: data.photo || '',
           lastName: data.lastName || '',
           firstName: data.firstName || '',
@@ -209,10 +278,107 @@ const GraduateProfile = () => {
           education: data.education || '',
           experience: data.experience || '',
           about: data.about || '',
+          email: data.email || user.email || '',
+          phone: data.phone || '',
+          github: data.github || '',
+          linkedin: data.linkedin || '',
+          portfolio: data.portfolio || '',
+          skills: data.skills || [],
+          projects: data.projects || [],
+        }
+        setProfile(loadedProfile)
+      } else if (response.status === 404) {
+        // Если профиль не найден, загружаем примерные данные для демонстрации
+        setProfile({
+          photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+          lastName: 'Иванов',
+          firstName: 'Алексей',
+          middleName: 'Сергеевич',
+          birthDate: '1998-05-15',
+          city: 'Москва',
+          education: 'МГУ им. М.В. Ломоносова, Факультет вычислительной математики и кибернетики, Специалист по прикладной математике и информатике (2016-2021)',
+          experience: 'Frontend Developer в ООО "ТехноСофт" (2021-2023)\n• Разработка пользовательских интерфейсов на React и TypeScript\n• Оптимизация производительности приложений\n• Работа в команде по методологии Agile\n\nСтажер в IT-компании "СтартАп" (2020-2021)\n• Изучение современных технологий веб-разработки\n• Участие в разработке внутренних проектов',
+          about: 'Увлеченный разработчик с опытом создания современных веб-приложений. Специализируюсь на React, TypeScript и Node.js. Постоянно изучаю новые технологии и стремлюсь к профессиональному росту. Имею опыт работы в команде и готов к новым вызовам.',
+          email: user.email || 'alexey.ivanov@example.com',
+          phone: '+7 (999) 123-45-67',
+          github: 'https://github.com/alexey-ivanov',
+          linkedin: 'https://linkedin.com/in/alexey-ivanov',
+          portfolio: 'https://alexey-ivanov.dev',
+          skills: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'HTML/CSS', 'Git', 'Redux', 'Next.js', 'MongoDB', 'PostgreSQL', 'Docker', 'AWS'],
+          projects: [
+            {
+              id: '1',
+              name: 'E-commerce платформа',
+              description: 'Полнофункциональная платформа для онлайн-торговли с корзиной, оплатой и админ-панелью. Реализована система рекомендаций на основе машинного обучения.',
+              technologies: ['React', 'TypeScript', 'Node.js', 'MongoDB', 'Stripe API'],
+              link: 'https://ecommerce-demo.example.com',
+              githubLink: 'https://github.com/alexey-ivanov/ecommerce-platform'
+            },
+            {
+              id: '2',
+              name: 'Система управления задачами',
+              description: 'Коллаборативное приложение для управления проектами с real-time обновлениями, уведомлениями и аналитикой.',
+              technologies: ['React', 'Socket.io', 'Express', 'PostgreSQL', 'Redis'],
+              link: 'https://taskmanager-demo.example.com',
+              githubLink: 'https://github.com/alexey-ivanov/task-manager'
+            },
+            {
+              id: '3',
+              name: 'Погодное приложение',
+              description: 'Мобильное веб-приложение для прогноза погоды с красивой визуализацией и интеграцией с несколькими API.',
+              technologies: ['React', 'TypeScript', 'Chart.js', 'Weather API'],
+              githubLink: 'https://github.com/alexey-ivanov/weather-app'
+            }
+          ]
         })
       }
     } catch (error) {
       console.error('Error loading profile:', error)
+      // В случае ошибки также загружаем примерные данные
+      if (!profile) {
+        setProfile({
+          photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+          lastName: 'Иванов',
+          firstName: 'Алексей',
+          middleName: 'Сергеевич',
+          birthDate: '1998-05-15',
+          city: 'Москва',
+          education: 'МГУ им. М.В. Ломоносова, Факультет вычислительной математики и кибернетики, Специалист по прикладной математике и информатике (2016-2021)',
+          experience: 'Frontend Developer в ООО "ТехноСофт" (2021-2023)\n• Разработка пользовательских интерфейсов на React и TypeScript\n• Оптимизация производительности приложений\n• Работа в команде по методологии Agile\n\nСтажер в IT-компании "СтартАп" (2020-2021)\n• Изучение современных технологий веб-разработки\n• Участие в разработке внутренних проектов',
+          about: 'Увлеченный разработчик с опытом создания современных веб-приложений. Специализируюсь на React, TypeScript и Node.js. Постоянно изучаю новые технологии и стремлюсь к профессиональному росту. Имею опыт работы в команде и готов к новым вызовам.',
+          email: user?.email || 'alexey.ivanov@example.com',
+          phone: '+7 (999) 123-45-67',
+          github: 'https://github.com/alexey-ivanov',
+          linkedin: 'https://linkedin.com/in/alexey-ivanov',
+          portfolio: 'https://alexey-ivanov.dev',
+          skills: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'HTML/CSS', 'Git', 'Redux', 'Next.js', 'MongoDB', 'PostgreSQL', 'Docker', 'AWS'],
+          projects: [
+            {
+              id: '1',
+              name: 'E-commerce платформа',
+              description: 'Полнофункциональная платформа для онлайн-торговли с корзиной, оплатой и админ-панелью. Реализована система рекомендаций на основе машинного обучения.',
+              technologies: ['React', 'TypeScript', 'Node.js', 'MongoDB', 'Stripe API'],
+              link: 'https://ecommerce-demo.example.com',
+              githubLink: 'https://github.com/alexey-ivanov/ecommerce-platform'
+            },
+            {
+              id: '2',
+              name: 'Система управления задачами',
+              description: 'Коллаборативное приложение для управления проектами с real-time обновлениями, уведомлениями и аналитикой.',
+              technologies: ['React', 'Socket.io', 'Express', 'PostgreSQL', 'Redis'],
+              link: 'https://taskmanager-demo.example.com',
+              githubLink: 'https://github.com/alexey-ivanov/task-manager'
+            },
+            {
+              id: '3',
+              name: 'Погодное приложение',
+              description: 'Мобильное веб-приложение для прогноза погоды с красивой визуализацией и интеграцией с несколькими API.',
+              technologies: ['React', 'TypeScript', 'Chart.js', 'Weather API'],
+              githubLink: 'https://github.com/alexey-ivanov/weather-app'
+            }
+          ]
+        })
+      }
     }
   }
 
@@ -254,9 +420,180 @@ const GraduateProfile = () => {
           lastMessageTime: chat.last_message_time || '',
           messages: [],
         })))
+      } else if (response.status === 404) {
+        // Примерные данные для демонстрации
+        const mockChats: Chat[] = [
+          {
+            id: '1',
+            employerName: 'Мария Петрова',
+            company: 'Яндекс',
+            lastMessage: 'Спасибо за отклик! Можем обсудить детали?',
+            lastMessageTime: '14:30',
+            messages: [
+              {
+                id: '1',
+                text: 'Здравствуйте! Я заинтересован в вакансии Frontend Developer.',
+                sender: 'graduate',
+                timestamp: '10:15',
+                isEdited: false,
+              },
+              {
+                id: '2',
+                text: 'Здравствуйте! Спасибо за интерес. Расскажите немного о своем опыте работы с React.',
+                sender: 'employer',
+                timestamp: '10:20',
+                isEdited: false,
+              },
+              {
+                id: '3',
+                text: 'У меня 2 года опыта работы с React и TypeScript. Участвовал в разработке нескольких крупных проектов.',
+                sender: 'graduate',
+                timestamp: '10:25',
+                isEdited: false,
+              },
+              {
+                id: '4',
+                text: 'Отлично! Можем назначить собеседование на следующей неделе?',
+                sender: 'employer',
+                timestamp: '14:20',
+                isEdited: false,
+              },
+              {
+                id: '5',
+                text: 'Спасибо за отклик! Можем обсудить детали?',
+                sender: 'employer',
+                timestamp: '14:30',
+                isEdited: false,
+              },
+            ],
+          },
+          {
+            id: '2',
+            employerName: 'Дмитрий Смирнов',
+            company: 'Сбер',
+            lastMessage: 'Хорошо, жду ваше резюме',
+            lastMessageTime: 'Вчера',
+            messages: [
+              {
+                id: '1',
+                text: 'Добрый день! Видел вашу вакансию на сайте.',
+                sender: 'graduate',
+                timestamp: '09:00',
+                isEdited: false,
+              },
+              {
+                id: '2',
+                text: 'Добрый день! Пришлите, пожалуйста, ваше резюме.',
+                sender: 'employer',
+                timestamp: '09:15',
+                isEdited: false,
+              },
+              {
+                id: '3',
+                text: 'Конечно, отправлю сегодня вечером.',
+                sender: 'graduate',
+                timestamp: '09:20',
+                isEdited: false,
+              },
+              {
+                id: '4',
+                text: 'Хорошо, жду ваше резюме',
+                sender: 'employer',
+                timestamp: '09:25',
+                isEdited: false,
+              },
+            ],
+          },
+          {
+            id: '3',
+            employerName: 'Анна Козлова',
+            company: 'VK',
+            lastMessage: 'Отлично, тогда до встречи!',
+            lastMessageTime: '2 дня назад',
+            messages: [
+              {
+                id: '1',
+                text: 'Здравствуйте! Хотел бы узнать больше о вакансии.',
+                sender: 'graduate',
+                timestamp: '16:00',
+                isEdited: false,
+              },
+              {
+                id: '2',
+                text: 'Здравствуйте! Какие вопросы у вас есть?',
+                sender: 'employer',
+                timestamp: '16:10',
+                isEdited: false,
+              },
+              {
+                id: '3',
+                text: 'Интересует формат работы и стек технологий.',
+                sender: 'graduate',
+                timestamp: '16:15',
+                isEdited: false,
+              },
+              {
+                id: '4',
+                text: 'Удаленная работа, React, TypeScript, Node.js. Можем обсудить на собеседовании.',
+                sender: 'employer',
+                timestamp: '16:20',
+                isEdited: false,
+              },
+              {
+                id: '5',
+                text: 'Спасибо за информацию!',
+                sender: 'graduate',
+                timestamp: '16:25',
+                isEdited: false,
+              },
+              {
+                id: '6',
+                text: 'Отлично, тогда до встречи!',
+                sender: 'employer',
+                timestamp: '16:30',
+                isEdited: false,
+              },
+            ],
+          },
+        ]
+        setChats(mockChats)
+        // Автоматически выбираем первый чат для демонстрации
+        if (mockChats.length > 0) {
+          setSelectedChat(mockChats[0].id)
+        }
       }
     } catch (error) {
       console.error('Error loading chats:', error)
+      // В случае ошибки также загружаем примерные данные
+      const mockChats: Chat[] = [
+        {
+          id: '1',
+          employerName: 'Мария Петрова',
+          company: 'Яндекс',
+          lastMessage: 'Спасибо за отклик! Можем обсудить детали?',
+          lastMessageTime: '14:30',
+          messages: [
+            {
+              id: '1',
+              text: 'Здравствуйте! Я заинтересован в вакансии Frontend Developer.',
+              sender: 'graduate',
+              timestamp: '10:15',
+              isEdited: false,
+            },
+            {
+              id: '2',
+              text: 'Здравствуйте! Спасибо за интерес. Расскажите немного о своем опыте работы с React.',
+              sender: 'employer',
+              timestamp: '10:20',
+              isEdited: false,
+            },
+          ],
+        },
+      ]
+      setChats(mockChats)
+      if (mockChats.length > 0) {
+        setSelectedChat(mockChats[0].id)
+      }
     }
   }
 
@@ -284,6 +621,13 @@ const GraduateProfile = () => {
           education: updatedProfile.education || '',
           experience: updatedProfile.experience || '',
           about: updatedProfile.about || '',
+          email: updatedProfile.email || '',
+          phone: updatedProfile.phone || '',
+          github: updatedProfile.github || '',
+          linkedin: updatedProfile.linkedin || '',
+          portfolio: updatedProfile.portfolio || '',
+          skills: updatedProfile.skills || [],
+          projects: updatedProfile.projects || [],
         }
         setIsEditingProfile(false)
         // Reload profile to ensure it's saved
@@ -291,7 +635,7 @@ const GraduateProfile = () => {
         setProfile(savedProfile)
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Ошибка сохранения' }))
-        alert(errorData.error || 'Ошибка при сохранении профиля')
+        toast.error(errorData.error || 'Ошибка при сохранении профиля')
       }
     } catch (error) {
       console.error('Error saving profile:', error)
@@ -370,12 +714,18 @@ const GraduateProfile = () => {
           isEdited: msg.is_edited || false,
         }))
         
-        setChats(chats.map(chat =>
+        setChats(prevChats => prevChats.map(chat =>
           chat.id === chatId ? { ...chat, messages } : chat
+        ))
+      } else if (response.status === 404) {
+        // Если сообщения не найдены, но чат уже имеет сообщения (из примерных данных), оставляем их
+        setChats(prevChats => prevChats.map(chat =>
+          chat.id === chatId ? chat : chat
         ))
       }
     } catch (error) {
       console.error('Error loading messages:', error)
+      // В случае ошибки оставляем существующие сообщения
     }
   }
 
@@ -384,6 +734,13 @@ const GraduateProfile = () => {
       loadChatMessages(selectedChat)
     }
   }, [selectedChat, user])
+
+  // Автоматически выбираем первый чат при загрузке, если чат не выбран
+  useEffect(() => {
+    if (chats.length > 0 && !selectedChat) {
+      setSelectedChat(chats[0].id)
+    }
+  }, [chats, selectedChat])
 
   const handleSendMessage = async (chatId: string) => {
     if (!messageText.trim() || !user) return
@@ -401,14 +758,18 @@ const GraduateProfile = () => {
       if (response.ok) {
         setMessageText('')
         loadChatMessages(chatId)
+        toast.success('Сообщение отправлено')
+      } else {
+        toast.error('Ошибка при отправке сообщения')
       }
     } catch (error) {
       console.error('Error sending message:', error)
+      toast.error('Ошибка при отправке сообщения')
     }
   }
 
   const handleEditMessage = async (chatId: string, messageId: string, newText: string) => {
-    if (!user) return
+    if (!user || !newText.trim()) return
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
       const response = await fetch(`${apiUrl}/chats/messages/${messageId}`, {
@@ -421,11 +782,26 @@ const GraduateProfile = () => {
       })
       if (response.ok) {
         setEditingMessageId(null)
+        setEditingMessageText('')
         loadChatMessages(chatId)
+        toast.success('Сообщение отредактировано')
+      } else {
+        toast.error('Ошибка при редактировании сообщения')
       }
     } catch (error) {
       console.error('Error editing message:', error)
+      toast.error('Ошибка при редактировании сообщения')
     }
+  }
+
+  const startEditingMessage = (messageId: string, currentText: string) => {
+    setEditingMessageId(messageId)
+    setEditingMessageText(currentText)
+  }
+
+  const cancelEditingMessage = () => {
+    setEditingMessageId(null)
+    setEditingMessageText('')
   }
 
   const handleDeleteMessage = async (chatId: string, messageId: string) => {
@@ -450,127 +826,253 @@ const GraduateProfile = () => {
   return (
     <div className="bg-dark-bg min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Profile Section */}
-        <Section title="Личный кабинет выпускника" className="bg-dark-bg py-0 scroll-animate-item">
+        {/* Profile Header Section */}
+        <Section title="" className="bg-dark-bg py-0 scroll-animate-item">
           {profile ? (
-            <Card>
-              <div className="flex justify-between items-start mb-6">
-                <h2 className="text-2xl font-bold text-white">Профиль</h2>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => setIsEditingProfile(true)}
-                    className="p-2 text-accent-cyan hover:bg-dark-surface rounded-lg transition-colors"
-                  >
-                    <Edit className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={handleDeleteProfile}
-                    className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
+            <>
+              {/* Header Card with Photo and Basic Info */}
+              <Card className="mb-6">
+                <div className="flex justify-between items-start mb-6">
+                  <h2 className="text-3xl font-bold text-white">Мой профиль</h2>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => setIsEditingProfile(true)}
+                      className="p-2 text-accent-cyan hover:bg-dark-surface rounded-lg transition-colors"
+                      title="Редактировать профиль"
+                    >
+                      <Edit className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={handleDeleteProfile}
+                      className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
+                      title="Удалить профиль"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {isEditingProfile ? (
-                <ProfileEditForm
-                  profile={profile}
-                  onSave={handleSaveProfile}
-                  onCancel={() => setIsEditingProfile(false)}
-                />
-              ) : (
-                <div className="space-y-6">
-                  {/* Photo and Name Section */}
-                  <div className="flex flex-col md:flex-row gap-6 items-start">
+                {isEditingProfile ? (
+                  <ProfileEditForm
+                    profile={profile}
+                    onSave={handleSaveProfile}
+                    onCancel={() => setIsEditingProfile(false)}
+                  />
+                ) : (
+                  <div className="flex flex-col md:flex-row gap-8">
                     {/* Photo */}
-                    <div className="w-full md:w-48 h-48 bg-dark-surface rounded-xl overflow-hidden border border-dark-surface flex items-center justify-center">
+                    <div className="w-full md:w-56 h-56 bg-dark-surface rounded-2xl overflow-hidden border-2 border-accent-cyan/30 flex items-center justify-center shadow-lg">
                       {profile.photo ? (
                         <img 
                           src={profile.photo} 
-                          alt="Profile" 
+                          alt={`${profile.firstName} ${profile.lastName}`}
                           className="w-full h-full object-cover" 
                         />
                       ) : (
-                        <span className="text-4xl text-gray-400">👤</span>
+                        <span className="text-6xl text-gray-400">👤</span>
                       )}
                     </div>
                     
-                    {/* Name Section */}
-                    <div className="flex-1 space-y-3">
+                    {/* Name and Contact Info */}
+                    <div className="flex-1 space-y-4">
                       <div>
-                        <label className="text-gray-300 text-sm font-medium block mb-1">Фамилия</label>
-                        <p className="text-white text-lg font-semibold">
-                          {profile.lastName || 'Не указано'}
-                        </p>
+                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                          {profile.lastName} {profile.firstName} {profile.middleName}
+                        </h1>
+                        <p className="text-accent-cyan text-lg font-medium">Frontend Developer</p>
                       </div>
-                      <div>
-                        <label className="text-gray-300 text-sm font-medium block mb-1">Имя</label>
-                        <p className="text-white text-lg font-semibold">
-                          {profile.firstName || 'Не указано'}
-                        </p>
+
+                      {/* Contact Information */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        {profile.email && (
+                          <div className="flex items-center gap-3 text-gray-300">
+                            <Mail className="h-5 w-5 text-accent-cyan" />
+                            <a href={`mailto:${profile.email}`} className="hover:text-accent-cyan transition-colors">
+                              {profile.email}
+                            </a>
+                          </div>
+                        )}
+                        {profile.phone && (
+                          <div className="flex items-center gap-3 text-gray-300">
+                            <Phone className="h-5 w-5 text-accent-cyan" />
+                            <a href={`tel:${profile.phone}`} className="hover:text-accent-cyan transition-colors">
+                              {profile.phone}
+                            </a>
+                          </div>
+                        )}
+                        {profile.city && (
+                          <div className="flex items-center gap-3 text-gray-300">
+                            <MapPin className="h-5 w-5 text-accent-cyan" />
+                            <span>{profile.city}</span>
+                          </div>
+                        )}
+                        {profile.birthDate && (
+                          <div className="flex items-center gap-3 text-gray-300">
+                            <Calendar className="h-5 w-5 text-accent-cyan" />
+                            <span>
+                              {profile.birthDate.includes('T') 
+                                ? new Date(profile.birthDate).toLocaleDateString('ru-RU', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                  })
+                                : profile.birthDate}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <label className="text-gray-300 text-sm font-medium block mb-1">Отчество</label>
-                        <p className="text-white text-lg font-semibold">
-                          {profile.middleName || 'Не указано'}
-                        </p>
-                      </div>
+
+                      {/* Social Links */}
+                      {(profile.github || profile.linkedin || profile.portfolio) && (
+                        <div className="flex items-center gap-4 mt-6 pt-6 border-t border-dark-surface">
+                          {profile.github && (
+                            <a 
+                              href={profile.github} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-gray-300 hover:text-accent-cyan transition-colors"
+                            >
+                              <Github className="h-5 w-5" />
+                              <span className="text-sm">GitHub</span>
+                            </a>
+                          )}
+                          {profile.linkedin && (
+                            <a 
+                              href={profile.linkedin} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-gray-300 hover:text-accent-cyan transition-colors"
+                            >
+                              <Linkedin className="h-5 w-5" />
+                              <span className="text-sm">LinkedIn</span>
+                            </a>
+                          )}
+                          {profile.portfolio && (
+                            <a 
+                              href={profile.portfolio} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-gray-300 hover:text-accent-cyan transition-colors"
+                            >
+                              <Globe className="h-5 w-5" />
+                              <span className="text-sm">Портфолио</span>
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
+                )}
+              </Card>
 
-                  {/* Information Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Date of Birth */}
-                    {profile.birthDate && (
-                      <div className="bg-dark-surface rounded-xl p-4 border border-dark-card hover:border-accent-cyan/30 transition-colors">
-                        <label className="text-gray-300 text-sm font-medium block mb-2">Дата рождения</label>
-                        <p className="text-white text-base">
-                          {profile.birthDate.includes('T') 
-                            ? new Date(profile.birthDate).toLocaleDateString('ru-RU', { 
-                                year: 'numeric', 
-                                month: '2-digit', 
-                                day: '2-digit' 
-                              })
-                            : profile.birthDate}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* City */}
-                    {profile.city && (
-                      <div className="bg-dark-surface rounded-xl p-4 border border-dark-card hover:border-accent-cyan/30 transition-colors">
-                        <label className="text-gray-300 text-sm font-medium block mb-2">Город</label>
-                        <p className="text-white text-base">{profile.city}</p>
-                      </div>
-                    )}
-
-                    {/* Education */}
-                    {profile.education && (
-                      <div className="bg-dark-surface rounded-xl p-4 border border-dark-card hover:border-accent-cyan/30 transition-colors md:col-span-2">
-                        <label className="text-gray-300 text-sm font-medium block mb-2">Образование</label>
-                        <p className="text-white text-base leading-relaxed">{profile.education}</p>
-                      </div>
-                    )}
-
-                    {/* Experience */}
-                    {profile.experience && (
-                      <div className="bg-dark-surface rounded-xl p-4 border border-dark-card hover:border-accent-cyan/30 transition-colors md:col-span-2">
-                        <label className="text-gray-300 text-sm font-medium block mb-2">Опыт работы</label>
-                        <p className="text-white text-base leading-relaxed">{profile.experience}</p>
-                      </div>
-                    )}
-
-                    {/* About */}
-                    {profile.about && (
-                      <div className="bg-dark-surface rounded-xl p-4 border border-dark-card hover:border-accent-cyan/30 transition-colors md:col-span-2">
-                        <label className="text-gray-300 text-sm font-medium block mb-2">О себе</label>
-                        <p className="text-white text-base leading-relaxed">{profile.about}</p>
-                      </div>
-                    )}
+              {/* About Section */}
+              {profile.about && !isEditingProfile && (
+                <Card className="mb-6 scroll-animate-item">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Briefcase className="h-6 w-6 text-accent-cyan" />
+                    <h3 className="text-xl font-semibold text-white">О себе</h3>
                   </div>
-                </div>
+                  <p className="text-gray-300 leading-relaxed text-base">{profile.about}</p>
+                </Card>
               )}
-            </Card>
+
+              {/* Skills Section */}
+              {profile.skills && profile.skills.length > 0 && !isEditingProfile && (
+                <Card className="mb-6 scroll-animate-item">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Code className="h-6 w-6 text-accent-cyan" />
+                    <h3 className="text-xl font-semibold text-white">Навыки</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {profile.skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="px-4 py-2 bg-dark-surface border border-accent-cyan/30 rounded-lg text-white text-sm hover:border-accent-cyan hover:bg-accent-cyan/10 transition-colors"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              {/* Education Section */}
+              {profile.education && !isEditingProfile && (
+                <Card className="mb-6 scroll-animate-item">
+                  <div className="flex items-center gap-3 mb-4">
+                    <GraduationCap className="h-6 w-6 text-accent-cyan" />
+                    <h3 className="text-xl font-semibold text-white">Образование</h3>
+                  </div>
+                  <p className="text-gray-300 leading-relaxed">{profile.education}</p>
+                </Card>
+              )}
+
+              {/* Experience Section */}
+              {profile.experience && !isEditingProfile && (
+                <Card className="mb-6 scroll-animate-item">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Award className="h-6 w-6 text-accent-cyan" />
+                    <h3 className="text-xl font-semibold text-white">Опыт работы</h3>
+                  </div>
+                  <div className="text-gray-300 leading-relaxed whitespace-pre-line">{profile.experience}</div>
+                </Card>
+              )}
+
+              {/* Projects Section */}
+              {profile.projects && profile.projects.length > 0 && !isEditingProfile && (
+                <Card className="mb-6 scroll-animate-item">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Code className="h-6 w-6 text-accent-cyan" />
+                    <h3 className="text-xl font-semibold text-white">Проекты</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {profile.projects.map((project) => (
+                      <div
+                        key={project.id}
+                        className="bg-dark-surface rounded-xl p-6 border border-dark-card hover:border-accent-cyan/50 transition-all"
+                      >
+                        <h4 className="text-lg font-semibold text-white mb-2">{project.name}</h4>
+                        <p className="text-gray-300 text-sm mb-4 leading-relaxed">{project.description}</p>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {project.technologies.map((tech, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-dark-card border border-gray-700 rounded text-xs text-gray-400"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {project.link && (
+                            <a
+                              href={project.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-accent-cyan hover:text-accent-gold transition-colors text-sm"
+                            >
+                              <Globe className="h-4 w-4" />
+                              <span>Демо</span>
+                            </a>
+                          )}
+                          {project.githubLink && (
+                            <a
+                              href={project.githubLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-accent-cyan hover:text-accent-gold transition-colors text-sm"
+                            >
+                              <Github className="h-4 w-4" />
+                              <span>GitHub</span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </>
           ) : (
             <Card>
               <p className="text-gray-300 mb-4">Профиль не заполнен</p>
@@ -612,148 +1114,206 @@ const GraduateProfile = () => {
 
         {/* Chats Section */}
         <Section title="Чаты с работодателями" className="bg-dark-bg py-0 scroll-animate-item">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Chat List */}
-            <div className="lg:col-span-1">
-              <Card className="scroll-fade-left">
-                <h3 className="text-xl font-semibold text-white mb-4">Чаты</h3>
-                <div className="space-y-2 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
-                  {chats.map((chat, index) => (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Chat List - Left Panel */}
+            <Card className="scroll-animate-item">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-white">Чаты</h3>
+                <span className="text-sm text-gray-400">{chats.length} {chats.length === 1 ? 'чат' : chats.length < 5 ? 'чата' : 'чатов'}</span>
+              </div>
+              <div className="space-y-2 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+                {chats.length > 0 ? (
+                  chats.map((chat) => (
                     <div
                       key={chat.id}
                       onClick={() => setSelectedChat(chat.id)}
-                      className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                        selectedChat === chat.id ? 'bg-dark-surface' : 'hover:bg-dark-surface'
+                      className={`p-4 rounded-xl cursor-pointer transition-all border ${
+                        selectedChat === chat.id
+                          ? 'bg-dark-surface border-accent-cyan shadow-lg'
+                          : 'bg-dark-card border-dark-surface hover:border-accent-cyan/50 hover:bg-dark-surface/50'
                       }`}
                     >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{chat.employerName}</p>
-                          <p className="text-gray-400 text-sm">{chat.company}</p>
-                          <p className="text-gray-500 text-xs mt-1 truncate">{chat.lastMessage}</p>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center flex-shrink-0">
+                              <span className="text-accent-cyan font-semibold text-sm">
+                                {chat.employerName.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-semibold truncate">{chat.employerName}</p>
+                              <p className="text-gray-400 text-sm truncate">{chat.company}</p>
+                            </div>
+                          </div>
+                          <p className="text-gray-500 text-sm mt-2 truncate">{chat.lastMessage}</p>
+                          <p className="text-gray-600 text-xs mt-2">{chat.lastMessageTime}</p>
                         </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
                             handleDeleteChat(chat.id)
                           }}
-                          className="p-1 text-red-400 hover:bg-dark-card rounded"
+                          className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors flex-shrink-0"
+                          title="Удалить чат"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                      <p className="text-gray-500 text-xs mt-1">{chat.lastMessageTime}</p>
                     </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-gray-400">У вас пока нет чатов</p>
+                  </div>
+                )}
+              </div>
+            </Card>
 
-            {/* Chat Messages */}
-            <div className="lg:col-span-2">
+            {/* Chat Messages - Right Panel */}
+            <Card className="scroll-animate-item">
               {selectedChatData ? (
-                <Card className="scroll-fade-right">
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <h3 className="text-xl font-semibold text-white">{selectedChatData.employerName}</h3>
-                      <p className="text-gray-400 text-sm">{selectedChatData.company}</p>
+                <>
+                  {/* Chat Header */}
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-dark-surface">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-accent-cyan/20 flex items-center justify-center">
+                        <span className="text-accent-cyan font-semibold text-lg">
+                          {selectedChatData.employerName.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold text-white">{selectedChatData.employerName}</h3>
+                        <p className="text-gray-400 text-sm">{selectedChatData.company}</p>
+                      </div>
                     </div>
                     <button
                       onClick={() => setSelectedChat(null)}
-                      className="p-2 text-gray-400 hover:bg-dark-surface rounded-lg"
+                      className="p-2 text-gray-400 hover:bg-dark-surface rounded-lg transition-colors"
+                      title="Закрыть чат"
                     >
                       <X className="h-5 w-5" />
                     </button>
                   </div>
 
-                  <div className="h-96 overflow-y-auto space-y-4 mb-4 custom-scrollbar pr-2">
-                    {selectedChatData.messages.map(msg => (
-                      <div
-                        key={msg.id}
-                        className={`flex ${msg.sender === 'graduate' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-xs lg:max-w-md p-3 rounded-lg ${
-                            msg.sender === 'graduate'
-                              ? 'bg-accent-cyan text-dark-bg'
-                              : 'bg-dark-surface text-white'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm">{msg.text}</p>
-                            {msg.sender === 'graduate' && (
-                              <div className="flex gap-1">
-                                {editingMessageId === msg.id ? (
-                                  <>
+                  {/* Messages Area */}
+                  <div className="h-[500px] overflow-y-auto space-y-4 mb-4 custom-scrollbar pr-2">
+                    {selectedChatData.messages.length > 0 ? (
+                      selectedChatData.messages.map((msg, index) => {
+                        const isEditing = editingMessageId === msg.id
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`flex ${msg.sender === 'graduate' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div
+                              className={`max-w-[75%] rounded-xl p-4 ${
+                                msg.sender === 'graduate'
+                                  ? 'bg-accent-cyan text-dark-bg'
+                                  : 'bg-dark-surface text-white'
+                              }`}
+                            >
+                              {isEditing ? (
+                                <div className="space-y-2">
+                                  <textarea
+                                    value={editingMessageText}
+                                    onChange={(e) => setEditingMessageText(e.target.value)}
+                                    className="w-full p-2 bg-dark-card border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-accent-cyan resize-none"
+                                    rows={3}
+                                    autoFocus
+                                  />
+                                  <div className="flex items-center gap-2">
                                     <button
-                                      onClick={() => {
-                                        const newText = prompt('Редактировать сообщение:', msg.text)
-                                        if (newText) {
-                                          handleEditMessage(selectedChatData.id, msg.id, newText)
-                                        }
-                                      }}
-                                      className="p-1 hover:bg-accent-blue rounded"
+                                      onClick={() => handleEditMessage(selectedChatData.id, msg.id, editingMessageText)}
+                                      className="px-3 py-1 bg-accent-cyan text-dark-bg rounded-lg text-sm font-medium hover:bg-accent-cyan/90 transition-colors"
                                     >
-                                      ✓
+                                      Сохранить
                                     </button>
                                     <button
-                                      onClick={() => setEditingMessageId(null)}
-                                      className="p-1 hover:bg-accent-blue rounded"
+                                      onClick={cancelEditingMessage}
+                                      className="px-3 py-1 bg-dark-card text-gray-300 rounded-lg text-sm font-medium hover:bg-dark-surface transition-colors"
                                     >
-                                      ✕
+                                      Отмена
                                     </button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <button
-                                      onClick={() => setEditingMessageId(msg.id)}
-                                      className="p-1 hover:bg-accent-blue rounded"
-                                    >
-                                      <Edit className="h-3 w-3" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteMessage(selectedChatData.id, msg.id)}
-                                      className="p-1 hover:bg-accent-blue rounded"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            )}
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="flex items-start justify-between gap-3 mb-2">
+                                    <p className="text-sm leading-relaxed break-words">{msg.text}</p>
+                                    {msg.sender === 'graduate' && (
+                                      <div className="flex gap-1 flex-shrink-0">
+                                        <button
+                                          onClick={() => startEditingMessage(msg.id, msg.text)}
+                                          className="p-1.5 hover:bg-black/20 rounded transition-colors"
+                                          title="Редактировать"
+                                        >
+                                          <Edit className="h-3.5 w-3.5" />
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeleteMessage(selectedChatData.id, msg.id)}
+                                          className="p-1.5 hover:bg-black/20 rounded transition-colors"
+                                          title="Удалить"
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-current/20">
+                                    <span className="text-xs opacity-70">{msg.timestamp}</span>
+                                    {msg.isEdited && (
+                                      <span className="text-xs opacity-70 italic">(изменено)</span>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex justify-between items-center mt-1">
-                            <span className="text-xs opacity-70">{msg.timestamp}</span>
-                            {msg.isEdited && <span className="text-xs opacity-70">(изменено)</span>}
-                          </div>
-                        </div>
+                        )
+                      })
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-gray-400">Нет сообщений в этом чате</p>
                       </div>
-                    ))}
+                    )}
                   </div>
 
-                  <div className="flex gap-2">
+                  {/* Message Input */}
+                  <div className="flex gap-3 pt-4 border-t border-dark-surface">
                     <input
                       type="text"
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(selectedChatData.id)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          handleSendMessage(selectedChatData.id)
+                        }
+                      }}
                       placeholder="Введите сообщение..."
                       className="input-field flex-1"
                     />
                     <button
                       onClick={() => handleSendMessage(selectedChatData.id)}
-                      className="btn-primary"
+                      disabled={!messageText.trim()}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Отправить сообщение"
                     >
                       <Send className="h-5 w-5" />
                     </button>
                   </div>
-                </Card>
+                </>
               ) : (
-                <Card>
-                  <p className="text-gray-300 text-center">Выберите чат для просмотра сообщений</p>
-                </Card>
+                <div className="flex flex-col items-center justify-center h-[600px] text-center">
+                  <div className="w-16 h-16 rounded-full bg-dark-surface flex items-center justify-center mb-4">
+                    <MessageCircle className="h-8 w-8 text-gray-500" />
+                  </div>
+                  <p className="text-gray-400 text-lg mb-2">Выберите чат</p>
+                  <p className="text-gray-500 text-sm">Выберите чат из списка слева, чтобы начать общение</p>
+                </div>
               )}
-            </div>
+            </Card>
           </div>
         </Section>
       </div>
