@@ -12,6 +12,11 @@ import InterviewPage from './components/pages/Interview/InterviewPage';
 import InterviewResultsPage from './components/pages/Interview/InterviewResultsPage';
 import Help from './components/pages/Help/Help';
 import FAQ from './components/pages/FAQ/FAQ';
+import Skills from './components/pages/Skills/Skills';
+import Interview from './components/pages/Interview/Interview';
+import AI from './components/pages/AI/AI';
+import Jobs from './components/pages/Jobs/Jobs';
+import Profile from './components/pages/Profile/Profile';
 import { Provider } from 'react-redux';
 import { store } from './store';
 
@@ -67,6 +72,29 @@ const router = createBrowserRouter([
       {
         path: "/faq",
         element: <FAQ />
+      },
+      {
+        path: "/skills",
+        element: <Skills />
+      },
+      {
+        path: "/interview",
+        element: <Interview />
+      },
+      {
+        path: "/ai",
+        element: <AI />
+      },
+      {
+        path: "/jobs",
+        element: <Jobs />
+      },
+      {
+        path: "/profile/:type",
+        element:
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>,
       },
 
     ]}
