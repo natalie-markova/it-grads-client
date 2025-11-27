@@ -498,19 +498,19 @@ const GraduateProfile = () => {
                     {/* Name Section */}
                     <div className="flex-1 space-y-3">
                       <div>
-                        <label className="text-[#b0b0b0] text-sm font-medium block mb-1">Фамилия</label>
+                        <label className="text-gray-300 text-sm font-medium block mb-1">Фамилия</label>
                         <p className="text-white text-lg font-semibold">
                           {profile.lastName || 'Не указано'}
                         </p>
                       </div>
                       <div>
-                        <label className="text-[#b0b0b0] text-sm font-medium block mb-1">Имя</label>
+                        <label className="text-gray-300 text-sm font-medium block mb-1">Имя</label>
                         <p className="text-white text-lg font-semibold">
                           {profile.firstName || 'Не указано'}
                         </p>
                       </div>
                       <div>
-                        <label className="text-[#b0b0b0] text-sm font-medium block mb-1">Отчество</label>
+                        <label className="text-gray-300 text-sm font-medium block mb-1">Отчество</label>
                         <p className="text-white text-lg font-semibold">
                           {profile.middleName || 'Не указано'}
                         </p>
@@ -523,7 +523,7 @@ const GraduateProfile = () => {
                     {/* Date of Birth */}
                     {profile.birthDate && (
                       <div className="bg-dark-surface rounded-xl p-4 border border-dark-card hover:border-accent-cyan/30 transition-colors">
-                        <label className="text-[#b0b0b0] text-sm font-medium block mb-2">Дата рождения</label>
+                        <label className="text-gray-300 text-sm font-medium block mb-2">Дата рождения</label>
                         <p className="text-white text-base">
                           {profile.birthDate.includes('T') 
                             ? new Date(profile.birthDate).toLocaleDateString('ru-RU', { 
@@ -539,7 +539,7 @@ const GraduateProfile = () => {
                     {/* City */}
                     {profile.city && (
                       <div className="bg-dark-surface rounded-xl p-4 border border-dark-card hover:border-accent-cyan/30 transition-colors">
-                        <label className="text-[#b0b0b0] text-sm font-medium block mb-2">Город</label>
+                        <label className="text-gray-300 text-sm font-medium block mb-2">Город</label>
                         <p className="text-white text-base">{profile.city}</p>
                       </div>
                     )}
@@ -547,7 +547,7 @@ const GraduateProfile = () => {
                     {/* Education */}
                     {profile.education && (
                       <div className="bg-dark-surface rounded-xl p-4 border border-dark-card hover:border-accent-cyan/30 transition-colors md:col-span-2">
-                        <label className="text-[#b0b0b0] text-sm font-medium block mb-2">Образование</label>
+                        <label className="text-gray-300 text-sm font-medium block mb-2">Образование</label>
                         <p className="text-white text-base leading-relaxed">{profile.education}</p>
                       </div>
                     )}
@@ -555,7 +555,7 @@ const GraduateProfile = () => {
                     {/* Experience */}
                     {profile.experience && (
                       <div className="bg-dark-surface rounded-xl p-4 border border-dark-card hover:border-accent-cyan/30 transition-colors md:col-span-2">
-                        <label className="text-[#b0b0b0] text-sm font-medium block mb-2">Опыт работы</label>
+                        <label className="text-gray-300 text-sm font-medium block mb-2">Опыт работы</label>
                         <p className="text-white text-base leading-relaxed">{profile.experience}</p>
                       </div>
                     )}
@@ -563,7 +563,7 @@ const GraduateProfile = () => {
                     {/* About */}
                     {profile.about && (
                       <div className="bg-dark-surface rounded-xl p-4 border border-dark-card hover:border-accent-cyan/30 transition-colors md:col-span-2">
-                        <label className="text-[#b0b0b0] text-sm font-medium block mb-2">О себе</label>
+                        <label className="text-gray-300 text-sm font-medium block mb-2">О себе</label>
                         <p className="text-white text-base leading-relaxed">{profile.about}</p>
                       </div>
                     )}

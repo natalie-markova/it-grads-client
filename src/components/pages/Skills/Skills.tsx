@@ -5,7 +5,7 @@ import Section from '../../ui/Section'
 import Card from '../../ui/Card'
 import SkillsRadar from '../../../components/SkillsRadar'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
-import { OutletContext } from '../../../types'
+import { type OutletContext } from '../../../types'
 
 const Skills = () => {
   const { user } = useOutletContext<OutletContext>()
