@@ -21,6 +21,7 @@ import CompaniesRating from './components/pages/CompaniesRating/CompaniesRating'
 import CompanyDetails from './components/pages/CompanyDetails/CompanyDetails';
 import { Provider } from 'react-redux';
 import { store } from './store';
+import InterviewHub from './components/pages/Interview/InterviewHub';
 
 const router = createBrowserRouter([
   {
@@ -51,21 +52,29 @@ const router = createBrowserRouter([
         </ProtectedRoute>,
       },
       {
-        path: "/interview/setup",
+        path: "/interview",
+        element: <InterviewHub />
+      },
+      {
+        path: "/interview/practice",
+        element: <Interview />
+      },
+      {
+        path: "/interview/ai/setup",
         element:
         <ProtectedRoute>
           <InterviewSetupPage />
         </ProtectedRoute>,
       },
       {
-        path: "/interview/:sessionId ",
+        path: "/interview/ai/:sessionId",
         element:
         <ProtectedRoute>
           <InterviewPage />
         </ProtectedRoute>,
       },
       {
-        path: "/interview/:sessionId/results",
+        path: "/interview/ai/:sessionId/results",
         element:
         <ProtectedRoute>
           <InterviewResultsPage/>
@@ -82,10 +91,6 @@ const router = createBrowserRouter([
       {
         path: "/skills",
         element: <Skills />
-      },
-      {
-        path: "/interview",
-        element: <Interview />
       },
       {
         path: "/ai",
