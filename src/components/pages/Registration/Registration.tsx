@@ -11,6 +11,17 @@ function Registration() {
     const navigate = useNavigate();
     const [role, setRole] = useState<'graduate' | 'employer'>('graduate');
     const [passwordError, setPasswordError] = useState<string>('');
+    const [emailError, setEmailError] = useState<string>('');
+    
+    function validateEmail(email: string): boolean {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setEmailError('Некорректный формат email');
+            return false;
+        }
+        setEmailError('');
+        return true;
+    }
     
     function validatePassword(password: string): boolean {
         if (password.length < 8) {
@@ -32,15 +43,26 @@ function Registration() {
     function submitHandler(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
+        const email = formData.get('email') as string;
         const password = formData.get('password') as string;
         
+        // Сбрасываем предыдущие ошибки
+        setEmailError('');
+        setPasswordError('');
+        
+        // Валидация email
+        if (!validateEmail(email)) {
+            return;
+        }
+        
+        // Валидация пароля
         if (!validatePassword(password)) {
             return;
         }
         
         const data = {
             username: formData.get('login') as string,
-            email: formData.get('email') as string,
+            email: email,
             password: password,
             role: role,
         };
@@ -48,13 +70,73 @@ function Registration() {
         .then((response) => {
             console.log("Response:", response.data)
             if (response.status === 200) {
-                toast.success("Регистрация прошла успешно! Теперь войдите в систему.")
-                navigate("/login")
+                // Если API возвращает токен и пользователя, автоматически аутентифицируем
+                if (response.data.accessToken && response.data.user) {
+                setAccessToken(response.data.accessToken)
+                setUser(response.data.user)
+                    toast.success("Регистрация прошла успешно! Вы автоматически вошли в систему.")
+                    const userRole = response.data.user?.role || 'graduate'
+                    navigate(`/profile/${userRole}`)
+                } else {
+                    // Если токен не возвращается, делаем автоматический логин
+                    // Используем те же данные для входа
+                    $api.post("/users/login", {
+                        email: data.email,
+                        password: data.password
+                    })
+                    .then(loginResponse => {
+                        if (loginResponse.data.accessToken && loginResponse.data.user) {
+                            setAccessToken(loginResponse.data.accessToken)
+                            setUser(loginResponse.data.user)
+                            toast.success("Регистрация прошла успешно! Вы автоматически вошли в систему.")
+                            const userRole = loginResponse.data.user?.role || 'graduate'
+                            navigate(`/profile/${userRole}`)
+                        } else {
+                            toast.success("Регистрация прошла успешно! Теперь войдите в систему.")
+                            navigate("/login")
+                        }
+                    })
+                    .catch(() => {
+                        toast.success("Регистрация прошла успешно! Теперь войдите в систему.")
+                        navigate("/login")
+                    })
+                }
             }
         })
         .catch(error => {
             console.error("Что-то пошло не так:", error.response?.data || error.message);
-            toast.error("Ошибка регистрации. Пользователь с такими данными уже зарегестрирован.")
+            
+            // Обработка различных типов ошибок
+            const errorData = error.response?.data;
+            const errorMessage = errorData?.message || errorData?.error || '';
+            const statusCode = error.response?.status;
+            
+            // Проверка на ошибку формата email
+            if (
+                statusCode === 400 || 
+                errorMessage.toLowerCase().includes('email') && 
+                (errorMessage.toLowerCase().includes('invalid') || 
+                 errorMessage.toLowerCase().includes('format') ||
+                 errorMessage.toLowerCase().includes('некорректн'))
+            ) {
+                setEmailError('Некорректный формат email');
+                toast.error('Пожалуйста, введите корректный email адрес');
+                return;
+            }
+            
+            // Проверка на существующего пользователя
+            if (
+                statusCode === 409 || 
+                errorMessage.toLowerCase().includes('уже существует') ||
+                errorMessage.toLowerCase().includes('already exists') ||
+                errorMessage.toLowerCase().includes('зарегестрирован')
+            ) {
+                toast.error('Пользователь с такими данными уже зарегистрирован');
+                return;
+            }
+            
+            // Общая ошибка
+            toast.error(errorMessage || 'Ошибка регистрации. Попробуйте еще раз.');
         });
     }
     
@@ -110,10 +192,20 @@ function Registration() {
                                     id="email"
                                     name="email"
                                     required
-                                    className="input-field pl-10"
+                                    className={`input-field pl-10 ${emailError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                                     placeholder="your@email.com"
+                                    onChange={(e) => {
+                                        if (e.target.value) {
+                                            validateEmail(e.target.value);
+                                        } else {
+                                            setEmailError('');
+                                        }
+                                    }}
                                 />
                             </div>
+                            {emailError && (
+                                <p className="mt-1 text-sm text-red-500">{emailError}</p>
+                            )}
                         </div>
 
                         <div>

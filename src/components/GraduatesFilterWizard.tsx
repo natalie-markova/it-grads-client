@@ -3,30 +3,27 @@ import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react'
 import Card from './ui/Card'
 
-export interface FilterData {
-  employmentType: string[]
+export interface GraduateFilterData {
   workFormat: string[]
   region: string
   experience: string
-  salary: string
-  salaryUnlimited: boolean
+  education: string
+  educationInstitutions: string[]
   technology: string[]
   programmingLanguages: string[]
   additionalSkills: string[]
   additionalSkillsCustom: string
   englishLevel: string
-  companySize: string
-  industry: string
 }
 
-interface FilterWizardProps {
+interface GraduatesFilterWizardProps {
   isOpen: boolean
   onClose: () => void
-  onApply: (filters: FilterData) => void
-  initialFilters?: FilterData
+  onApply: (filters: GraduateFilterData) => void
+  initialFilters?: GraduateFilterData
 }
 
-const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizardProps) => {
+const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: GraduatesFilterWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0)
   const [customSkillInput, setCustomSkillInput] = useState('')
   const [validationError, setValidationError] = useState(false)
@@ -49,34 +46,30 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
     }
   }, [isOpen])
   
-  const [filters, setFilters] = useState<FilterData>(initialFilters || {
-    employmentType: [],
+  const [filters, setFilters] = useState<GraduateFilterData>(initialFilters || {
     workFormat: [],
     region: '',
     experience: '',
-    salary: '',
-    salaryUnlimited: false,
+    education: '',
+    educationInstitutions: [],
     technology: [],
     programmingLanguages: [],
     additionalSkills: [],
     additionalSkillsCustom: '',
     englishLevel: '',
-    companySize: '',
-    industry: '',
   })
 
   const steps = [
-    { id: 0, title: 'Тип занятости и формат работы' },
+    { id: 0, title: 'Формат работы' },
     { id: 1, title: 'Опыт работы' },
     { id: 2, title: 'Регион/Город и знание языка' },
-    { id: 3, title: 'Диапазон зарплаты' },
-    { id: 4, title: 'Отрасль бизнеса работодателя' },
-    { id: 5, title: 'Языки программирования' },
-    { id: 6, title: 'Технологическое направление' },
-    { id: 7, title: 'Дополнительные навыки' },
+    { id: 3, title: 'Образование' },
+    { id: 4, title: 'Языки программирования' },
+    { id: 5, title: 'Технологическое направление' },
+    { id: 6, title: 'Дополнительные навыки' },
   ]
 
-  const toggleFilter = (category: keyof FilterData, value: string) => {
+  const toggleFilter = (category: keyof GraduateFilterData, value: string) => {
     setFilters(prev => {
       const currentValues = prev[category] as string[]
       if (Array.isArray(currentValues)) {
@@ -93,7 +86,6 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
         }
       }
     })
-    // Сбрасываем ошибку валидации при изменении фильтров
     if (validationError) {
       setValidationError(false)
     }
@@ -101,21 +93,19 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
   const validateCurrentStep = (): boolean => {
     switch (currentStep) {
-      case 0: // Тип занятости и формат работы
-        return filters.employmentType.length > 0 || filters.workFormat.length > 0
+      case 0: // Формат работы
+        return filters.workFormat.length > 0
       case 1: // Опыт работы
         return filters.experience !== ''
       case 2: // Регион/Город и знание языка
         return filters.region !== '' || filters.englishLevel !== ''
-      case 3: // Диапазон зарплаты
-        return filters.salary !== '' || filters.salaryUnlimited
-      case 4: // Отрасль бизнеса работодателя
-        return filters.industry !== ''
-      case 5: // Языки программирования
+      case 3: // Образование
+        return filters.education !== '' || filters.educationInstitutions.length > 0
+      case 4: // Языки программирования
         return filters.programmingLanguages.length > 0
-      case 6: // Технологическое направление
+      case 5: // Технологическое направление
         return filters.technology.length > 0
-      case 7: // Дополнительные навыки
+      case 6: // Дополнительные навыки
         return filters.additionalSkills.length > 0
       default:
         return true
@@ -125,8 +115,8 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
   const handleNext = () => {
     if (validateCurrentStep()) {
       setValidationError(false)
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1)
       }
     } else {
       setValidationError(true)
@@ -143,8 +133,8 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
   const handleApply = () => {
     if (validateCurrentStep()) {
       setValidationError(false)
-    onApply(filters)
-    onClose()
+      onApply(filters)
+      onClose()
     } else {
       setValidationError(true)
     }
@@ -152,35 +142,26 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
   const handleReset = () => {
     setFilters({
-      employmentType: [],
       workFormat: [],
       region: '',
       experience: '',
-      salary: '',
-      salaryUnlimited: false,
+      education: '',
+      educationInstitutions: [],
       technology: [],
       programmingLanguages: [],
       additionalSkills: [],
       additionalSkillsCustom: '',
       englishLevel: '',
-      companySize: '',
-      industry: '',
     })
   }
 
   useEffect(() => {
     if (isOpen) {
       if (initialFilters) {
-        // Если initialFilters имеет старую структуру, конвертируем в новую
-        const convertedFilters: FilterData = {
+        const convertedFilters: GraduateFilterData = {
           ...initialFilters,
-          salary: initialFilters.salary || (initialFilters as any).salaryMin || '',
-          additionalSkillsCustom: initialFilters.additionalSkillsCustom || '',
-        }
-        // Удаляем старые поля если они есть
-        if ((initialFilters as any).salaryMin) {
-          delete (convertedFilters as any).salaryMin
-          delete (convertedFilters as any).salaryMax
+          education: initialFilters.education || '',
+          educationInstitutions: initialFilters.educationInstitutions || [],
         }
         setFilters(convertedFilters)
       }
@@ -190,14 +171,6 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
   }, [isOpen, initialFilters])
 
   if (!isOpen) return null
-
-  const employmentTypes = [
-    { value: 'full-time', label: 'Полная занятость' },
-    { value: 'part-time', label: 'Частичная занятость' },
-    { value: 'remote', label: 'Удалённая работа' },
-    { value: 'freelance', label: 'Проектная работа / Фриланс' },
-    { value: 'internship', label: 'Стажёрство / Практика' },
-  ]
 
   const workFormats = [
     { value: 'office', label: 'Офисная работа' },
@@ -273,55 +246,27 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
     { value: 'fluent', label: 'Свободное владение' },
   ]
 
-  const companySizes = [
-    { value: 'startup', label: 'Стартапы (<10 сотрудников)' },
-    { value: 'small', label: 'Небольшие компании (10-50 сотрудников)' },
-    { value: 'medium', label: 'Средние компании (50-200 сотрудников)' },
-    { value: 'large', label: 'Большие корпорации (>200 сотрудников)' },
+  const universities = [
+    'МГУ им. М.В. Ломоносова',
+    'МФТИ',
+    'ВШЭ',
+    'МГТУ им. Н.Э. Баумана',
+    'СПбГУ',
   ]
 
-  const industries = [
-    'ИТ-компании',
-    'Банковский сектор',
-    'E-commerce',
-    'Телекоммуникационные услуги',
-    'Интернет-сервисы',
-    'Образование',
-    'Геймдевелопмент',
-    'Fintech',
-    'Логистика и транспортировка',
-    'Консалтинговые фирмы',
-    'Государственные учреждения',
+  const itCourses = [
+    'Яндекс.Практикум',
+    'GeekBrains',
+    'SkillFactory',
+    'Эльбрус Буткемп',
+    'Hexlet',
   ]
 
   const renderStepContent = () => {
     switch (currentStep) {
-      case 0: // Тип занятости и формат работы
+      case 0: // Формат работы
         return (
           <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4">Тип занятости</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {employmentTypes.map(type => (
-                  <label
-                    key={type.value}
-                    className="flex items-center gap-3 p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors border border-transparent hover:border-accent-cyan"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.employmentType.includes(type.value)}
-                      onChange={() => toggleFilter('employmentType', type.value)}
-                      className="h-5 w-5 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-card"
-                    />
-                    <span className="text-gray-300 flex-1">{type.label}</span>
-                    {filters.employmentType.includes(type.value) && (
-                      <Check className="h-5 w-5 text-accent-cyan" />
-                    )}
-                  </label>
-                ))}
-              </div>
-            </div>
-
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Формат работы</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -420,75 +365,80 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
           </div>
         )
 
-      case 3: // Диапазон зарплаты
+      case 3: // Образование
         return (
           <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
-              <h3 className="text-xl font-semibold text-white mb-4">Диапазон зарплаты</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">Название учебного заведения</h3>
               <input
                 type="text"
-                value={filters.salary}
-                onChange={(e) => setFilters({ ...filters, salary: e.target.value })}
-                placeholder="Например: от 100000 до 200000 ₽"
+                value={filters.education}
+                onChange={(e) => setFilters({ ...filters, education: e.target.value })}
+                placeholder="Введите название учебного заведения"
                 className="input-field w-full"
               />
             </div>
 
             <div>
-              <label className="flex items-center gap-3 p-4 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors border border-transparent hover:border-accent-cyan">
-                <input
-                  type="checkbox"
-                  checked={filters.salaryUnlimited}
-                  onChange={(e) => setFilters({ ...filters, salaryUnlimited: e.target.checked })}
-                  className="h-5 w-5 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-card"
-                />
-                <span className="text-gray-300 flex-1">Без ограничений по зарплате</span>
-                {filters.salaryUnlimited && (
-                  <Check className="h-5 w-5 text-accent-cyan" />
-                )}
-              </label>
-            </div>
-          </div>
-        )
+              <h3 className="text-xl font-semibold text-white mb-4">Популярные учебные заведения</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Вузы */}
+                <div>
+                  <h4 className="text-lg font-medium text-gray-300 mb-3">Вузы с IT образованием</h4>
+                  <div className="space-y-2">
+                    {universities.map(university => (
+                      <label
+                        key={university}
+                        className="flex items-center gap-3 p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors border border-transparent hover:border-accent-cyan"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={filters.educationInstitutions.includes(university)}
+                          onChange={() => toggleFilter('educationInstitutions', university)}
+                          className="h-5 w-5 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-card"
+                        />
+                        <span className="text-gray-300 flex-1 text-sm">{university}</span>
+                        {filters.educationInstitutions.includes(university) && (
+                          <Check className="h-5 w-5 text-accent-cyan" />
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
-      case 4: // Отрасль бизнеса работодателя
-        return (
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4">Отрасль бизнеса работодателя</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {industries.map(industry => (
-                  <label
-                    key={industry}
-                    className="flex items-center gap-3 p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors border border-transparent hover:border-accent-cyan"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.industry === industry}
-                      onChange={() => setFilters({
-                        ...filters,
-                        industry: filters.industry === industry ? '' : industry
-                      })}
-                      className="h-5 w-5 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-card"
-                    />
-                    <span className="text-gray-300 flex-1 text-sm">{industry}</span>
-                    {filters.industry === industry && (
-                      <Check className="h-5 w-5 text-accent-cyan" />
-                    )}
-                  </label>
-                ))}
+                {/* IT Курсы */}
+                <div>
+                  <h4 className="text-lg font-medium text-gray-300 mb-3">IT Курсы</h4>
+                  <div className="space-y-2">
+                    {itCourses.map(course => (
+                      <label
+                        key={course}
+                        className="flex items-center gap-3 p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors border border-transparent hover:border-accent-cyan"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={filters.educationInstitutions.includes(course)}
+                          onChange={() => toggleFilter('educationInstitutions', course)}
+                          className="h-5 w-5 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-card"
+                        />
+                        <span className="text-gray-300 flex-1 text-sm">{course}</span>
+                        {filters.educationInstitutions.includes(course) && (
+                          <Check className="h-5 w-5 text-accent-cyan" />
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )
 
-      case 5: // Языки программирования
+      case 4: // Языки программирования
         return (
           <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Языки программирования</h3>
-              
-              {/* Список предустановленных языков программирования */}
               <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                 {programmingLanguages.map(lang => (
                   <label
@@ -512,13 +462,11 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
           </div>
         )
 
-      case 6: // Технологическое направление
+      case 5: // Технологическое направление
         return (
           <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Технологическое направление</h3>
-              
-              {/* Список технологических направлений */}
               <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                 {technologyDirections.map(tech => (
                   <label
@@ -542,13 +490,12 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
           </div>
         )
 
-      case 7: // Дополнительные навыки
+      case 6: // Дополнительные навыки
         return (
           <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Дополнительные навыки</h3>
               
-              {/* Поле для ввода дополнительного навыка */}
               <div className="mb-6">
                 <div className="flex gap-2">
                   <input
@@ -590,7 +537,6 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
                 </div>
               </div>
 
-              {/* Список предустановленных навыков */}
               <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                 {additionalSkills.map(skill => (
                   <label
@@ -611,7 +557,6 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
                 ))}
               </div>
 
-              {/* Выбранные дополнительные навыки (включая пользовательские) */}
               {filters.additionalSkills.length > 0 && (
                 <div className="mt-4">
                   <h4 className="text-sm font-semibold text-white mb-2">Выбранные навыки:</h4>
@@ -647,11 +592,8 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
     }
   }
 
-  if (!isOpen) return null
-
   const modalContent = (
     <>
-      {/* Backdrop - покрывает весь экран включая навбар и футер */}
       <div 
         style={{ 
           position: 'fixed',
@@ -668,7 +610,6 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
         }}
         onClick={onClose}
       />
-      {/* Модальное окно */}
       <div 
         className="fixed flex items-start justify-center z-[101] pointer-events-none" 
         style={{
@@ -685,108 +626,104 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
         }}
       >
         <div className="pointer-events-auto w-full max-w-4xl">
-      <Card className="max-w-4xl w-full max-h-[85vh] min-h-[85vh] flex flex-col">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6 pb-4 border-b border-dark-surface">
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-2">Фильтры вакансий</h2>
-            <p className="text-gray-400 text-sm">
-              Шаг {currentStep + 1} из {steps.length}: {steps[currentStep].title}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white hover:bg-dark-surface rounded-lg transition-colors"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center flex-1">
-                <div className="flex items-center flex-1">
-                  <button
-                    onClick={() => {
-                      setCurrentStep(index)
-                      setValidationError(false)
-                    }}
-                    className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors cursor-pointer ${
-                      index <= currentStep
-                        ? 'bg-accent-cyan border-accent-cyan text-dark-bg hover:bg-accent-cyan/90'
-                        : 'bg-dark-surface border-gray-600 text-gray-400 hover:border-accent-cyan/50'
-                    }`}
-                  >
-                    {index < currentStep ? (
-                      <Check className="h-5 w-5" />
-                    ) : (
-                      <span>{step.id + 1}</span>
-                    )}
-                  </button>
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`flex-1 h-1 mx-2 transition-colors ${
-                        index < currentStep ? 'bg-accent-cyan' : 'bg-gray-600'
-                      }`}
-                    />
-                  )}
-                </div>
+          <Card className="max-w-4xl w-full max-h-[85vh] min-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-dark-surface">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">Фильтры выпускников</h2>
+                <p className="text-gray-400 text-sm">
+                  Шаг {currentStep + 1} из {steps.length}: {steps[currentStep].title}
+                </p>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-          {renderStepContent()}
-          {validationError && (
-            <div className="mt-4 p-3 bg-red-500/20 border border-red-500 rounded-lg">
-              <p className="text-red-500 text-sm">Выберите хотя-бы один пункт</p>
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-white hover:bg-dark-surface rounded-lg transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
             </div>
-          )}
-        </div>
 
-        {/* Footer */}
-        <div className="flex justify-between items-center mt-6 pt-4 border-t border-dark-surface">
-          <button
-            onClick={handleReset}
-            className="text-gray-400 hover:text-accent-cyan transition-colors"
-          >
-            Сбросить все
-          </button>
-          <div className="flex gap-3">
-            {currentStep > 0 && (
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                {steps.map((step, index) => (
+                  <div key={step.id} className="flex items-center flex-1">
+                    <div className="flex items-center flex-1">
+                      <button
+                        onClick={() => {
+                          setCurrentStep(index)
+                          setValidationError(false)
+                        }}
+                        className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors cursor-pointer ${
+                          index <= currentStep
+                            ? 'bg-accent-cyan border-accent-cyan text-dark-bg hover:bg-accent-cyan/90'
+                            : 'bg-dark-surface border-gray-600 text-gray-400 hover:border-accent-cyan/50'
+                        }`}
+                      >
+                        {index < currentStep ? (
+                          <Check className="h-5 w-5" />
+                        ) : (
+                          <span>{step.id + 1}</span>
+                        )}
+                      </button>
+                      {index < steps.length - 1 && (
+                        <div
+                          className={`flex-1 h-1 mx-2 transition-colors ${
+                            index < currentStep ? 'bg-accent-cyan' : 'bg-gray-600'
+                          }`}
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+              {renderStepContent()}
+              {validationError && (
+                <div className="mt-4 p-3 bg-red-500/20 border border-red-500 rounded-lg">
+                  <p className="text-red-500 text-sm">Выберите хотя-бы один пункт</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center mt-6 pt-4 border-t border-dark-surface">
               <button
-                onClick={handlePrevious}
-                className="btn-secondary flex items-center gap-2"
+                onClick={handleReset}
+                className="text-gray-400 hover:text-accent-cyan transition-colors"
               >
-                <ChevronLeft className="h-5 w-5" />
-                Назад
+                Сбросить все
               </button>
-            )}
-            {currentStep < steps.length - 1 ? (
-              <button
-                onClick={handleNext}
-                className="btn-primary flex items-center gap-2"
-              >
-                Далее
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            ) : (
-              <button
-                onClick={handleApply}
-                className="btn-primary flex items-center gap-2"
-              >
-                Применить фильтры
-                <Check className="h-5 w-5" />
-              </button>
-            )}
-          </div>
+              <div className="flex gap-3">
+                {currentStep > 0 && (
+                  <button
+                    onClick={handlePrevious}
+                    className="btn-secondary flex items-center gap-2"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                    Назад
+                  </button>
+                )}
+                {currentStep < steps.length - 1 ? (
+                  <button
+                    onClick={handleNext}
+                    className="btn-primary flex items-center gap-2"
+                  >
+                    Далее
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleApply}
+                    className="btn-primary flex items-center gap-2"
+                  >
+                    Применить фильтры
+                    <Check className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
-      </Card>
-    </div>
       </div>
     </>
   )
@@ -794,4 +731,5 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
   return createPortal(modalContent, document.body)
 }
 
-export default FilterWizard
+export default GraduatesFilterWizard
+

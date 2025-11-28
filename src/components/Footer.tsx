@@ -1,8 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Mail, Phone } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { User } from '../types'
 
-const Footer = () => {
+interface FooterProps {
+  user: User | null
+}
+
+const Footer = ({ user }: FooterProps) => {
+  const userType = user?.role || null
   const handlePhoneClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault()
     toast.success('Открывается приложение для звонка...')
@@ -29,26 +35,48 @@ const Footer = () => {
           <div>
             <h3 className="text-white text-lg font-semibold mb-4">Быстрые ссылки</h3>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/home" className="hover:text-accent-cyan transition-colors text-gray-400">
-                  Главная
-                </Link>
-              </li>
-              <li>
-                <Link to="/skills" className="hover:text-accent-cyan transition-colors text-gray-400">
-                  Навыки и Проекты
-                </Link>
-              </li>
-              <li>
-                <Link to="/interview" className="hover:text-accent-cyan transition-colors text-gray-400">
-                  Собеседования
-                </Link>
-              </li>
-              <li>
-                <Link to="/ai" className="hover:text-accent-cyan transition-colors text-gray-400">
-                  ИИ и Автоматизация
-                </Link>
-              </li>
+              {userType === 'employer' ? (
+                <>
+                  <li>
+                    <Link to="/home" className="hover:text-accent-cyan transition-colors text-gray-400">
+                      Главная
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/interview" className="hover:text-accent-cyan transition-colors text-gray-400">
+                      Собеседования
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/graduates" className="hover:text-accent-cyan transition-colors text-gray-400">
+                      Выпускники
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link to="/home" className="hover:text-accent-cyan transition-colors text-gray-400">
+                      Главная
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/skills" className="hover:text-accent-cyan transition-colors text-gray-400">
+                      Навыки и Проекты
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/interview" className="hover:text-accent-cyan transition-colors text-gray-400">
+                      Собеседования
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/ai" className="hover:text-accent-cyan transition-colors text-gray-400">
+                      ИИ и Автоматизация
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
 
@@ -94,7 +122,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-dark-card mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; 2024 IT-Grads. Все права защищены.</p>
+          <p>&copy; 2025 IT-Grads. Все права защищены.</p>
         </div>
       </div>
     </footer>

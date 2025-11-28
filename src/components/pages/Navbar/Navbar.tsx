@@ -22,13 +22,21 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
     return location.pathname.startsWith(path)
   }
 
-    const navLinks = [
-        { path: '/home', label: 'Главная' },
-        { path: '/skills', label: 'Навыки и Проекты' },
-        { path: '/interview', label: 'Собеседования' },
-        { path: '/ai', label: 'ИИ и Автоматизация' },
-        { path: '/jobs', label: 'Вакансии' },
-    ]
+    // Разные наборы ссылок для разных типов пользователей
+    const navLinks = userType === 'employer' 
+        ? [
+            { path: '/home', label: 'Главная' },
+            { path: '/interview', label: 'Собеседования' },
+            { path: '/jobs', label: 'Вакансии' },
+            { path: '/graduates', label: 'Выпускники' },
+          ]
+        : [
+            { path: '/home', label: 'Главная' },
+            { path: '/skills', label: 'Навыки и Проекты' },
+            { path: '/interview', label: 'Собеседования' },
+            { path: '/ai', label: 'ИИ и Автоматизация' },
+            { path: '/jobs', label: 'Вакансии' },
+          ]
 
     function logoutHandler() {
         $api("/users/logout")

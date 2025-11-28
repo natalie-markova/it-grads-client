@@ -4,7 +4,7 @@ import { Edit, Trash2, X, Send, Mail, Phone, MapPin, Calendar, GraduationCap, Br
 import Card from '../../ui/Card'
 import Section from '../../ui/Section'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
-import { User, OutletContext } from '../../../types'
+import { type User, type OutletContext } from '../../../types'
 import toast from 'react-hot-toast'
 
 interface Profile {
@@ -250,7 +250,12 @@ const GraduateProfile = () => {
   const [editingMessageText, setEditingMessageText] = useState<string>('')
 
   useEffect(() => {
-    if (!user || user?.role !== 'graduate') {
+    if (!user) {
+            navigate('/login')
+      return
+          }
+    // Этот компонент только для выпускников
+    if (user.role !== 'graduate') {
         navigate('/login')
       return
     }
@@ -832,33 +837,33 @@ const GraduateProfile = () => {
             <>
               {/* Header Card with Photo and Basic Info */}
               <Card className="mb-6">
-                <div className="flex justify-between items-start mb-6">
+              <div className="flex justify-between items-start mb-6">
                   <h2 className="text-3xl font-bold text-white">Мой профиль</h2>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setIsEditingProfile(true)}
-                      className="p-2 text-accent-cyan hover:bg-dark-surface rounded-lg transition-colors"
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setIsEditingProfile(true)}
+                    className="p-2 text-accent-cyan hover:bg-dark-surface rounded-lg transition-colors"
                       title="Редактировать профиль"
-                    >
-                      <Edit className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={handleDeleteProfile}
-                      className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
+                  >
+                    <Edit className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={handleDeleteProfile}
+                    className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
                       title="Удалить профиль"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </div>
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
                 </div>
+              </div>
 
-                {isEditingProfile ? (
-                  <ProfileEditForm
-                    profile={profile}
-                    onSave={handleSaveProfile}
-                    onCancel={() => setIsEditingProfile(false)}
-                  />
-                ) : (
+              {isEditingProfile ? (
+                <ProfileEditForm
+                  profile={profile}
+                  onSave={handleSaveProfile}
+                  onCancel={() => setIsEditingProfile(false)}
+                />
+              ) : (
                   <div className="flex flex-col md:flex-row gap-8">
                     {/* Photo */}
                     <div className="w-full md:w-56 h-56 bg-dark-surface rounded-2xl overflow-hidden border-2 border-accent-cyan/30 flex items-center justify-center shadow-lg">
@@ -890,7 +895,7 @@ const GraduateProfile = () => {
                             <a href={`mailto:${profile.email}`} className="hover:text-accent-cyan transition-colors">
                               {profile.email}
                             </a>
-                          </div>
+                      </div>
                         )}
                         {profile.phone && (
                           <div className="flex items-center gap-3 text-gray-300">
@@ -898,28 +903,28 @@ const GraduateProfile = () => {
                             <a href={`tel:${profile.phone}`} className="hover:text-accent-cyan transition-colors">
                               {profile.phone}
                             </a>
-                          </div>
+                      </div>
                         )}
                         {profile.city && (
                           <div className="flex items-center gap-3 text-gray-300">
                             <MapPin className="h-5 w-5 text-accent-cyan" />
                             <span>{profile.city}</span>
-                          </div>
+                    </div>
                         )}
-                        {profile.birthDate && (
+                    {profile.birthDate && (
                           <div className="flex items-center gap-3 text-gray-300">
                             <Calendar className="h-5 w-5 text-accent-cyan" />
                             <span>
-                              {profile.birthDate.includes('T') 
-                                ? new Date(profile.birthDate).toLocaleDateString('ru-RU', { 
-                                    year: 'numeric', 
+                          {profile.birthDate.includes('T') 
+                            ? new Date(profile.birthDate).toLocaleDateString('ru-RU', { 
+                                year: 'numeric', 
                                     month: 'long', 
                                     day: 'numeric' 
-                                  })
-                                : profile.birthDate}
+                              })
+                            : profile.birthDate}
                             </span>
-                          </div>
-                        )}
+                      </div>
+                    )}
                       </div>
 
                       {/* Social Links */}
@@ -958,8 +963,8 @@ const GraduateProfile = () => {
                               <span className="text-sm">Портфолио</span>
                             </a>
                           )}
-                        </div>
-                      )}
+                      </div>
+                    )}
                     </div>
                   </div>
                 )}
@@ -971,10 +976,10 @@ const GraduateProfile = () => {
                   <div className="flex items-center gap-3 mb-4">
                     <Briefcase className="h-6 w-6 text-accent-cyan" />
                     <h3 className="text-xl font-semibold text-white">О себе</h3>
-                  </div>
+                      </div>
                   <p className="text-gray-300 leading-relaxed text-base">{profile.about}</p>
                 </Card>
-              )}
+                    )}
 
               {/* Skills Section */}
               {profile.skills && profile.skills.length > 0 && !isEditingProfile && (
@@ -982,7 +987,7 @@ const GraduateProfile = () => {
                   <div className="flex items-center gap-3 mb-4">
                     <Code className="h-6 w-6 text-accent-cyan" />
                     <h3 className="text-xl font-semibold text-white">Навыки</h3>
-                  </div>
+                      </div>
                   <div className="flex flex-wrap gap-3">
                     {profile.skills.map((skill, index) => (
                       <span
@@ -1002,7 +1007,7 @@ const GraduateProfile = () => {
                   <div className="flex items-center gap-3 mb-4">
                     <GraduationCap className="h-6 w-6 text-accent-cyan" />
                     <h3 className="text-xl font-semibold text-white">Образование</h3>
-                  </div>
+                      </div>
                   <p className="text-gray-300 leading-relaxed">{profile.education}</p>
                 </Card>
               )}
@@ -1024,7 +1029,7 @@ const GraduateProfile = () => {
                   <div className="flex items-center gap-3 mb-6">
                     <Code className="h-6 w-6 text-accent-cyan" />
                     <h3 className="text-xl font-semibold text-white">Проекты</h3>
-                  </div>
+                </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {profile.projects.map((project) => (
                       <div
@@ -1070,7 +1075,7 @@ const GraduateProfile = () => {
                       </div>
                     ))}
                   </div>
-                </Card>
+            </Card>
               )}
             </>
           ) : (
@@ -1165,9 +1170,9 @@ const GraduateProfile = () => {
                 ) : (
                   <div className="text-center py-12">
                     <p className="text-gray-400">У вас пока нет чатов</p>
-                  </div>
+                </div>
                 )}
-              </div>
+            </div>
             </Card>
 
             {/* Chat Messages - Right Panel */}
@@ -1182,9 +1187,9 @@ const GraduateProfile = () => {
                           {selectedChatData.employerName.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-white">{selectedChatData.employerName}</h3>
-                        <p className="text-gray-400 text-sm">{selectedChatData.company}</p>
+                    <div>
+                      <h3 className="text-xl font-semibold text-white">{selectedChatData.employerName}</h3>
+                      <p className="text-gray-400 text-sm">{selectedChatData.company}</p>
                       </div>
                     </div>
                     <button
@@ -1202,17 +1207,17 @@ const GraduateProfile = () => {
                       selectedChatData.messages.map((msg, index) => {
                         const isEditing = editingMessageId === msg.id
                         return (
-                          <div
-                            key={msg.id}
-                            className={`flex ${msg.sender === 'graduate' ? 'justify-end' : 'justify-start'}`}
-                          >
-                            <div
+                      <div
+                        key={msg.id}
+                        className={`flex ${msg.sender === 'graduate' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
                               className={`max-w-[75%] rounded-xl p-4 ${
-                                msg.sender === 'graduate'
-                                  ? 'bg-accent-cyan text-dark-bg'
-                                  : 'bg-dark-surface text-white'
-                              }`}
-                            >
+                            msg.sender === 'graduate'
+                              ? 'bg-accent-cyan text-dark-bg'
+                              : 'bg-dark-surface text-white'
+                          }`}
+                        >
                               {isEditing ? (
                                 <div className="space-y-2">
                                   <textarea
@@ -1237,39 +1242,39 @@ const GraduateProfile = () => {
                                     </button>
                                   </div>
                                 </div>
-                              ) : (
-                                <>
+                                ) : (
+                                  <>
                                   <div className="flex items-start justify-between gap-3 mb-2">
                                     <p className="text-sm leading-relaxed break-words">{msg.text}</p>
                                     {msg.sender === 'graduate' && (
                                       <div className="flex gap-1 flex-shrink-0">
-                                        <button
+                                    <button
                                           onClick={() => startEditingMessage(msg.id, msg.text)}
                                           className="p-1.5 hover:bg-black/20 rounded transition-colors"
                                           title="Редактировать"
-                                        >
+                                    >
                                           <Edit className="h-3.5 w-3.5" />
-                                        </button>
-                                        <button
-                                          onClick={() => handleDeleteMessage(selectedChatData.id, msg.id)}
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteMessage(selectedChatData.id, msg.id)}
                                           className="p-1.5 hover:bg-black/20 rounded transition-colors"
                                           title="Удалить"
-                                        >
+                                    >
                                           <Trash2 className="h-3.5 w-3.5" />
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
+                                    </button>
+                              </div>
+                            )}
+                          </div>
                                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-current/20">
-                                    <span className="text-xs opacity-70">{msg.timestamp}</span>
+                            <span className="text-xs opacity-70">{msg.timestamp}</span>
                                     {msg.isEdited && (
                                       <span className="text-xs opacity-70 italic">(изменено)</span>
                                     )}
-                                  </div>
+                          </div>
                                 </>
                               )}
-                            </div>
-                          </div>
+                        </div>
+                      </div>
                         )
                       })
                     ) : (
@@ -1308,7 +1313,7 @@ const GraduateProfile = () => {
                 <div className="flex flex-col items-center justify-center h-[600px] text-center">
                   <div className="w-16 h-16 rounded-full bg-dark-surface flex items-center justify-center mb-4">
                     <MessageCircle className="h-8 w-8 text-gray-500" />
-                  </div>
+            </div>
                   <p className="text-gray-400 text-lg mb-2">Выберите чат</p>
                   <p className="text-gray-500 text-sm">Выберите чат из списка слева, чтобы начать общение</p>
                 </div>

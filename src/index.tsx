@@ -16,9 +16,10 @@ import Skills from './components/pages/Skills/Skills';
 import Interview from './components/pages/Interview/Interview';
 import AI from './components/pages/AI/AI';
 import Jobs from './components/pages/Jobs/Jobs';
-import Profile from './components/pages/Profile/Profile';
+import ProfileRouter from './components/pages/Profile/ProfileRouter';
 import CompaniesRating from './components/pages/CompaniesRating/CompaniesRating';
 import CompanyDetails from './components/pages/CompanyDetails/CompanyDetails';
+import Graduates from './components/pages/Graduates/Graduates';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import InterviewHub from './components/pages/Interview/InterviewHub';
@@ -104,7 +105,7 @@ const router = createBrowserRouter([
         path: "/profile/:type",
         element:
         <ProtectedRoute>
-          <Profile />
+          <ProfileRouter />
         </ProtectedRoute>,
       },
       {
@@ -114,6 +115,10 @@ const router = createBrowserRouter([
       {
         path: "/companies/:id",
         element: <CompanyDetails />,
+      },
+      {
+        path: "/graduates",
+        element: <Graduates />,
       },
 
     ]}
