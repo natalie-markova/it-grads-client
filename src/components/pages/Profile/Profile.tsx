@@ -6,6 +6,7 @@ import Section from '../../ui/Section'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
 import { type User, type OutletContext } from '../../../types'
 import toast from 'react-hot-toast'
+import ResumeForm from '../Resume/ResumeForm'
 
 interface Profile {
   photo: string
@@ -40,6 +41,22 @@ interface Application {
   jobTitle: string
   company: string
   appliedDate: string
+}
+
+interface Resume {
+  id: number
+  title: string
+  description: string
+  skills: string[]
+  skillsArray: string[]
+  experience: string
+  education: string
+  portfolio: string
+  desiredSalary: number
+  location: string
+  level: 'junior' | 'middle' | 'senior' | 'lead'
+  isActive: boolean
+  radarImage?: string
 }
 
 interface Chat {
@@ -243,6 +260,8 @@ const GraduateProfile = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [applications, setApplications] = useState<Application[]>([])
   const [chats, setChats] = useState<Chat[]>([])
+  const [resumes, setResumes] = useState<Resume[]>([])
+  const [isCreatingResume, setIsCreatingResume] = useState(false)
 
   const [selectedChat, setSelectedChat] = useState<string | null>(null)
   const [messageText, setMessageText] = useState('')
@@ -262,6 +281,7 @@ const GraduateProfile = () => {
       loadProfile()
       loadApplications()
       loadChats()
+      loadResumes()
   }, [user])
 
   const loadProfile = async () => {
@@ -602,6 +622,22 @@ const GraduateProfile = () => {
     }
   }
 
+  const loadResumes = async () => {
+    if (!user) return
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const response = await fetch(`${apiUrl}/resumes/user/${user.id}`, {
+        credentials: 'include'
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setResumes(data)
+      }
+    } catch (error) {
+      console.error('Error loading resumes:', error)
+    }
+  }
+
   const handleSaveProfile = async (newProfile: Profile) => {
     if (!user) return
     try {
@@ -684,7 +720,7 @@ const GraduateProfile = () => {
   const handleDeleteChat = async (id: string) => {
     if (!user) return
     if (!confirm('Вы уверены, что хотите удалить этот чат?')) return
-    
+
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
       const response = await fetch(`${apiUrl}/chats/${id}`, {
@@ -699,6 +735,26 @@ const GraduateProfile = () => {
       }
     } catch (error) {
       console.error('Error deleting chat:', error)
+    }
+  }
+
+  const handleDeleteResume = async (id: number) => {
+    if (!user) return
+    if (!confirm('Вы уверены, что хотите удалить это резюме?')) return
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const response = await fetch(`${apiUrl}/resumes/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      if (response.ok) {
+        setResumes(resumes.filter(resume => resume.id !== id))
+        toast.success('Резюме удалено')
+      }
+    } catch (error) {
+      console.error('Error deleting resume:', error)
+      toast.error('Ошибка при удалении резюме')
     }
   }
 
@@ -1085,6 +1141,146 @@ const GraduateProfile = () => {
                 Создать профиль
               </button>
             </Card>
+          )}
+        </Section>
+
+        {/* Skills Radar Section */}
+        {resumes.length > 0 && resumes[0].radarImage && (
+          <Section title="Радар навыков" className="bg-dark-bg py-0 scroll-animate-item">
+            <Card>
+              <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-start">
+                  <p className="text-gray-300">
+                    Визуализация ваших навыков, созданная на основе интерактивного радара
+                  </p>
+                  <button
+                    onClick={async () => {
+                      if (!confirm('Вы уверены, что хотите удалить радар навыков?')) return
+                      try {
+                        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api"
+                        const response = await fetch(`${apiUrl}/resumes/${resumes[0].id}`, {
+                          method: 'PUT',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          credentials: 'include',
+                          body: JSON.stringify({ radarImage: null }),
+                        })
+                        if (response.ok) {
+                          toast.success('Радар навыков удалён')
+                          loadResumes()
+                        }
+                      } catch (error) {
+                        console.error('Error deleting radar:', error)
+                        toast.error('Ошибка при удалении радара')
+                      }
+                    }}
+                    className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
+                    title="Удалить радар навыков"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="flex justify-center">
+                  <img
+                    src={resumes[0].radarImage}
+                    alt="Радар навыков"
+                    className="max-w-full h-auto rounded-lg border border-dark-card"
+                  />
+                </div>
+              </div>
+            </Card>
+          </Section>
+        )}
+
+        {/* Resumes Section */}
+        <Section title="Мои резюме" className="bg-dark-bg py-0 scroll-animate-item">
+          {isCreatingResume ? (
+            <ResumeForm
+              onClose={() => setIsCreatingResume(false)}
+              onSuccess={() => {
+                setIsCreatingResume(false)
+                loadResumes()
+              }}
+            />
+          ) : (
+            <>
+              <div className="mb-4">
+                <button
+                  onClick={() => setIsCreatingResume(true)}
+                  className="btn-primary"
+                >
+                  Создать резюме
+                </button>
+              </div>
+              {resumes.length > 0 ? (
+            <div className="space-y-4">
+              {resumes.map((resume, index) => (
+                <Card key={resume.id} className="scroll-animate-item" style={{ transitionDelay: `${index * 0.05}s` }}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-white mb-2">{resume.title}</h3>
+                      {resume.description && (
+                        <p className="text-gray-300 mb-3">{resume.description}</p>
+                      )}
+                      <div className="flex flex-wrap gap-3 mb-3">
+                        {resume.location && (
+                          <span className="text-sm text-gray-400">
+                            <MapPin className="inline h-4 w-4 mr-1" />
+                            {resume.location}
+                          </span>
+                        )}
+                        {resume.level && (
+                          <span className="text-sm text-gray-400">
+                            <Briefcase className="inline h-4 w-4 mr-1" />
+                            {resume.level}
+                          </span>
+                        )}
+                        {resume.desiredSalary && (
+                          <span className="text-sm text-accent-cyan font-semibold">
+                            от {resume.desiredSalary.toLocaleString()} ₽
+                          </span>
+                        )}
+                      </div>
+                      {resume.skillsArray && resume.skillsArray.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {resume.skillsArray.slice(0, 10).map((skill, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-1 bg-dark-surface border border-accent-cyan/30 rounded text-xs text-gray-300"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <button
+                        onClick={() => navigate(`/resume/${resume.id}`)}
+                        className="p-2 text-accent-cyan hover:bg-dark-surface rounded-lg transition-colors"
+                        title="Редактировать резюме"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteResume(resume.id)}
+                        className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
+                        title="Удалить резюме"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <p className="text-gray-300">У вас пока нет резюме. Создайте своё первое резюме!</p>
+            </Card>
+          )}
+            </>
           )}
         </Section>
 

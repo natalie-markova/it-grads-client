@@ -9,8 +9,12 @@ COPY package*.json ./
 # Установка зависимостей
 RUN npm ci
 
-# Копирование кода
+# Копирование кода и .env.production
 COPY . .
+
+# Установка переменных окружения для production сборки
+ENV VITE_API_URL=/api
+ENV VITE_DOMAIN=itgrads.ru
 
 # Сборка production билда
 RUN npm run build

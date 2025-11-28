@@ -3,6 +3,13 @@
 *.local
 *.log*
 
+# Environment files
+.env
+.env.production
+.env.development
+!.env.example
+!.env.*.example
+
 # Dist
 node_modules/
 dist/

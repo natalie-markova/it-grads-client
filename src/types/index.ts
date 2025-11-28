@@ -55,14 +55,56 @@ export interface InterviewSession {
   messages?: InterviewMessage[];
   totalScore?: number;
   recommendations?: string[];
+  strengths?: string[];
+  weaknesses?: string[];
+  detailedFeedback?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface InterviewFeedback {
-  score: number; // 0-100
+  totalScore: number;
   strengths: string[];
   weaknesses: string[];
   recommendations: string[];
   detailedFeedback: string;
+}
+
+export interface Employer extends User {
+  phone?: string;
+  avatar?: string;
+  createdAt: string;
+  companyName?: string;
+  companyDescription?: string;
+  companyWebsite?: string;
+  companyAddress?: string;
+  companySize?: string;
+  industry?: string;
+}
+
+
+export interface Vacancy {
+  id: number;
+  employerId: number;
+  companyName?: string;
+  title: string;
+  description: string;
+  requirements?: string;
+  salary?: number;
+  location?: string;
+  employmentType: 'full-time' | 'part-time' | 'contract' | 'internship';
+  level?: 'junior' | 'middle' | 'senior' | 'lead';
+  skills?: string[];
+  benefits?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  employer?: Employer; 
+}
+
+
+export interface EmployerProfile {
+  employer: Employer;
+  vacancies: Vacancy[];
+  vacanciesCount: number;
 }

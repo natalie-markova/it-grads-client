@@ -16,13 +16,18 @@ import Skills from './components/pages/Skills/Skills';
 import Interview from './components/pages/Interview/Interview';
 import AI from './components/pages/AI/AI';
 import Jobs from './components/pages/Jobs/Jobs';
-import ProfileRouter from './components/pages/Profile/ProfileRouter';
+import ProfileWrapper from './components/pages/Profile/ProfileWrapper';
 import CompaniesRating from './components/pages/CompaniesRating/CompaniesRating';
 import CompanyDetails from './components/pages/CompanyDetails/CompanyDetails';
 import Graduates from './components/pages/Graduates/Graduates';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import InterviewHub from './components/pages/Interview/InterviewHub';
+import RoadmapList from './components/pages/Roadmap/RoadmapList';
+import RoadmapDetail from './components/pages/Roadmap/RoadmapDetail';
+import Candidates from './components/pages/Candidates/Candidates';
+import EmployerPublicProfile from './components/pages/Employer/EmployerPublicProfile';
+import ProfileWrapper from './components/pages/Profile/ProfileWrapper';
 
 const router = createBrowserRouter([
   {
@@ -105,7 +110,7 @@ const router = createBrowserRouter([
         path: "/profile/:type",
         element:
         <ProtectedRoute>
-          <ProfileRouter />
+          <ProfileWrapper />
         </ProtectedRoute>,
       },
       {
@@ -117,8 +122,20 @@ const router = createBrowserRouter([
         element: <CompanyDetails />,
       },
       {
-        path: "/graduates",
-        element: <Graduates />,
+        path: "/employer/:employerId",
+        element: <EmployerPublicProfile />,
+      },
+      {
+        path: "/roadmap",
+        element: <RoadmapList />,
+      },
+      {
+        path: "/roadmap/:slug",
+        element: <RoadmapDetail />,
+      },
+      {
+        path: "/candidates",
+        element: <Candidates />,
       },
 
     ]}

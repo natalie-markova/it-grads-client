@@ -22,21 +22,27 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
     return location.pathname.startsWith(path)
   }
 
-    // Разные наборы ссылок для разных типов пользователей
-    const navLinks = userType === 'employer' 
-        ? [
-            { path: '/home', label: 'Главная' },
-            { path: '/interview', label: 'Собеседования' },
-            { path: '/jobs', label: 'Вакансии' },
-            { path: '/graduates', label: 'Выпускники' },
-          ]
-        : [
-            { path: '/home', label: 'Главная' },
-            { path: '/skills', label: 'Навыки и Проекты' },
-            { path: '/interview', label: 'Собеседования' },
-            { path: '/ai', label: 'ИИ и Автоматизация' },
-            { path: '/jobs', label: 'Вакансии' },
-          ]
+    const baseNavLinks = [
+        { path: '/home', label: 'Главная' },
+        { path: '/skills', label: 'Навыки и Проекты' },
+        { path: '/interview', label: 'Собеседования' },
+        { path: '/ai', label: 'ИИ и Автоматизация' },
+        { path: '/jobs', label: 'Вакансии' },
+    ]
+
+    const graduateNavLinks = [
+        ...baseNavLinks,
+        { path: '/roadmap', label: 'Карта специальностей' },
+    ]
+
+    const employerNavLinks = [
+        { path: '/home', label: 'Главная' },
+        { path: '/candidates', label: 'Кандидаты' },
+        { path: '/jobs', label: 'Вакансии' },
+        { path: '/ai', label: 'ИИ и Автоматизация' },
+    ]
+
+    const navLinks = userType === 'graduate' ? graduateNavLinks : (userType === 'employer' ? employerNavLinks : baseNavLinks)
 
     function logoutHandler() {
         $api("/users/logout")

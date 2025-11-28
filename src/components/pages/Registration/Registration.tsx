@@ -70,37 +70,20 @@ function Registration() {
         .then((response) => {
             console.log("Response:", response.data)
             if (response.status === 200) {
-                // Если API возвращает токен и пользователя, автоматически аутентифицируем
-                if (response.data.accessToken && response.data.user) {
-                setAccessToken(response.data.accessToken)
-                setUser(response.data.user)
-                    toast.success("Регистрация прошла успешно! Вы автоматически вошли в систему.")
-                    const userRole = response.data.user?.role || 'graduate'
-                    navigate(`/profile/${userRole}`)
-                } else {
-                    // Если токен не возвращается, делаем автоматический логин
-                    // Используем те же данные для входа
-                    $api.post("/users/login", {
-                        email: data.email,
-                        password: data.password
-                    })
-                    .then(loginResponse => {
-                        if (loginResponse.data.accessToken && loginResponse.data.user) {
-                            setAccessToken(loginResponse.data.accessToken)
-                            setUser(loginResponse.data.user)
-                            toast.success("Регистрация прошла успешно! Вы автоматически вошли в систему.")
-                            const userRole = loginResponse.data.user?.role || 'graduate'
-                            navigate(`/profile/${userRole}`)
-                        } else {
-                            toast.success("Регистрация прошла успешно! Теперь войдите в систему.")
-                            navigate("/login")
-                        }
-                    })
-                    .catch(() => {
-                        toast.success("Регистрация прошла успешно! Теперь войдите в систему.")
-                        navigate("/login")
-                    })
-                }
+                toast.success("Регистрация прошла успешно!")
+                // Auto login after registration
+                return $api.post("/users/login", {
+                    email: data.email,
+                    password: data.password
+                });
+            }
+        })
+        .then((loginResponse) => {
+            if (loginResponse) {
+                setAccessToken(loginResponse.data.accessToken)
+                setUser(loginResponse.data.user)
+                const userRole = loginResponse.data.user?.role || 'graduate'
+                navigate(`/profile/${userRole}`);
             }
         })
         .catch(error => {
