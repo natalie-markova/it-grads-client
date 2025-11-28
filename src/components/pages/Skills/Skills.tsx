@@ -25,13 +25,13 @@ const Skills = () => {
 
   return (
     <div className="bg-dark-bg min-h-screen">
-      <Section 
+      <Section
         title="Навыки и Проекты"
         subtitle="Визуализируйте свои умения и демонстрируйте портфолио"
         className="bg-dark-bg scroll-animate-item"
       >
         {user ? (
-          <SkillsRadar user={user} />
+          <SkillsRadar user={user} redirectToJobs={true} />
         ) : (
           <Card>
             <div className="text-center py-12">
