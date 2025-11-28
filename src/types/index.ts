@@ -60,7 +60,7 @@ export interface InterviewSession {
 }
 
 export interface InterviewFeedback {
-  score: number; // 0-100
+  totalScore: number; // 0-100
   strengths: string[];
   weaknesses: string[];
   recommendations: string[];
