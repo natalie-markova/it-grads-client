@@ -25,6 +25,19 @@ export default function InterviewResultsPage() {
 
   useScrollAnimation();
 
+  // Trigger animation visibility check after feedback is loaded
+  useEffect(() => {
+    if (feedback) {
+      // Wait for DOM to update, then check visibility
+      setTimeout(() => {
+        const items = document.querySelectorAll('.scroll-animate-item');
+        items.forEach((item) => {
+          item.classList.add('visible');
+        });
+      }, 50);
+    }
+  }, [feedback]);
+
   useEffect(() => {
     if (!sessionId) {
       navigate('/interview/ai/setup');
@@ -36,8 +49,30 @@ export default function InterviewResultsPage() {
       setError(null);
 
       try {
-        const results = await interviewAPI.completeSession(Number(sessionId));
-        setFeedback(results);
+        const session = await interviewAPI.getSession(Number(sessionId));
+
+        // Проверяем, что интервью завершено
+        if (session.status !== 'completed') {
+          setError('Интервью ещё не завершено');
+          return;
+        }
+
+        // Проверяем наличие данных обратной связи
+        if (session.totalScore === undefined || session.totalScore === null) {
+          setError('Результаты интервью не найдены');
+          return;
+        }
+
+        // Формируем объект feedback из данных сессии
+        const feedbackData = {
+          totalScore: session.totalScore || 0,
+          strengths: session.strengths || [],
+          weaknesses: session.weaknesses || [],
+          recommendations: session.recommendations || [],
+          detailedFeedback: session.detailedFeedback || 'Подробная обратная связь недоступна'
+        };
+
+        setFeedback(feedbackData);
       } catch (err) {
         console.error('Ошибка при загрузке результатов:', err);
         setError('Не удалось загрузить результаты интервью');
@@ -81,7 +116,14 @@ export default function InterviewResultsPage() {
   }
 
   if (!feedback) {
-    return null;
+    return (
+      <div className="bg-dark-bg min-h-screen flex items-center justify-center">
+        <div className="flex items-center gap-3 text-white">
+          <Loader2 className="h-8 w-8 animate-spin text-accent-cyan" />
+          <span className="text-xl">Загрузка результатов...</span>
+        </div>
+      </div>
+    );
   }
 
   const getScoreColor = (score: number) => {
@@ -130,8 +172,8 @@ export default function InterviewResultsPage() {
             {feedback.strengths && feedback.strengths.length > 0 ? (
               <ul className="space-y-2">
                 {feedback.strengths.map((strength, index) => (
-                  <li 
-                    key={index} 
+                  <li
+                    key={index}
                     className="flex items-start gap-2 text-gray-300"
                   >
                     <span className="text-green-400 mt-1">✓</span>
