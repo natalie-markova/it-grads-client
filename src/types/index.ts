@@ -55,12 +55,15 @@ export interface InterviewSession {
   messages?: InterviewMessage[];
   totalScore?: number;
   recommendations?: string[];
+  strengths?: string[];
+  weaknesses?: string[];
+  detailedFeedback?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface InterviewFeedback {
-  score: number; // 0-100
+  totalScore: number; // 0-100
   strengths: string[];
   weaknesses: string[];
   recommendations: string[];
