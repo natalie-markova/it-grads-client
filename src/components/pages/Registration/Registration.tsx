@@ -48,8 +48,20 @@ function Registration() {
         .then((response) => {
             console.log("Response:", response.data)
             if (response.status === 200) {
-                toast.success("Регистрация прошла успешно! Теперь войдите в систему.")
-                navigate("/login")
+                toast.success("Регистрация прошла успешно!")
+                // Auto login after registration
+                return $api.post("/users/login", {
+                    email: data.email,
+                    password: data.password
+                });
+            }
+        })
+        .then((loginResponse) => {
+            if (loginResponse) {
+                setAccessToken(loginResponse.data.accessToken)
+                setUser(loginResponse.data.user)
+                const userRole = loginResponse.data.user?.role || 'graduate'
+                navigate(`/profile/${userRole}`);
             }
         })
         .catch(error => {
