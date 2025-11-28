@@ -10,23 +10,46 @@ function Registration() {
     const { setUser } = useOutletContext<OutletContext>();
     const navigate = useNavigate();
     const [role, setRole] = useState<'graduate' | 'employer'>('graduate');
+    const [passwordError, setPasswordError] = useState<string>('');
+    
+    function validatePassword(password: string): boolean {
+        if (password.length < 8) {
+            setPasswordError('invalid');
+            return false;
+        }
+        if (!/[A-Z]/.test(password)) {
+            setPasswordError('invalid');
+            return false;
+        }
+        if (!/[a-z]/.test(password)) {
+            setPasswordError('invalid');
+            return false;
+        }
+        setPasswordError('');
+        return true;
+    }
     
     function submitHandler(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
+        const password = formData.get('password') as string;
+        
+        if (!validatePassword(password)) {
+            return;
+        }
+        
         const data = {
             username: formData.get('login') as string,
             email: formData.get('email') as string,
-            password: formData.get('password') as string,
+            password: password,
             role: role,
         };
         $api.post("/users/registration", data)
         .then((response) => {
             console.log("Response:", response.data)
             if (response.status === 200) {
-                setAccessToken(response.data.accessToken)
-                setUser(response.data.user)
-                navigate("/main")
+                toast.success("Регистрация прошла успешно! Теперь войдите в систему.")
+                navigate("/login")
             }
         })
         .catch(error => {
@@ -106,9 +129,25 @@ function Registration() {
                                     id="password"
                                     name="password"
                                     required
-                                    className="input-field pl-10"
+                                    className={`input-field pl-10 ${passwordError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                                     placeholder="••••••••"
+                                    onChange={(e) => {
+                                        if (e.target.value) {
+                                            validatePassword(e.target.value);
+                                        } else {
+                                            setPasswordError('');
+                                        }
+                                    }}
                                 />
+                            </div>
+                            <div className="mt-2">
+                                <p className="text-sm text-red-500 mb-2">
+                                    Для обеспечения безопасности, ваш пароль должен соответствовать следующим требованиям:
+                                </p>
+                                <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                                    <li>не менее 8 символов;</li>
+                                    <li>включает минимум 1 заглавную и 1 строчную букву (A-Z, a-z):</li>
+                                </ul>
                             </div>
                         </div>
 

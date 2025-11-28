@@ -12,25 +12,25 @@ const Home = () => {
       icon: <Code className="h-8 w-8" />,
       title: 'Навыки и Проекты',
       description: 'Визуализируйте свои умения и демонстрируйте портфолио.',
-      link: '/home',
+      link: '/skills',
     },
     {
       icon: <MessageCircle className="h-8 w-8" />,
       title: 'Подготовка к Собеседованию',
       description: 'Симулятор для отработки навыков прохождения интервью.',
-      link: '/interview/setup',
+      link: '/interview',
     },
     {
       icon: <Brain className="h-8 w-8" />,
       title: 'ИИ и Автоматизация',
       description: 'Персонализированные рекомендации и оптимизация поиска.',
-      link: '/home',
+      link: '/ai',
     },
     {
       icon: <Briefcase className="h-8 w-8" />,
       title: 'Вакансии',
       description: 'Найдите работу мечты среди тысяч актуальных вакансий.',
-      link: '/home',
+      link: '/jobs',
     },
   ]
 
@@ -84,7 +84,7 @@ const Home = () => {
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Left Column */}
-          <Link to="/home" className="block scroll-fade-left">
+          <Link to="/skills" className="block scroll-fade-left">
             <div>
               <h3 className="text-[20px] md:text-[22px] font-semibold text-white mb-4">
                 Интерактивная карта навыков
@@ -157,7 +157,7 @@ const Home = () => {
                 <span>Качество кода (статический анализ)</span>
               </li>
             </ul>
-            <Link to="/home" className="block">
+            <Link to="/skills" className="block">
               <div className="bg-dark-surface rounded-xl p-8 border border-dark-card hover:border-accent-cyan transition-all cursor-pointer">
                 <div className="relative w-full h-64 bg-gradient-to-br from-dark-card via-accent-blue/10 to-dark-surface rounded-lg flex items-center justify-center overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -189,7 +189,7 @@ const Home = () => {
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Left Column */}
-          <Link to="/home" className="block scroll-fade-left">
+          <Link to="/companies" className="block scroll-fade-left">
             <div>
               <h3 className="text-[20px] md:text-[22px] font-semibold text-white mb-4">
                 Рейтинг и отзывы работодателей
@@ -240,7 +240,7 @@ const Home = () => {
           </Link>
 
           {/* Right Column */}
-          <Link to="/interview/setup" className="block scroll-fade-right">
+          <Link to="/interview" className="block scroll-fade-right">
             <div>
               <h3 className="text-[20px] md:text-[22px] font-semibold text-white mb-4">
                 Симулятор собеседования
@@ -295,7 +295,7 @@ const Home = () => {
         className="bg-dark-bg scroll-animate-item"
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Link to="/home" className="block">
+          <Link to="/ai" className="block">
             <FeatureCard
               icon={<Brain className="h-8 w-8" />}
               title="Персональный карьерный консультант"
@@ -304,7 +304,7 @@ const Home = () => {
               style={{ transitionDelay: '0s' }}
             />
           </Link>
-          <Link to="/home" className="block">
+          <Link to="/ai" className="block">
             <FeatureCard
               icon={<Briefcase className="h-8 w-8" />}
               title="Автоматическое создание резюме"
@@ -313,7 +313,7 @@ const Home = () => {
               style={{ transitionDelay: '0.1s' }}
             />
           </Link>
-          <Link to="/home" className="block">
+          <Link to="/ai" className="block">
             <FeatureCard
               icon={<TrendingUp className="h-8 w-8" />}
               title="Анализ вакансии на соответствие"

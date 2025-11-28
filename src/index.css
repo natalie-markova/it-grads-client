@@ -21,6 +21,19 @@
   html {
     scroll-behavior: smooth;
   }
+
+  /* Убираем каретку при наведении на элементы */
+  *:hover {
+    caret-color: transparent;
+  }
+
+  input, textarea {
+    caret-color: transparent;
+  }
+
+  input:focus, textarea:focus {
+    caret-color: transparent;
+  }
 }
 
 @layer components {

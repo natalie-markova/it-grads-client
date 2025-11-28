@@ -23,7 +23,8 @@ function Login() {
             toast.success("Авторизация прошла успешно!");
             setAccessToken(data.data.accessToken)
             setUser(data.data.user)
-            navigate('/main');
+            const userRole = data.data.user?.role || 'graduate'
+            navigate(`/profile/${userRole}`);
         })
         .catch(error => {
             console.error("Что-то пошло не так:", error.response?.data || error.message);
