@@ -55,6 +55,9 @@ export interface InterviewSession {
   messages?: InterviewMessage[];
   totalScore?: number;
   recommendations?: string[];
+  strengths?: string[];
+  weaknesses?: string[];
+  detailedFeedback?: string;
   createdAt: string;
   updatedAt: string;
 }

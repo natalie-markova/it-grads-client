@@ -34,6 +34,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           rows={3}
           disabled={disabled}
           className="w-full px-4 py-3 bg-dark-surface border border-dark-card rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:border-transparent resize-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ caretColor: '#06b6d4' }}
         />
       </div>
       
