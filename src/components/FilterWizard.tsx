@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react'
 import Card from './ui/Card'
 
@@ -28,6 +29,25 @@ interface FilterWizardProps {
 const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0)
   const [customSkillInput, setCustomSkillInput] = useState('')
+  const [validationError, setValidationError] = useState(false)
+
+  // Блокируем скролл body при открытии модального окна
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
+  }, [isOpen])
   
   const [filters, setFilters] = useState<FilterData>(initialFilters || {
     employmentType: [],
@@ -51,8 +71,8 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
     { id: 2, title: 'Регион/Город и знание языка' },
     { id: 3, title: 'Диапазон зарплаты' },
     { id: 4, title: 'Отрасль бизнеса работодателя' },
-    { id: 5, title: 'Технологическое направление' },
-    { id: 6, title: 'Языки программирования' },
+    { id: 5, title: 'Языки программирования' },
+    { id: 6, title: 'Технологическое направление' },
     { id: 7, title: 'Дополнительные навыки' },
   ]
 
@@ -73,23 +93,61 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
         }
       }
     })
+    // Сбрасываем ошибку валидации при изменении фильтров
+    if (validationError) {
+      setValidationError(false)
+    }
+  }
+
+  const validateCurrentStep = (): boolean => {
+    switch (currentStep) {
+      case 0: // Тип занятости и формат работы
+        return filters.employmentType.length > 0 || filters.workFormat.length > 0
+      case 1: // Опыт работы
+        return filters.experience !== ''
+      case 2: // Регион/Город и знание языка
+        return filters.region !== '' || filters.englishLevel !== ''
+      case 3: // Диапазон зарплаты
+        return filters.salary !== '' || filters.salaryUnlimited
+      case 4: // Отрасль бизнеса работодателя
+        return filters.industry !== ''
+      case 5: // Языки программирования
+        return filters.programmingLanguages.length > 0
+      case 6: // Технологическое направление
+        return filters.technology.length > 0
+      case 7: // Дополнительные навыки
+        return filters.additionalSkills.length > 0
+      default:
+        return true
+    }
   }
 
   const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
+    if (validateCurrentStep()) {
+      setValidationError(false)
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1)
+      }
+    } else {
+      setValidationError(true)
     }
   }
 
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
+      setValidationError(false)
     }
   }
 
   const handleApply = () => {
-    onApply(filters)
-    onClose()
+    if (validateCurrentStep()) {
+      setValidationError(false)
+      onApply(filters)
+      onClose()
+    } else {
+      setValidationError(true)
+    }
   }
 
   const handleReset = () => {
@@ -240,7 +298,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
     switch (currentStep) {
       case 0: // Тип занятости и формат работы
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Тип занятости</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -291,7 +349,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
       case 1: // Опыт работы
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Опыт работы</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -322,7 +380,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
       case 2: // Регион/Город и знание языка
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Регион/Город</h3>
               <input
@@ -364,7 +422,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
       case 3: // Диапазон зарплаты
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Диапазон зарплаты</h3>
               <input
@@ -395,7 +453,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
       case 4: // Отрасль бизнеса работодателя
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Отрасль бизнеса работодателя</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -424,35 +482,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
           </div>
         )
 
-      case 5: // Технологическое направление
-        return (
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-4">Технологическое направление</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {technologyDirections.map(tech => (
-                  <label
-                    key={tech}
-                    className="flex items-center gap-3 p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors border border-transparent hover:border-accent-cyan"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.technology.includes(tech)}
-                      onChange={() => toggleFilter('technology', tech)}
-                      className="h-5 w-5 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-card"
-                    />
-                    <span className="text-gray-300 flex-1 text-sm">{tech}</span>
-                    {filters.technology.includes(tech) && (
-                      <Check className="h-5 w-5 text-accent-cyan" />
-                    )}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-        )
-
-      case 6: // Языки программирования
+      case 5: // Языки программирования
         return (
           <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
@@ -473,6 +503,36 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
                     />
                     <span className="text-gray-300 flex-1 text-sm">{lang}</span>
                     {filters.programmingLanguages.includes(lang) && (
+                      <Check className="h-5 w-5 text-accent-cyan" />
+                    )}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+
+      case 6: // Технологическое направление
+        return (
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+            <div>
+              <h3 className="text-xl font-semibold text-white mb-4">Технологическое направление</h3>
+              
+              {/* Список технологических направлений */}
+              <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                {technologyDirections.map(tech => (
+                  <label
+                    key={tech}
+                    className="flex items-center gap-3 p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors border border-transparent hover:border-accent-cyan"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.technology.includes(tech)}
+                      onChange={() => toggleFilter('technology', tech)}
+                      className="h-5 w-5 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-card"
+                    />
+                    <span className="text-gray-300 flex-1 text-sm">{tech}</span>
+                    {filters.technology.includes(tech) && (
                       <Check className="h-5 w-5 text-accent-cyan" />
                     )}
                   </label>
@@ -587,9 +647,45 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
     }
   }
 
-  return (
-    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
-      <Card className="max-w-6xl w-full max-h-[90vh] flex flex-col">
+  if (!isOpen) return null
+
+  const modalContent = (
+    <>
+      {/* Backdrop - покрывает весь экран включая навбар и футер */}
+      <div 
+        style={{ 
+          position: 'fixed',
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          margin: 0,
+          padding: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          zIndex: 100
+        }}
+        onClick={onClose}
+      />
+      {/* Модальное окно */}
+      <div 
+        className="fixed flex items-start justify-center z-[101] pointer-events-none" 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 101,
+          padding: '1rem',
+          paddingTop: '5rem'
+        }}
+      >
+        <div className="pointer-events-auto w-full max-w-4xl">
+      <Card className="max-w-4xl w-full max-h-[85vh] min-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center mb-6 pb-4 border-b border-dark-surface">
           <div>
@@ -613,7 +709,10 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
               <div key={step.id} className="flex items-center flex-1">
                 <div className="flex items-center flex-1">
                   <button
-                    onClick={() => setCurrentStep(index)}
+                    onClick={() => {
+                      setCurrentStep(index)
+                      setValidationError(false)
+                    }}
                     className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors cursor-pointer ${
                       index <= currentStep
                         ? 'bg-accent-cyan border-accent-cyan text-dark-bg hover:bg-accent-cyan/90'
@@ -642,6 +741,11 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
         {/* Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
           {renderStepContent()}
+          {validationError && (
+            <div className="mt-4 p-3 bg-red-500/20 border border-red-500 rounded-lg">
+              <p className="text-red-500 text-sm">Выберите хотя-бы один пункт</p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -682,8 +786,12 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
           </div>
         </div>
       </Card>
-    </div>
+        </div>
+      </div>
+    </>
   )
+
+  return createPortal(modalContent, document.body)
 }
 
 export default FilterWizard

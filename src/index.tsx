@@ -17,9 +17,13 @@ import Interview from './components/pages/Interview/Interview';
 import AI from './components/pages/AI/AI';
 import Jobs from './components/pages/Jobs/Jobs';
 import Profile from './components/pages/Profile/Profile';
+import CompaniesRating from './components/pages/CompaniesRating/CompaniesRating';
+import CompanyDetails from './components/pages/CompanyDetails/CompanyDetails';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import InterviewHub from './components/pages/Interview/InterviewHub';
+import RoadmapList from './components/pages/Roadmap/RoadmapList';
+import RoadmapDetail from './components/pages/Roadmap/RoadmapDetail';
 
 const router = createBrowserRouter([
   {
@@ -104,6 +108,22 @@ const router = createBrowserRouter([
         <ProtectedRoute>
           <Profile />
         </ProtectedRoute>,
+      },
+      {
+        path: "/companies",
+        element: <CompaniesRating />,
+      },
+      {
+        path: "/companies/:id",
+        element: <CompanyDetails />,
+      },
+      {
+        path: "/roadmap",
+        element: <RoadmapList />,
+      },
+      {
+        path: "/roadmap/:slug",
+        element: <RoadmapDetail />,
       },
 
     ]}
