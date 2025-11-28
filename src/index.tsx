@@ -24,6 +24,7 @@ import { store } from './store';
 import InterviewHub from './components/pages/Interview/InterviewHub';
 import RoadmapList from './components/pages/Roadmap/RoadmapList';
 import RoadmapDetail from './components/pages/Roadmap/RoadmapDetail';
+import Candidates from './components/pages/Candidates/Candidates';
 
 const router = createBrowserRouter([
   {
@@ -124,6 +125,10 @@ const router = createBrowserRouter([
       {
         path: "/roadmap/:slug",
         element: <RoadmapDetail />,
+      },
+      {
+        path: "/candidates",
+        element: <Candidates />,
       },
 
     ]}
