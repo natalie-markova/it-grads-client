@@ -23,6 +23,8 @@ export interface Job {
   salaryMin?: number
   salaryMax?: number
   createdAt: string
+  matchScore?: number
+  matchingSkills?: string[]
 }
 
 interface JobsListProps {
@@ -276,7 +278,18 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
             <Card key={job.id} className="scroll-animate-item" style={{ transitionDelay: `${index * 0.05}s` }}>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-white mb-2">{job.title}</h3>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-semibold text-white">{job.title}</h3>
+                    {job.matchScore !== undefined && job.matchScore > 0 && (
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        job.matchScore >= 70 ? 'bg-green-500/20 text-green-400' :
+                        job.matchScore >= 40 ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {job.matchScore}% совпадение
+                      </span>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-4 text-gray-300 mb-3">
                     <div className="flex items-center gap-1">
                       <Briefcase className="h-4 w-4" />
@@ -294,18 +307,35 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
                     )}
                   </div>
                   <p className="text-gray-400 text-sm mb-2 line-clamp-2">{job.description}</p>
+                  {job.matchingSkills && job.matchingSkills.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-400 mb-1">Совпадающие навыки:</p>
+                      <div className="flex gap-1 flex-wrap">
+                        {job.matchingSkills.slice(0, 5).map((skill, idx) => (
+                          <span key={idx} className="px-2 py-0.5 bg-accent-cyan/20 text-accent-cyan text-xs rounded">
+                            {skill}
+                          </span>
+                        ))}
+                        {job.matchingSkills.length > 5 && (
+                          <span className="px-2 py-0.5 text-gray-400 text-xs">
+                            +{job.matchingSkills.length - 5}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-2 mt-4 flex-wrap">
                     <span className="px-2 py-1 bg-dark-surface text-accent-cyan text-xs rounded">
-                      {job.type === 'full-time' ? 'Полный день' : 
+                      {job.type === 'full-time' ? 'Полный день' :
                        job.type === 'part-time' ? 'Частичная занятость' :
-                       job.type === 'remote' ? 'Удаленно' : 
+                       job.type === 'remote' ? 'Удаленно' :
                        job.type === 'hybrid' ? 'Гибрид' :
                        job.type === 'internship' ? 'Стажировка' : 'Фриланс'}
                     </span>
                     <span className="px-2 py-1 bg-dark-surface text-accent-cyan text-xs rounded">
                       {job.experience === 'no-experience' ? 'Нет опыта' :
                        job.experience === 'junior' ? 'Junior' :
-                       job.experience === 'middle' ? 'Middle' : 
+                       job.experience === 'middle' ? 'Middle' :
                        job.experience === 'senior' ? 'Senior' : 'Lead'}
                     </span>
                   </div>

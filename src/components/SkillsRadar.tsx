@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Save, Edit2, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import Card from './ui/Card'
 import { useScrollAnimation } from '../hooks/useScrollAnimation'
 import { User } from '../types'
 import toast from 'react-hot-toast'
+import { $api } from '../utils/axios.instance'
 
 interface Skill {
   category: string
@@ -15,6 +17,7 @@ interface SkillsRadarProps {
   userId?: number
   user?: User | null
   onSave?: (skills: Skill[]) => void
+  redirectToJobs?: boolean
 }
 
 // Color palette for categories
@@ -162,7 +165,8 @@ const SKILL_CATEGORIES = [
   },
 ]
 
-const SkillsRadar = ({ userId, user, onSave }: SkillsRadarProps) => {
+const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRadarProps) => {
+  const navigate = useNavigate()
   const [skills, setSkills] = useState<Record<string, Record<string, number>>>({})
   const [isEditing, setIsEditing] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -187,12 +191,24 @@ const SkillsRadar = ({ userId, user, onSave }: SkillsRadarProps) => {
   const loadSkills = async () => {
     if (actualUserId) {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-        const response = await fetch(`${apiUrl}/skills/radar`, {
-          credentials: 'include',
-        })
-        if (response.ok) {
-          const data = await response.json()
+        const response = await $api.get(`/skills/radar/${actualUserId}`)
+        const data = response.data
+
+        // Если получили массив навыков, преобразуем в нужный формат
+        if (Array.isArray(data.skills)) {
+          const skillsMap: Record<string, Record<string, number>> = {}
+          SKILL_CATEGORIES.forEach(category => {
+            skillsMap[category.name] = {}
+            category.skills.forEach(skill => {
+              // Проверяем, есть ли этот навык в массиве
+              const hasSkill = data.skills.includes(skill.name)
+              // Если есть, ставим уровень 3 (средний), иначе 0
+              skillsMap[category.name][skill.name] = hasSkill ? 3 : 0
+            })
+          })
+          setSkills(skillsMap)
+        } else {
+          // Старый формат с детальными уровнями
           const skillsMap: Record<string, Record<string, number>> = {}
           data.forEach((item: Skill & { skill: string }) => {
             if (!skillsMap[item.category]) {
@@ -364,25 +380,33 @@ const SkillsRadar = ({ userId, user, onSave }: SkillsRadarProps) => {
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-      const response = await fetch(`${apiUrl}/skills/radar`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ userId: actualUserId, skills: skillsArray }),
+      // Сохраняем снимок canvas как изображение
+      const canvas = canvasRef.current
+      let radarImage = ''
+      if (canvas) {
+        radarImage = canvas.toDataURL('image/png')
+      }
+
+      await $api.post('/skills/radar', {
+        userId: actualUserId,
+        skills: skillsArray,
+        radarImage
       })
 
-      if (response.ok) {
-        toast.success('Навыки успешно сохранены!')
-        setIsEditing(false)
-        await loadSkills()
-        if (onSave) {
-          onSave(skillsArray)
-        }
-      } else {
-        toast.error('Ошибка при сохранении навыков')
+      toast.success('Навыки успешно сохранены!')
+      setIsEditing(false)
+      await loadSkills()
+
+      if (onSave) {
+        onSave(skillsArray)
+      }
+
+      // Перенаправляем на страницу вакансий, если указано
+      if (redirectToJobs) {
+        toast.success('Переходим к подбору вакансий...')
+        setTimeout(() => {
+          navigate('/jobs')
+        }, 1500)
       }
     } catch (error) {
       console.error('Error saving skills:', error)
