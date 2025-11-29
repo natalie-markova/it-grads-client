@@ -14,7 +14,7 @@ const App = () => {
     const checkAuth = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-        const response = await axios(`${apiUrl}/tokens/refresh`,
+        const response = await axios.get(`${apiUrl}/tokens/refresh`,
           {
             withCredentials: true,
           }
