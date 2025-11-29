@@ -25,6 +25,8 @@ import InterviewHub from './components/pages/Interview/InterviewHub';
 import RoadmapList from './components/pages/Roadmap/RoadmapList';
 import RoadmapDetail from './components/pages/Roadmap/RoadmapDetail';
 import Candidates from './components/pages/Candidates/Candidates';
+import EmployerPublicProfile from './components/pages/Employer/EmployerPublicProfile';
+import ProfileWrapper from './components/pages/Profile/ProfileWrapper';
 
 const router = createBrowserRouter([
   {
@@ -107,7 +109,7 @@ const router = createBrowserRouter([
         path: "/profile/:type",
         element:
         <ProtectedRoute>
-          <Profile />
+          <ProfileWrapper />
         </ProtectedRoute>,
       },
       {
@@ -117,6 +119,10 @@ const router = createBrowserRouter([
       {
         path: "/companies/:id",
         element: <CompanyDetails />,
+      },
+      {
+        path: "/employer/:employerId",
+        element: <EmployerPublicProfile />,
       },
       {
         path: "/roadmap",

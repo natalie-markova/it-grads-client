@@ -43,7 +43,7 @@ const EmployerProfile = () => {
 
   const loadProfile = async () => {
     try {
-      const response = await $api.get(`/user/${user?.id}`);
+      const response = await $api.get(`/user/profile`);
       const data = response.data;
 
       const profileData: EmployerProfileData = {
@@ -82,7 +82,7 @@ const EmployerProfile = () => {
     e.preventDefault();
 
     try {
-      await $api.put(`/user/${user?.id}`, formData);
+      await $api.put(`/user/profile`, formData);
       setProfile(formData);
       setIsEditing(false);
       toast.success('Профиль обновлен');
