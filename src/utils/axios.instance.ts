@@ -37,13 +37,24 @@ $api.interceptors.response.use((response) => {
        return response
    }, async (error: AxiosError) => {
        const prevRequest = error.config as InternalAxiosRequestConfig & { sent?: boolean }
-       if (error.response && error.response.status === 403 && !prevRequest.sent) {
-           const refreshResponse = await axios(`${API_URL}/tokens/refresh`, { withCredentials: true })
-           if (refreshResponse.data && typeof refreshResponse.data.accessToken === 'string') {
-               accessToken = refreshResponse.data.accessToken
-               prevRequest.sent = true
-               prevRequest.headers.Authorization = "Bearer " + accessToken
-               return $api(prevRequest)
+       // Проверяем 401 (Unauthorized) вместо 403
+       if (error.response && error.response.status === 401 && !prevRequest.sent) {
+           try {
+               // Правильный URL для обновления токена
+               const refreshResponse = await axios.post(`${API_URL}/tokens/refresh`, {}, { withCredentials: true })
+               if (refreshResponse.data && typeof refreshResponse.data.accessToken === 'string') {
+                   // Сохраняем новый токен
+                   setAccessToken(refreshResponse.data.accessToken)
+                   prevRequest.sent = true
+                   prevRequest.headers.Authorization = "Bearer " + refreshResponse.data.accessToken
+                   return $api(prevRequest)
+               }
+           } catch (refreshError) {
+               // Если обновление токена не удалось, очищаем токен и перенаправляем на логин
+               clearAccessToken()
+               // Можно добавить редирект на страницу логина
+               window.location.href = '/login'
+               return Promise.reject(refreshError)
            }
        }
 

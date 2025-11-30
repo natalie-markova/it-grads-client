@@ -10,6 +10,9 @@ const hasSslCerts = fs.existsSync(path.join(sslPath, 'cert.pem')) &&
 
 export default defineConfig({
   plugins: [pluginReact()],
+  html: {
+    title: 'IT Grads - Платформа для выпускников IT'
+  },
   server: {
     https: hasSslCerts ? {
       key: fs.readFileSync(path.join(sslPath, 'key.pem')),

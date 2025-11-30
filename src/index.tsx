@@ -16,7 +16,7 @@ import Skills from './components/pages/Skills/Skills';
 import Interview from './components/pages/Interview/Interview';
 import AI from './components/pages/AI/AI';
 import Jobs from './components/pages/Jobs/Jobs';
-import Profile from './components/pages/Profile/Profile';
+import ProfileWrapper from './components/pages/Profile/ProfileWrapper';
 import CompaniesRating from './components/pages/CompaniesRating/CompaniesRating';
 import CompanyDetails from './components/pages/CompanyDetails/CompanyDetails';
 import { Provider } from 'react-redux';
