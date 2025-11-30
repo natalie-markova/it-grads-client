@@ -4,6 +4,8 @@ import { Edit, Trash2, Building2, Globe, MapPin, Users, Briefcase } from 'lucide
 import { OutletContext } from '../../../types';
 import { $api } from '../../../utils/axios.instance';
 import toast from 'react-hot-toast';
+import VacanciesManagement from '../Vacancies/VacanciesManagement';
+
 
 interface EmployerProfileData {
   companyName: string;
@@ -359,18 +361,7 @@ const EmployerProfile = () => {
 
         {/* My Vacancies Section */}
         <div className="mt-8 bg-dark-surface rounded-lg p-8 border border-dark-card">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-white">Мои вакансии</h2>
-            <button
-              onClick={() => navigate('/vacancies')}
-              className="btn-primary text-sm"
-            >
-              Управлять вакансиями
-            </button>
-          </div>
-          <p className="text-gray-400">
-            Перейдите на страницу вакансий для создания и управления вашими вакансиями
-          </p>
+          <VacanciesManagement userId={user?.id} />
         </div>
       </div>
     </div>
