@@ -26,7 +26,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
         { path: '/home', label: 'Главная' },
         { path: '/skills', label: 'Навыки и Проекты' },
         { path: '/interview', label: 'Собеседования' },
-        { path: '/ai', label: 'ИИ и Автоматизация' },
         { path: '/jobs', label: 'Вакансии' },
     ]
 
@@ -39,7 +38,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
         { path: '/home', label: 'Главная' },
         { path: '/candidates', label: 'Кандидаты' },
         { path: '/jobs', label: 'Вакансии' },
-        { path: '/ai', label: 'ИИ и Автоматизация' },
     ]
 
     const navLinks = userType === 'graduate' ? graduateNavLinks : (userType === 'employer' ? employerNavLinks : baseNavLinks)

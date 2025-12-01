@@ -1,11 +1,14 @@
-import { Link } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import { ArrowRight, Users, Briefcase, Brain, Code, MessageCircle, TrendingUp } from 'lucide-react'
 import Section from '../../../components/ui/Section'
 import FeatureCard from '../../../components/ui/FeatureCard'
 import Card from '../../../components/ui/Card'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
+import { OutletContext } from '../../../types'
 
 const Home = () => {
+  const { user } = useOutletContext<OutletContext>()
+  
   useScrollAnimation()
   const topFeatures = [
     {
@@ -47,15 +50,22 @@ const Home = () => {
               Мы создаем платформу, которая поможет выпускникам IT-школ и молодым специалистам 
               найти работу мечты и пройти собеседования с уверенностью.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/registration" className="btn-primary inline-flex items-center justify-center">
-                Начать бесплатно
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-              <Link to="/home" className="btn-secondary">
-                Узнать больше
-              </Link>
-            </div>
+            {!user 
+              ? <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link to="/registration" className="btn-primary inline-flex items-center justify-center">
+                    Начать бесплатно
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                  <Link to="/home" className="btn-secondary">
+                    Узнать больше
+                  </Link>
+                </div>
+              : <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link to="/home" className="btn-secondary">
+                    Узнать больше
+                  </Link>
+                </div>
+            }
           </div>
         </div>
       </section>
@@ -289,7 +299,7 @@ const Home = () => {
         </div>
       </Section>
 
-      {/* AI Section */}
+      {/* AI Section
       <Section 
         title="Искусственный интеллект и автоматизация"
         className="bg-dark-bg scroll-animate-item"
@@ -323,10 +333,10 @@ const Home = () => {
             />
           </Link>
         </div>
-      </Section>
+      </Section> */}
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-accent-cyan/20 to-accent-blue/20 border-y border-accent-cyan/30 scroll-scale">
+      { !user 
+        ? <section className="py-20 bg-gradient-to-r from-accent-cyan/20 to-accent-blue/20 border-y border-accent-cyan/30 scroll-scale">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-[24px] md:text-[28px] font-bold mb-4 text-white">
             Готовы начать?
@@ -340,6 +350,8 @@ const Home = () => {
           </Link>
         </div>
       </section>
+        : <div></div>
+      }
     </div>
   )
 }
