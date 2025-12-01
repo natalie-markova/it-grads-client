@@ -56,10 +56,18 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
         .then((response) => {
             if (response.status === 200) {
                 setUser(null)
+                localStorage.removeItem('user')
+                localStorage.removeItem('accessToken')
                 navigate("/home");
             }
         })
-        .catch((err) => console.error(err));
+        .catch((err) => {
+            console.error(err);
+            // Даже при ошибке очищаем данные
+            setUser(null)
+            localStorage.removeItem('user')
+            localStorage.removeItem('accessToken')
+        });
     }
 
     return (

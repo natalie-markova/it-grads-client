@@ -82,28 +82,24 @@ const EmployerProfile = () => {
   });
 
   useEffect(() => {
-    // Проверяем авторизацию только один раз при монтировании или при изменении user
     if (!user) {
-      navigate('/login');
-      return;
-    }
+            navigate('/login')
+      return
+          }
+    // Этот компонент только для работодателей
     if (user.role !== 'employer') {
-      navigate('/login');
-      return;
+        navigate('/login')
+      return
     }
-    // Загружаем данные только если пользователь авторизован и является работодателем
-    loadProfile();
-    loadApplications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, user?.role]); // Зависимости только от критических полей, чтобы избежать лишних редиректов
+      loadProfile()
+      loadApplications()
+  }, [user])
 
   const loadProfile = async () => {
-    if (!user || user.role !== 'employer') {
-      return; // Не загружаем профиль, если пользователь не авторизован или не работодатель
-    }
+    if (!user) return
     try {
-      const response = await $api.get(`/user/profile`);
-      const data = response.data;
+      const response = await $api.get('/user/profile')
+      const data = response.data
 
       const profileData: EmployerProfileData = {
         companyName: data.companyName || '',
@@ -113,49 +109,52 @@ const EmployerProfile = () => {
         companySize: data.companySize || '',
         industry: data.industry || '',
         phone: data.phone || '',
-        email: data.email || user?.email || '',
+        email: data.email || user.email || '',
         avatar: data.avatar
-      };
-
-      setProfile(profileData);
-      setFormData(profileData);
-      setAvatarPreview(profileData.avatar || null);
-    } catch (error: any) {
-      console.error('Error loading profile:', error);
-      // Если ошибка 401 или 403, не делаем редирект здесь - это обработается в useEffect
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        // Ошибка авторизации будет обработана в useEffect
-        return;
       }
-      // Если профиль не загружен, используем пустые данные
-      const emptyProfile: EmployerProfileData = {
-        companyName: '',
-        companyDescription: '',
-        companyWebsite: '',
-        companyAddress: '',
-        companySize: '',
-        industry: '',
-        phone: '',
-        email: user?.email || ''
-      };
-      setProfile(emptyProfile);
-      setFormData(emptyProfile);
+
+      setProfile(profileData)
+      setFormData(profileData)
+      setAvatarPreview(profileData.avatar || null)
+    } catch (error: any) {
+      console.error('Error loading profile:', error)
     }
-  };
+  }
 
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
+    if (!user) return
 
     try {
-      await $api.put(`/user/profile`, formData);
-      setProfile(formData);
-      setIsEditing(false);
-      toast.success('Профиль обновлен');
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error('Ошибка при сохранении профиля');
+      const response = await $api.put('/user/profile', formData)
+      // Обновляем профиль из ответа сервера, чтобы получить актуальные данные
+      if (response.data) {
+        const profileData: EmployerProfileData = {
+          companyName: response.data.companyName || '',
+          companyDescription: response.data.companyDescription || '',
+          companyWebsite: response.data.companyWebsite || '',
+          companyAddress: response.data.companyAddress || '',
+          companySize: response.data.companySize || '',
+          industry: response.data.industry || '',
+          phone: response.data.phone || '',
+          email: response.data.email || user.email || '',
+          avatar: response.data.avatar
+        }
+        setProfile(profileData)
+        setFormData(profileData)
+        setAvatarPreview(profileData.avatar || null)
+      } else {
+        setProfile(formData)
+        setFormData(formData)
+      }
+      setIsEditing(false)
+      toast.success('Профиль обновлен')
+    } catch (error: any) {
+      console.error('Error saving profile:', error)
+      const errorMessage = error.response?.data?.message || error.message || 'Ошибка при сохранении профиля'
+      toast.error(errorMessage)
     }
-  };
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -165,48 +164,15 @@ const EmployerProfile = () => {
   };
 
   const loadApplications = async () => {
-    if (!user) {
-      console.log('No user, skipping loadApplications');
-      return;
-    }
-    if (user.role !== 'employer') {
-      console.log('User is not employer, skipping loadApplications');
-      return;
-    }
+    if (!user) return
     try {
-      console.log('Loading applications for employer:', user.id);
-      const response = await $api.get('/applications/employer/all');
-      console.log('Applications API response:', response);
-      console.log('Applications data:', response.data);
-      console.log('Applications data type:', typeof response.data);
-      console.log('Is array?', Array.isArray(response.data));
-      console.log('Applications count:', response.data?.length || 0);
-      
-      // Убеждаемся, что данные - это массив
-      const apps = Array.isArray(response.data) ? response.data : [];
-      console.log('Processed applications:', apps);
-      console.log('Processed applications count:', apps.length);
-      
-      if (apps.length > 0) {
-        console.log('First application:', apps[0]);
-        console.log('First application user:', apps[0]?.user);
-        console.log('First application vacancy:', apps[0]?.vacancy);
-      }
-      
-      setApplications(apps);
-    } catch (error: any) {
-      console.error('Error loading applications:', error);
-      console.error('Error response:', error.response);
-      console.error('Error message:', error.message);
-      // Если ошибка 401 или 403, не делаем редирект здесь - это обработается в useEffect
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        console.log('Access denied or unauthorized - will be handled in useEffect');
-        // Ошибка авторизации будет обработана в useEffect, не делаем редирект здесь
-        return;
-      }
-      toast.error(error.response?.data?.error || 'Ошибка при загрузке откликов');
+      const response = await $api.get('/applications/employer/all')
+      const apps = Array.isArray(response.data) ? response.data : []
+      setApplications(apps)
+    } catch (error) {
+      console.error('Error loading applications:', error)
     }
-  };
+  }
 
   const handleUpdateApplicationStatus = async (applicationId: number, status: 'accepted' | 'rejected') => {
     try {

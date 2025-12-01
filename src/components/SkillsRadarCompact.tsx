@@ -388,6 +388,28 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
         <Card>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-white">Карта навыков</h3>
+          </div>
+          <div className="flex justify-center">
+            <canvas ref={canvasRef} className="max-w-full" />
+          </div>
+          {/* Legend */}
+          <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
+            {SKILL_CATEGORIES.map((cat, index) => (
+              <div key={cat.name} className="flex items-center gap-1.5">
+                <div
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: colors[index] }}
+                />
+                <span className="text-gray-400 font-medium">{cat.short}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Skills List */}
+        <Card className="max-h-[600px] overflow-y-auto custom-scrollbar">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-white">Детализация навыков</h3>
             {isEditing ? (
               <div className="flex gap-2">
                 <button
@@ -413,26 +435,6 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
               </button>
             )}
           </div>
-          <div className="flex justify-center">
-            <canvas ref={canvasRef} className="max-w-full" />
-          </div>
-          {/* Legend */}
-          <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
-            {SKILL_CATEGORIES.map((cat, index) => (
-              <div key={cat.name} className="flex items-center gap-1.5">
-                <div
-                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: colors[index] }}
-                />
-                <span className="text-gray-400 font-medium">{cat.short}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Skills List */}
-        <Card className="max-h-[600px] overflow-y-auto custom-scrollbar">
-          <h3 className="text-lg font-semibold text-white mb-4">Детализация навыков</h3>
           <div className="space-y-2">
             {SKILL_CATEGORIES.map((category, catIndex) => {
               const average = getCategoryAverage(category.name)
