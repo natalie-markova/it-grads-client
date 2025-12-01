@@ -232,12 +232,12 @@ const Interview = () => {
 
   return (
     <div className="bg-dark-bg min-h-screen py-8">
-      <Section 
+      <Section
         title="Симулятор собеседования"
         subtitle={`Вопрос ${currentQuestionIndex + 1} из ${filteredQuestions.length}`}
-        className="bg-dark-bg py-0 scroll-animate-item"
+        className="bg-dark-bg py-0"
       >
-        <Card className="max-w-3xl mx-auto scroll-animate-item">
+        <Card className="max-w-3xl mx-auto">
           {/* Progress Bar */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
@@ -257,7 +257,7 @@ const Interview = () => {
           </div>
 
           {/* Question */}
-          <div className="mb-6 scroll-animate-item">
+          <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan rounded-lg text-sm font-medium">
                 {currentQuestion.category}
@@ -305,7 +305,7 @@ const Interview = () => {
 
             {/* Explanation */}
             {showExplanation && (
-              <div className="mt-6 p-4 bg-dark-surface rounded-lg border border-accent-cyan/30 scroll-animate-item" style={{ transitionDelay: '0.2s' }}>
+              <div className="mt-6 p-4 bg-dark-surface rounded-lg border border-accent-cyan/30">
                 <h4 className="text-lg font-semibold text-white mb-2">Объяснение:</h4>
                 <p className="text-gray-300 leading-relaxed">{currentQuestion.explanation}</p>
               </div>

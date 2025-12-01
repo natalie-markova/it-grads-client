@@ -27,7 +27,7 @@ import RoadmapList from './components/pages/Roadmap/RoadmapList';
 import RoadmapDetail from './components/pages/Roadmap/RoadmapDetail';
 import Candidates from './components/pages/Candidates/Candidates';
 import EmployerPublicProfile from './components/pages/Employer/EmployerPublicProfile';
-import ProfileWrapper from './components/pages/Profile/ProfileWrapper';
+import AudioInterview from './components/pages/AudioInterview/AudioInterview';
 
 const router = createBrowserRouter([
   {
@@ -84,6 +84,13 @@ const router = createBrowserRouter([
         element:
         <ProtectedRoute>
           <InterviewResultsPage/>
+        </ProtectedRoute>,
+      },
+      {
+        path: "/interview/audio",
+        element:
+        <ProtectedRoute>
+          <AudioInterview />
         </ProtectedRoute>,
       },
       {
