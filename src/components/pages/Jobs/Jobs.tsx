@@ -113,7 +113,8 @@ const Jobs = () => {
           industry: job.industry || '',
           createdAt: job.createdAt || new Date().toISOString(),
           matchScore: job.matchScore || 0,
-          matchingSkills: job.matchingSkills || []
+          matchingSkills: job.matchingSkills || [],
+          employerId: job.employerId || (job.employer ? job.employer.id : undefined)
         })))
       } else if (response.status === 404) {
         // Эндпоинт не найден - показываем пустой список

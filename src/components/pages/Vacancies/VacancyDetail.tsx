@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
-import { ArrowLeft, MapPin, DollarSign, Briefcase, Heart, Calendar, User, Check } from 'lucide-react';
+import { ArrowLeft, MapPin, DollarSign, Briefcase, Heart, Calendar, User, Check, MessageSquare } from 'lucide-react';
 import { $api } from '../../../utils/axios.instance';
+import { chatAPI } from '../../../utils/chat.api';
 import { OutletContext } from '../../../types';
 import toast from 'react-hot-toast';
 import Card from '../../ui/Card';
@@ -14,6 +15,7 @@ const VacancyDetail = () => {
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -120,6 +122,31 @@ const VacancyDetail = () => {
       console.error('Error applying to job:', error);
       const errorMessage = error.response?.data?.error || 'Ошибка при отправке отклика';
       toast.error(errorMessage);
+    }
+  };
+
+  const handleStartChat = async () => {
+    if (!user) {
+      toast.error('Войдите в систему, чтобы написать сообщение');
+      navigate('/login');
+      return;
+    }
+
+    if (!vacancy?.employerId) {
+      toast.error('Информация о работодателе недоступна');
+      return;
+    }
+
+    setIsCreatingChat(true);
+    try {
+      const chat = await chatAPI.createChat(vacancy.employerId);
+      toast.success('Чат создан!');
+      navigate(`/messenger/${chat.id}`);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      toast.error('Ошибка при создании чата');
+    } finally {
+      setIsCreatingChat(false);
     }
   };
 
@@ -320,10 +347,20 @@ const VacancyDetail = () => {
           {user && user.role === 'graduate' && (
             <div className="flex gap-4 pt-6 border-t border-dark-card">
               {hasApplied ? (
-                <div className="flex-1 px-4 py-3 bg-green-500/20 text-green-400 rounded-lg flex items-center justify-center gap-2 border border-green-500/30">
-                  <Check className="h-5 w-5" />
-                  <span className="font-medium">Вы откликнулись</span>
-                </div>
+                <>
+                  <div className="flex-1 px-4 py-3 bg-green-500/20 text-green-400 rounded-lg flex items-center justify-center gap-2 border border-green-500/30">
+                    <Check className="h-5 w-5" />
+                    <span className="font-medium">Вы откликнулись</span>
+                  </div>
+                  <button
+                    onClick={handleStartChat}
+                    disabled={isCreatingChat}
+                    className="btn-secondary flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <MessageSquare className="h-5 w-5" />
+                    {isCreatingChat ? 'Создание...' : 'Написать'}
+                  </button>
+                </>
               ) : (
                 <button
                   onClick={handleApply}

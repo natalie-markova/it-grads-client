@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Building2, MapPin, Briefcase, Mail, Phone, Loader2, XCircle, Globe, Users, Factory } from 'lucide-react';
+import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom';
+import { Building2, MapPin, Briefcase, Mail, Phone, Loader2, XCircle, Globe, Users, Factory, MessageSquare } from 'lucide-react';
 import { employerAPI } from '../../../utils/employer.api';
-import type { Employer, Vacancy } from '../../../types';
+import { chatAPI } from '../../../utils/chat.api';
+import type { Employer, Vacancy, OutletContext } from '../../../types';
 import Section from '../../ui/Section';
 import Card from '../../ui/Card';
+import toast from 'react-hot-toast';
 
 export default function EmployerPublicProfile() {
   const { employerId } = useParams<{ employerId: string }>();
   const navigate = useNavigate();
-  
+  const { user } = useOutletContext<OutletContext>();
+
   const [employer, setEmployer] = useState<Employer | null>(null);
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   useEffect(() => {
     if (!employerId) {
@@ -40,6 +44,28 @@ export default function EmployerPublicProfile() {
       setError('Не удалось загрузить профиль работодателя');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleStartChat = async () => {
+    if (!user) {
+      toast.error('Войдите в систему, чтобы написать сообщение');
+      navigate('/login');
+      return;
+    }
+
+    if (!employer) return;
+
+    setIsCreatingChat(true);
+    try {
+      const chat = await chatAPI.createChat(employer.id);
+      toast.success('Чат создан!');
+      navigate(`/messenger/${chat.id}`);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      toast.error('Ошибка при создании чата');
+    } finally {
+      setIsCreatingChat(false);
     }
   };
 
@@ -89,7 +115,7 @@ export default function EmployerPublicProfile() {
               )}
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h1 className="text-3xl font-bold text-white mb-2">
                 {employer.companyName || employer.username}
               </h1>
@@ -151,6 +177,18 @@ export default function EmployerPublicProfile() {
                 )}
               </div>
             </div>
+
+            {/* Message Button */}
+            {user && user.role === 'graduate' && user.id !== employer.id && (
+              <button
+                onClick={handleStartChat}
+                disabled={isCreatingChat}
+                className="btn-primary flex items-center gap-2 self-start disabled:opacity-50"
+              >
+                <MessageSquare className="h-4 w-4" />
+                {isCreatingChat ? 'Создание...' : 'Написать сообщение'}
+              </button>
+            )}
           </div>
         </Card>
 

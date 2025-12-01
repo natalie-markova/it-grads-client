@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Briefcase, Filter, Award, GraduationCap, Globe, Code } from 'lucide-react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import { Search, MapPin, Briefcase, Filter, Award, GraduationCap, Globe, Code, MessageSquare } from 'lucide-react';
 import Card from '../../ui/Card';
 import Section from '../../ui/Section';
+import { chatAPI } from '../../../utils/chat.api';
+import { OutletContext } from '../../../types';
+import toast from 'react-hot-toast';
 
 interface Resume {
   id: number;
@@ -14,14 +18,19 @@ interface Resume {
   experience?: string;
   education?: string;
   portfolio?: string;
+  userId?: number;
   user?: {
+    id: number;
     username: string;
   };
 }
 
 const Candidates = () => {
+  const navigate = useNavigate();
+  const { user } = useOutletContext<OutletContext>();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creatingChatFor, setCreatingChatFor] = useState<number | null>(null);
 
   useEffect(() => {
     loadResumes();
@@ -40,6 +49,31 @@ const Candidates = () => {
       console.error('Error loading resumes:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStartChat = async (candidateId: number) => {
+    if (!user) {
+      toast.error('Войдите в систему, чтобы написать сообщение');
+      navigate('/login');
+      return;
+    }
+
+    if (user.role !== 'employer') {
+      toast.error('Только работодатели могут писать кандидатам');
+      return;
+    }
+
+    setCreatingChatFor(candidateId);
+    try {
+      const chat = await chatAPI.createChat(candidateId);
+      toast.success('Чат создан!');
+      navigate(`/messenger/${chat.id}`);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      toast.error('Ошибка при создании чата');
+    } finally {
+      setCreatingChatFor(null);
     }
   };
 
@@ -157,9 +191,16 @@ const Candidates = () => {
                       <button className="btn-primary text-sm">
                         Посмотреть резюме
                       </button>
-                      <button className="btn-secondary text-sm">
-                        Связаться
-                      </button>
+                      {user && user.role === 'employer' && (
+                        <button
+                          onClick={() => handleStartChat(resume.user?.id || resume.userId || 0)}
+                          disabled={creatingChatFor === (resume.user?.id || resume.userId)}
+                          className="btn-secondary text-sm flex items-center gap-2 disabled:opacity-50"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          {creatingChatFor === (resume.user?.id || resume.userId) ? 'Создание...' : 'Написать'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </Card>
