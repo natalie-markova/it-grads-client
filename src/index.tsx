@@ -28,6 +28,8 @@ import RoadmapDetail from './components/pages/Roadmap/RoadmapDetail';
 import Candidates from './components/pages/Candidates/Candidates';
 import EmployerPublicProfile from './components/pages/Employer/EmployerPublicProfile';
 import MessengerPage from './components/pages/Messenger/MessengerPage';
+import AudioInterview from './components/pages/AudioInterview/AudioInterview';
+import VacancyDetail from './components/pages/Vacancies/VacancyDetail';
 
 const router = createBrowserRouter([
   {
@@ -84,6 +86,13 @@ const router = createBrowserRouter([
         element:
         <ProtectedRoute>
           <InterviewResultsPage/>
+        </ProtectedRoute>,
+      },
+      {
+        path: "/interview/audio",
+        element:
+        <ProtectedRoute>
+          <AudioInterview />
         </ProtectedRoute>,
       },
       {
@@ -150,6 +159,10 @@ const router = createBrowserRouter([
         <ProtectedRoute>
           <MessengerPage />
         </ProtectedRoute>,
+      },
+      {
+        path: "/vacancy/:id",
+        element: <VacancyDetail />,
       },
 
     ]}

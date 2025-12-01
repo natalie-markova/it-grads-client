@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, Volume2, VolumeX, Award, TrendingUp, TrendingDown } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Award, TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
 import { $api } from '../../../utils/axios.instance';
 import toast from 'react-hot-toast';
 
@@ -25,6 +25,29 @@ interface FeedbackResult {
   feedback: string;
   duration: number;
 }
+
+const POSITIONS = [
+  'Frontend разработчик',
+  'Backend разработчик',
+  'Fullstack разработчик',
+  'React разработчик',
+  'Node.js разработчик',
+  'Python разработчик',
+  'Java разработчик',
+  'DevOps инженер',
+  'QA инженер',
+  'Data Scientist',
+  'Data Analyst',
+  'Mobile разработчик (iOS)',
+  'Mobile разработчик (Android)',
+  'UI/UX дизайнер',
+  'Product Manager',
+  'Project Manager',
+  'System Administrator',
+  'Бизнес-аналитик',
+  'ML инженер',
+  'Технический писатель'
+];
 
 const AudioInterview = () => {
   const navigate = useNavigate();
@@ -122,8 +145,8 @@ const AudioInterview = () => {
   };
 
   const startInterview = async () => {
-    if (!position.trim()) {
-      toast.error('Укажите желаемую позицию');
+    if (!position) {
+      toast.error('Выберите желаемую позицию');
       return;
     }
 
@@ -235,16 +258,22 @@ const AudioInterview = () => {
           <div className="bg-gray-800 rounded-2xl p-8 shadow-xl">
             <h2 className="text-2xl font-bold mb-6">Настройка интервью</h2>
 
-            {/* Position Input */}
+            {/* Position Select */}
             <div className="mb-6">
               <label className="block text-gray-300 mb-2">Желаемая позиция</label>
-              <input
-                type="text"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                placeholder="например: Frontend разработчик"
-                className="w-full px-4 py-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              />
+              <div className="relative">
+                <select
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">Выберите позицию...</option>
+                  {POSITIONS.map((pos) => (
+                    <option key={pos} value={pos}>{pos}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             {/* Persona Selection */}
