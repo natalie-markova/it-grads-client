@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Menu, X, Users, LogIn, UserCircle, LogOut, MessageSquare } from 'lucide-react'
+import { Menu, X, LogIn, UserCircle, LogOut, MessageSquare } from 'lucide-react'
 import { $api } from "../../../utils/axios.instance";
 import { chatAPI } from '../../../utils/chat.api';
 import { User } from "../../../types";
@@ -70,8 +70,8 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
                     <Link to="/home" className="flex items-center space-x-2">
-                        <div className="bg-accent-cyan p-2 rounded-lg">
-                            <Users className="h-6 w-6 text-dark-bg" />
+                        <div className="bg-accent-cyan px-2 py-1 rounded-lg">
+                            <span className="text-xl font-mono font-bold text-dark-bg">&lt;/&gt;</span>
                         </div>
                         <span className="text-xl font-bold text-white">IT-Grads</span>
                     </Link>

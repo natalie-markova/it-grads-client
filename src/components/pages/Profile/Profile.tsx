@@ -4,7 +4,7 @@ import { Edit, Trash2, X, Send, Mail, Phone, MapPin, Calendar, GraduationCap, Br
 import Card from '../../ui/Card'
 import Section from '../../ui/Section'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
-import { User, OutletContext } from '../../../types'
+import { type OutletContext } from '../../../types'
 import toast from 'react-hot-toast'
 import ResumeForm from '../Resume/ResumeForm'
 
@@ -41,6 +41,8 @@ interface Application {
   jobTitle: string
   company: string
   appliedDate: string
+  status?: 'pending' | 'accepted' | 'rejected'
+  vacancyId?: number
 }
 
 interface Resume {
@@ -84,10 +86,73 @@ interface ProfileEditFormProps {
 
 const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) => {
   const [formData, setFormData] = useState<Profile>(profile)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
   useEffect(() => {
     setFormData(profile)
+    setPhotoPreview(profile.photo || null)
   }, [profile])
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Проверяем тип файла
+      if (!file.type.startsWith('image/')) {
+        toast.error('Пожалуйста, выберите файл изображения')
+        return
+      }
+      // Проверяем размер файла (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Размер файла не должен превышать 5MB')
+        return
+      }
+      setPhotoFile(file)
+      // Создаем превью
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleUploadPhoto = async () => {
+    if (!photoFile) return
+
+    setIsUploading(true)
+    try {
+      const uploadFormData = new FormData()
+      uploadFormData.append('photo', photoFile)
+
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+      const token = localStorage.getItem('accessToken')
+      
+      const response = await fetch(`${apiUrl}/user/upload-photo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: uploadFormData,
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        throw new Error('Ошибка при загрузке фото')
+      }
+
+      const data = await response.json()
+      setFormData({ ...formData, photo: data.photo })
+      setPhotoFile(null)
+      toast.success('Фото успешно загружено')
+    } catch (error) {
+      console.error('Error uploading photo:', error)
+      toast.error('Ошибка при загрузке фото')
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,14 +162,48 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Фото (URL)</label>
-        <input
-          type="text"
-          value={formData.photo}
-          onChange={(e) => setFormData({ ...formData, photo: e.target.value })}
-          className="input-field"
-          placeholder="https://..."
-        />
+        <label className="block text-sm font-medium text-gray-300 mb-2">Фото профиля</label>
+        <div className="space-y-3">
+          {photoPreview && (
+            <div className="w-32 h-32 rounded-lg overflow-hidden border border-dark-card">
+              <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="flex gap-2">
+            <label className="flex-1 cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="hidden"
+              />
+              <span className="inline-block px-4 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors text-sm">
+                {photoFile ? 'Файл выбран' : 'Выбрать файл'}
+              </span>
+            </label>
+            {photoFile && (
+              <button
+                type="button"
+                onClick={handleUploadPhoto}
+                disabled={isUploading}
+                className="px-4 py-2 bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg font-medium rounded-lg transition-colors text-sm disabled:opacity-50"
+              >
+                {isUploading ? 'Загрузка...' : 'Загрузить'}
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-gray-400">Или введите URL фото</p>
+          <input
+            type="text"
+            value={formData.photo}
+            onChange={(e) => {
+              setFormData({ ...formData, photo: e.target.value })
+              setPhotoPreview(e.target.value || null)
+            }}
+            className="input-field"
+            placeholder="https://..."
+          />
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
@@ -258,7 +357,24 @@ const GraduateProfile = () => {
   const { user } = useOutletContext<OutletContext>()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
+
+  // Функция для формирования полного URL изображения
+  const getImageUrl = (url: string | undefined): string => {
+    if (!url) return ''
+    // Если URL уже полный (начинается с http), возвращаем как есть
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url
+    }
+    // Если это относительный путь к загруженному файлу, добавляем базовый URL сервера
+    if (url.startsWith('/uploads/')) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+      const baseUrl = apiUrl.replace('/api', '')
+      return `${baseUrl}${url}`
+    }
+    return url
+  }
   const [applications, setApplications] = useState<Application[]>([])
+  const [favorites, setFavorites] = useState<any[]>([])
   const [chats, setChats] = useState<Chat[]>([])
   const [resumes, setResumes] = useState<Resume[]>([])
   const [isCreatingResume, setIsCreatingResume] = useState(false)
@@ -269,12 +385,18 @@ const GraduateProfile = () => {
   const [editingMessageText, setEditingMessageText] = useState<string>('')
 
   useEffect(() => {
-    if (!user || user?.role !== 'graduate') {
+    if (!user) {
+            navigate('/login')
+      return
+          }
+    // Этот компонент только для выпускников
+    if (user.role !== 'graduate') {
         navigate('/login')
       return
     }
       loadProfile()
       loadApplications()
+      loadFavorites()
       loadChats()
       loadResumes()
   }, [user])
@@ -283,7 +405,11 @@ const GraduateProfile = () => {
     if (!user) return
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-      const response = await fetch(`${apiUrl}/profile/graduate`, {
+      const token = localStorage.getItem('accessToken') || '';
+      const response = await fetch(`${apiUrl}/user/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         credentials: 'include'
       })
       if (response.ok) {
@@ -406,16 +532,26 @@ const GraduateProfile = () => {
     if (!user) return
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-      const response = await fetch(`${apiUrl}/applications`, {
+      const token = localStorage.getItem('accessToken') || '';
+      const response = await fetch(`${apiUrl}/applications/my`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         credentials: 'include'
       })
       if (response.ok) {
         const data = await response.json()
         setApplications(data.map((app: any) => ({
           id: app.id.toString(),
-          jobTitle: app.title,
-          company: app.company,
-          appliedDate: app.applied_at,
+          jobTitle: app.vacancy?.title || 'Вакансия удалена',
+          company: app.vacancy?.companyName || app.vacancy?.employer?.companyName || app.vacancy?.employer?.username || 'Неизвестная компания',
+          appliedDate: new Date(app.createdAt).toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          status: app.status || 'pending',
+          vacancyId: app.vacancyId || app.vacancy?.id
         })))
       }
     } catch (error) {
@@ -423,11 +559,60 @@ const GraduateProfile = () => {
     }
   }
 
+  const loadFavorites = async () => {
+    if (!user) return
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const token = localStorage.getItem('accessToken') || '';
+      const response = await fetch(`${apiUrl}/favorites`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setFavorites(data || [])
+      }
+    } catch (error) {
+      console.error('Error loading favorites:', error)
+    }
+  }
+
+  const handleRemoveFavorite = async (vacancyId: number) => {
+    if (!user) return
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const token = localStorage.getItem('accessToken') || '';
+      const response = await fetch(`${apiUrl}/favorites/${vacancyId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      })
+      if (response.ok) {
+        setFavorites(favorites.filter(fav => fav.id !== vacancyId))
+        toast.success('Вакансия удалена из избранного')
+      } else {
+        const data = await response.json()
+        toast.error(data.error || 'Ошибка при удалении из избранного')
+      }
+    } catch (error) {
+      console.error('Error removing favorite:', error)
+      toast.error('Ошибка при удалении из избранного')
+    }
+  }
+
   const loadChats = async () => {
     if (!user) return
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const token = localStorage.getItem('accessToken') || '';
       const response = await fetch(`${apiUrl}/chats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         credentials: 'include'
       })
       if (response.ok) {
@@ -700,15 +885,24 @@ const GraduateProfile = () => {
     if (!user) return
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const token = localStorage.getItem('accessToken') || '';
       const response = await fetch(`${apiUrl}/applications/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         credentials: 'include'
       })
       if (response.ok) {
         setApplications(applications.filter(app => app.id !== id))
+        toast.success('Отклик удален')
+      } else {
+        const data = await response.json()
+        toast.error(data.error || 'Ошибка при удалении отклика')
       }
     } catch (error) {
       console.error('Error deleting application:', error)
+      toast.error('Ошибка при удалении отклика')
     }
   }
 
@@ -888,39 +1082,39 @@ const GraduateProfile = () => {
             <>
               {/* Header Card with Photo and Basic Info */}
               <Card className="mb-6">
-                <div className="flex justify-between items-start mb-6">
+              <div className="flex justify-between items-start mb-6">
                   <h2 className="text-3xl font-bold text-white">Мой профиль</h2>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setIsEditingProfile(true)}
-                      className="p-2 text-accent-cyan hover:bg-dark-surface rounded-lg transition-colors"
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setIsEditingProfile(true)}
+                    className="p-2 text-accent-cyan hover:bg-dark-surface rounded-lg transition-colors"
                       title="Редактировать профиль"
-                    >
-                      <Edit className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={handleDeleteProfile}
-                      className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
+                  >
+                    <Edit className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={handleDeleteProfile}
+                    className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
                       title="Удалить профиль"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </div>
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
                 </div>
+              </div>
 
-                {isEditingProfile ? (
-                  <ProfileEditForm
-                    profile={profile}
-                    onSave={handleSaveProfile}
-                    onCancel={() => setIsEditingProfile(false)}
-                  />
-                ) : (
+              {isEditingProfile ? (
+                <ProfileEditForm
+                  profile={profile}
+                  onSave={handleSaveProfile}
+                  onCancel={() => setIsEditingProfile(false)}
+                />
+              ) : (
                   <div className="flex flex-col md:flex-row gap-8">
                     {/* Photo */}
                     <div className="w-full md:w-56 h-56 bg-dark-surface rounded-2xl overflow-hidden border-2 border-accent-cyan/30 flex items-center justify-center shadow-lg">
                       {profile.photo ? (
                         <img 
-                          src={profile.photo} 
+                          src={getImageUrl(profile.photo)} 
                           alt={`${profile.firstName} ${profile.lastName}`}
                           className="w-full h-full object-cover" 
                         />
@@ -946,7 +1140,7 @@ const GraduateProfile = () => {
                             <a href={`mailto:${profile.email}`} className="hover:text-accent-cyan transition-colors">
                               {profile.email}
                             </a>
-                          </div>
+                      </div>
                         )}
                         {profile.phone && (
                           <div className="flex items-center gap-3 text-gray-300">
@@ -954,28 +1148,28 @@ const GraduateProfile = () => {
                             <a href={`tel:${profile.phone}`} className="hover:text-accent-cyan transition-colors">
                               {profile.phone}
                             </a>
-                          </div>
+                      </div>
                         )}
                         {profile.city && (
                           <div className="flex items-center gap-3 text-gray-300">
                             <MapPin className="h-5 w-5 text-accent-cyan" />
                             <span>{profile.city}</span>
-                          </div>
+                    </div>
                         )}
-                        {profile.birthDate && (
+                    {profile.birthDate && (
                           <div className="flex items-center gap-3 text-gray-300">
                             <Calendar className="h-5 w-5 text-accent-cyan" />
                             <span>
-                              {profile.birthDate.includes('T') 
-                                ? new Date(profile.birthDate).toLocaleDateString('ru-RU', { 
-                                    year: 'numeric', 
+                          {profile.birthDate.includes('T') 
+                            ? new Date(profile.birthDate).toLocaleDateString('ru-RU', { 
+                                year: 'numeric', 
                                     month: 'long', 
                                     day: 'numeric' 
-                                  })
-                                : profile.birthDate}
+                              })
+                            : profile.birthDate}
                             </span>
-                          </div>
-                        )}
+                      </div>
+                    )}
                       </div>
 
                       {/* Social Links */}
@@ -1014,8 +1208,8 @@ const GraduateProfile = () => {
                               <span className="text-sm">Портфолио</span>
                             </a>
                           )}
-                        </div>
-                      )}
+                      </div>
+                    )}
                     </div>
                   </div>
                 )}
@@ -1027,10 +1221,10 @@ const GraduateProfile = () => {
                   <div className="flex items-center gap-3 mb-4">
                     <Briefcase className="h-6 w-6 text-accent-cyan" />
                     <h3 className="text-xl font-semibold text-white">О себе</h3>
-                  </div>
+                      </div>
                   <p className="text-gray-300 leading-relaxed text-base">{profile.about}</p>
                 </Card>
-              )}
+                    )}
 
               {/* Skills Section */}
               {profile.skills && profile.skills.length > 0 && !isEditingProfile && (
@@ -1038,7 +1232,7 @@ const GraduateProfile = () => {
                   <div className="flex items-center gap-3 mb-4">
                     <Code className="h-6 w-6 text-accent-cyan" />
                     <h3 className="text-xl font-semibold text-white">Навыки</h3>
-                  </div>
+                      </div>
                   <div className="flex flex-wrap gap-3">
                     {profile.skills.map((skill, index) => (
                       <span
@@ -1058,7 +1252,7 @@ const GraduateProfile = () => {
                   <div className="flex items-center gap-3 mb-4">
                     <GraduationCap className="h-6 w-6 text-accent-cyan" />
                     <h3 className="text-xl font-semibold text-white">Образование</h3>
-                  </div>
+                      </div>
                   <p className="text-gray-300 leading-relaxed">{profile.education}</p>
                 </Card>
               )}
@@ -1080,7 +1274,7 @@ const GraduateProfile = () => {
                   <div className="flex items-center gap-3 mb-6">
                     <Code className="h-6 w-6 text-accent-cyan" />
                     <h3 className="text-xl font-semibold text-white">Проекты</h3>
-                  </div>
+                </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {profile.projects.map((project) => (
                       <div
@@ -1126,7 +1320,7 @@ const GraduateProfile = () => {
                       </div>
                     ))}
                   </div>
-                </Card>
+            </Card>
               )}
             </>
           ) : (
@@ -1279,6 +1473,61 @@ const GraduateProfile = () => {
           )}
         </Section>
 
+        {/* Favorites Section */}
+        <Section title="Избранные вакансии" className="bg-dark-bg py-0 scroll-animate-item">
+          {favorites.length > 0 ? (
+            <div className="space-y-4">
+              {favorites.map((fav, index) => (
+                <Card key={fav.id} className="scroll-animate-item" style={{ transitionDelay: `${index * 0.05}s` }}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-white mb-2">{fav.title}</h3>
+                      <p className="text-gray-300 mb-1">
+                        Компания: {fav.companyName || fav.employer?.companyName || fav.employer?.username || 'Неизвестная компания'}
+                      </p>
+                      {fav.location && (
+                        <p className="text-gray-400 text-sm mb-1">📍 {fav.location}</p>
+                      )}
+                      {fav.salary && (
+                        <p className="text-gray-400 text-sm mb-1">💰 {fav.salary.toLocaleString()} руб.</p>
+                      )}
+                      {fav.description && (
+                        <p className="text-gray-300 text-sm mt-2 line-clamp-2">{fav.description}</p>
+                      )}
+                      <p className="text-gray-400 text-xs mt-2">
+                        Добавлено: {new Date(fav.createdAt || Date.now()).toLocaleDateString('ru-RU', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 ml-4 items-center">
+                      <button
+                        onClick={() => navigate(`/vacancy/${fav.id}`)}
+                        className="btn-secondary text-sm whitespace-nowrap"
+                      >
+                        Подробнее
+                      </button>
+                      <button
+                        onClick={() => handleRemoveFavorite(fav.id)}
+                        className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
+                        title="Удалить из избранного"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <p className="text-gray-300 text-center py-8">У вас пока нет избранных вакансий</p>
+            </Card>
+          )}
+        </Section>
+
         {/* Applications Section */}
         <Section title="Мои отклики" className="bg-dark-bg py-0 scroll-animate-item">
           {applications.length > 0 ? (
@@ -1286,17 +1535,41 @@ const GraduateProfile = () => {
               {applications.map((app, index) => (
                 <Card key={app.id} className="scroll-animate-item" style={{ transitionDelay: `${index * 0.05}s` }}>
                   <div className="flex justify-between items-start">
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-xl font-semibold text-white mb-2">{app.jobTitle}</h3>
                       <p className="text-gray-300 mb-1">Компания: {app.company}</p>
-                      <p className="text-gray-400 text-sm">Отклик отправлен: {app.appliedDate}</p>
+                      <p className="text-gray-400 text-sm mb-2">Отклик отправлен: {app.appliedDate}</p>
+                      {app.status && (
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            app.status === 'accepted' ? 'bg-green-500/20 text-green-400' :
+                            app.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                            'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            {app.status === 'accepted' ? 'Принят' :
+                             app.status === 'rejected' ? 'Отклонен' :
+                             'На рассмотрении'}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleDeleteApplication(app.id)}
-                      className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
+                    <div className="flex gap-2 ml-4 items-center">
+                      {app.vacancyId && (
+                        <button
+                          onClick={() => navigate(`/vacancy/${app.vacancyId}`)}
+                          className="btn-secondary text-sm whitespace-nowrap"
+                        >
+                          Подробнее
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteApplication(app.id)}
+                        className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
+                        title="Удалить отклик"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -1361,9 +1634,9 @@ const GraduateProfile = () => {
                 ) : (
                   <div className="text-center py-12">
                     <p className="text-gray-400">У вас пока нет чатов</p>
-                  </div>
+                </div>
                 )}
-              </div>
+            </div>
             </Card>
 
             {/* Chat Messages - Right Panel */}
@@ -1378,9 +1651,9 @@ const GraduateProfile = () => {
                           {selectedChatData.employerName.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-white">{selectedChatData.employerName}</h3>
-                        <p className="text-gray-400 text-sm">{selectedChatData.company}</p>
+                    <div>
+                      <h3 className="text-xl font-semibold text-white">{selectedChatData.employerName}</h3>
+                      <p className="text-gray-400 text-sm">{selectedChatData.company}</p>
                       </div>
                     </div>
                     <button
@@ -1395,20 +1668,20 @@ const GraduateProfile = () => {
                   {/* Messages Area */}
                   <div className="h-[500px] overflow-y-auto space-y-4 mb-4 custom-scrollbar pr-2">
                     {selectedChatData.messages.length > 0 ? (
-                      selectedChatData.messages.map((msg, index) => {
+                      selectedChatData.messages.map((msg) => {
                         const isEditing = editingMessageId === msg.id
                         return (
-                          <div
-                            key={msg.id}
-                            className={`flex ${msg.sender === 'graduate' ? 'justify-end' : 'justify-start'}`}
-                          >
-                            <div
+                      <div
+                        key={msg.id}
+                        className={`flex ${msg.sender === 'graduate' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
                               className={`max-w-[75%] rounded-xl p-4 ${
-                                msg.sender === 'graduate'
-                                  ? 'bg-accent-cyan text-dark-bg'
-                                  : 'bg-dark-surface text-white'
-                              }`}
-                            >
+                            msg.sender === 'graduate'
+                              ? 'bg-accent-cyan text-dark-bg'
+                              : 'bg-dark-surface text-white'
+                          }`}
+                        >
                               {isEditing ? (
                                 <div className="space-y-2">
                                   <textarea
@@ -1433,39 +1706,39 @@ const GraduateProfile = () => {
                                     </button>
                                   </div>
                                 </div>
-                              ) : (
-                                <>
+                                ) : (
+                                  <>
                                   <div className="flex items-start justify-between gap-3 mb-2">
                                     <p className="text-sm leading-relaxed break-words">{msg.text}</p>
                                     {msg.sender === 'graduate' && (
                                       <div className="flex gap-1 flex-shrink-0">
-                                        <button
+                                    <button
                                           onClick={() => startEditingMessage(msg.id, msg.text)}
                                           className="p-1.5 hover:bg-black/20 rounded transition-colors"
                                           title="Редактировать"
-                                        >
+                                    >
                                           <Edit className="h-3.5 w-3.5" />
-                                        </button>
-                                        <button
-                                          onClick={() => handleDeleteMessage(selectedChatData.id, msg.id)}
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteMessage(selectedChatData.id, msg.id)}
                                           className="p-1.5 hover:bg-black/20 rounded transition-colors"
                                           title="Удалить"
-                                        >
+                                    >
                                           <Trash2 className="h-3.5 w-3.5" />
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
+                                    </button>
+                              </div>
+                            )}
+                          </div>
                                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-current/20">
-                                    <span className="text-xs opacity-70">{msg.timestamp}</span>
+                            <span className="text-xs opacity-70">{msg.timestamp}</span>
                                     {msg.isEdited && (
                                       <span className="text-xs opacity-70 italic">(изменено)</span>
                                     )}
-                                  </div>
+                          </div>
                                 </>
                               )}
-                            </div>
-                          </div>
+                        </div>
+                      </div>
                         )
                       })
                     ) : (
@@ -1504,7 +1777,7 @@ const GraduateProfile = () => {
                 <div className="flex flex-col items-center justify-center h-[600px] text-center">
                   <div className="w-16 h-16 rounded-full bg-dark-surface flex items-center justify-center mb-4">
                     <MessageCircle className="h-8 w-8 text-gray-500" />
-                  </div>
+            </div>
                   <p className="text-gray-400 text-lg mb-2">Выберите чат</p>
                   <p className="text-gray-500 text-sm">Выберите чат из списка слева, чтобы начать общение</p>
                 </div>

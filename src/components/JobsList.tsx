@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Search, Filter, X, MapPin, DollarSign, Briefcase } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Search, Filter, X, MapPin, DollarSign, Briefcase, Heart, Check } from 'lucide-react'
 import Card from './ui/Card'
-import FilterWizard, { FilterData } from './FilterWizard'
+import FilterWizard, { type FilterData } from './FilterWizard'
 
 export interface Job {
   id: string
@@ -30,9 +31,12 @@ export interface Job {
 interface JobsListProps {
   jobs: Job[]
   onApply?: (jobId: string) => void
+  favoriteIds?: Set<number>
+  onToggleFavorite?: (jobId: string) => void
+  appliedIds?: Set<number>
 }
 
-const JobsList = ({ jobs, onApply }: JobsListProps) => {
+const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, appliedIds = new Set() }: JobsListProps) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedJob, setSelectedJob] = useState<string | null>(null)
   const [showFilterWizard, setShowFilterWizard] = useState(false)
@@ -60,6 +64,28 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
       items.forEach((item) => observer.unobserve(item))
     }
   }, [jobs])
+
+  // Блокировка прокрутки и обработчик Escape для модального окна
+  useEffect(() => {
+    if (selectedJob) {
+      // Блокируем прокрутку фона
+      document.body.style.overflow = 'hidden'
+      
+      // Обработчик Escape
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setSelectedJob(null)
+        }
+      }
+      
+      document.addEventListener('keydown', handleEscape)
+      
+      return () => {
+        document.body.style.overflow = 'unset'
+        document.removeEventListener('keydown', handleEscape)
+      }
+    }
+  }, [selectedJob])
   
   const [filters, setFilters] = useState<FilterData>({
     employmentType: [],
@@ -82,45 +108,84 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
   }
 
   const filteredJobs = jobs.filter(job => {
+    // Поиск по тексту
     const matchesSearch = 
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.description.toLowerCase().includes(searchTerm.toLowerCase())
     
+    // Фильтр по типу занятости
+    // API возвращает: 'full-time', 'part-time', 'contract', 'internship'
+    // Фильтр может содержать: 'full-time', 'part-time', 'remote', 'freelance', 'internship'
     const matchesEmploymentType = filters.employmentType.length === 0 || 
-      filters.employmentType.includes(job.type)
+      filters.employmentType.some(filterType => {
+        // Маппинг значений фильтра на значения из API
+        if (filterType === 'remote' || filterType === 'freelance') {
+          // Эти значения не существуют в API, но могут быть в workFormat
+          // Пропускаем проверку по employmentType для этих значений
+          return true
+        }
+        return job.type === filterType
+      })
     
+    // Фильтр по формату работы (workFormat не приходит из API, всегда 'office' по умолчанию)
     const matchesWorkFormat = filters.workFormat.length === 0 || 
       (job.workFormat && filters.workFormat.includes(job.workFormat))
     
+    // Фильтр по региону
     const matchesRegion = !filters.region || 
-      job.location.toLowerCase().includes(filters.region.toLowerCase())
+      (job.location && job.location.toLowerCase().includes(filters.region.toLowerCase()))
     
-    const matchesExperience = !filters.experience || job.experience === filters.experience
+    // Фильтр по опыту
+    // API возвращает: 'junior', 'middle', 'senior', 'lead'
+    // Фильтр может содержать: 'no-experience', 'junior', 'middle', 'senior', 'lead'
+    const matchesExperience = !filters.experience || 
+      (filters.experience === 'no-experience' ? false : job.experience === filters.experience)
     
+    // Фильтр по зарплате
     const matchesSalary = filters.salaryUnlimited || 
       !filters.salary ||
-      job.salary.toLowerCase().includes(filters.salary.toLowerCase())
+      (job.salary && job.salary.toLowerCase().includes(filters.salary.toLowerCase()))
     
-    const matchesTechnology = filters.technology.length === 0 ||
-      (job.technology && filters.technology.some(t => job.technology?.includes(t)))
+    // Фильтр по навыкам (skills из API используется для всех категорий)
+    // Проверяем, есть ли хотя бы один навык из фильтра в массиве skills вакансии
+    const jobSkills = job.technology || job.programmingLanguages || job.additionalSkills || []
+    const allFilterSkills = [
+      ...filters.technology,
+      ...filters.programmingLanguages,
+      ...filters.additionalSkills
+    ]
     
-    const matchesLanguages = filters.programmingLanguages.length === 0 ||
-      (job.programmingLanguages && filters.programmingLanguages.some(l => job.programmingLanguages?.includes(l)))
+    const matchesSkills = allFilterSkills.length === 0 ||
+      (jobSkills.length > 0 && allFilterSkills.some(filterSkill => 
+        jobSkills.some((jobSkill: string) => 
+          jobSkill.toLowerCase().includes(filterSkill.toLowerCase()) ||
+          filterSkill.toLowerCase().includes(jobSkill.toLowerCase())
+        )
+      ))
     
-    const matchesSkills = filters.additionalSkills.length === 0 ||
-      (job.additionalSkills && filters.additionalSkills.some(s => job.additionalSkills?.includes(s)))
+    // Фильтр по английскому (если есть в данных)
+    const matchesEnglish = !filters.englishLevel || 
+      (job.englishLevel && job.englishLevel === filters.englishLevel)
     
-    const matchesEnglish = !filters.englishLevel || job.englishLevel === filters.englishLevel
-    const matchesCompanySize = !filters.companySize || job.companySize === filters.companySize
-    const matchesIndustry = !filters.industry || job.industry === filters.industry
+    // Фильтр по размеру компании (если есть в данных)
+    const matchesCompanySize = !filters.companySize || 
+      (job.companySize && job.companySize === filters.companySize)
+    
+    // Фильтр по отрасли (если есть в данных)
+    const matchesIndustry = !filters.industry || 
+      (job.industry && job.industry.toLowerCase().includes(filters.industry.toLowerCase()))
     
     return matchesSearch && matchesEmploymentType && matchesWorkFormat && matchesRegion &&
-           matchesExperience && matchesSalary && matchesTechnology && matchesLanguages &&
-           matchesSkills && matchesEnglish && matchesCompanySize && matchesIndustry
+           matchesExperience && matchesSalary && matchesSkills && 
+           matchesEnglish && matchesCompanySize && matchesIndustry
   })
 
-  const selectedJobData = jobs.find(j => j.id === selectedJob)
+  const selectedJobData = jobs.find(j => {
+    const jobId = String(j.id);
+    const selectedId = String(selectedJob);
+    return jobId === selectedId;
+  })
 
   const handleApply = (jobId: string) => {
     if (onApply) {
@@ -341,19 +406,46 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 ml-4">
-                  <button
-                    onClick={() => setSelectedJob(job.id)}
-                    className="btn-secondary text-sm whitespace-nowrap"
-                  >
-                    Подробнее
-                  </button>
-                  {onApply && (
+                  <div className="flex gap-2">
+                    {onToggleFavorite && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onToggleFavorite(job.id)
+                        }}
+                        className={`p-2 rounded-lg transition-colors ${
+                          favoriteIds.has(parseInt(job.id, 10))
+                            ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                            : 'bg-dark-surface text-gray-400 hover:bg-dark-card hover:text-accent-cyan'
+                        }`}
+                        title={favoriteIds.has(parseInt(job.id, 10)) ? 'Удалить из избранного' : 'Добавить в избранное'}
+                      >
+                        <Heart 
+                          className={`h-5 w-5 ${favoriteIds.has(parseInt(job.id, 10)) ? 'fill-current' : ''}`} 
+                        />
+                      </button>
+                    )}
                     <button
-                      onClick={() => handleApply(job.id)}
-                      className="btn-primary text-sm whitespace-nowrap"
+                      onClick={() => setSelectedJob(job.id)}
+                      className="btn-secondary text-sm whitespace-nowrap flex-1"
                     >
-                      Откликнуться
+                      Подробнее
                     </button>
+                  </div>
+                  {onApply && (
+                    appliedIds.has(parseInt(job.id, 10)) ? (
+                      <div className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg text-sm whitespace-nowrap flex items-center gap-2 justify-center border border-green-500/30">
+                        <Check className="h-4 w-4" />
+                        <span>Вы откликнулись</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleApply(job.id)}
+                        className="btn-primary text-sm whitespace-nowrap"
+                      >
+                        Откликнуться
+                      </button>
+                    )
                   )}
                 </div>
               </div>
@@ -367,69 +459,230 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
       </div>
 
       {/* Job Detail Modal */}
-      {selectedJobData && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <div className="flex justify-between items-start mb-4">
-              <h2 className="text-2xl font-bold text-white">{selectedJobData.title}</h2>
+      {selectedJobData && createPortal(
+        <div 
+          className="fixed inset-0 bg-black/75 flex items-center justify-center z-[100] p-4"
+          onClick={() => setSelectedJob(null)}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+        >
+          <div 
+            className="max-w-4xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar relative z-[101]"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          >
+            <Card className="w-full">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex-1">
+                <h2 className="text-3xl font-bold text-white mb-2">{selectedJobData.title}</h2>
+                <div className="flex items-center gap-4 text-gray-400">
+                  <div className="flex items-center gap-1">
+                    <Briefcase className="h-4 w-4" />
+                    <span>{selectedJobData.company}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    <span>{selectedJobData.location}</span>
+                  </div>
+                </div>
+              </div>
               <button
                 onClick={() => setSelectedJob(null)}
-                className="p-2 text-gray-400 hover:bg-dark-surface rounded-lg"
+                className="p-2 text-gray-400 hover:text-white hover:bg-dark-surface rounded-lg transition-colors"
               >
-                <X className="h-5 w-5" />
+                <X className="h-6 w-6" />
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-gray-400 text-sm">Компания</label>
-                <p className="text-white">{selectedJobData.company}</p>
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm">Локация</label>
-                <p className="text-white">{selectedJobData.location}</p>
-              </div>
-              {selectedJobData.salary && (
+            <div className="space-y-6">
+              {/* Основная информация */}
+              <div className="grid grid-cols-2 gap-4 pb-4 border-b border-dark-surface">
+                {selectedJobData.salary && (
+                  <div>
+                    <label className="text-gray-400 text-sm font-medium mb-1 block">Зарплата</label>
+                    <p className="text-white text-lg font-semibold text-accent-cyan">{selectedJobData.salary}</p>
+                  </div>
+                )}
                 <div>
-                  <label className="text-gray-400 text-sm">Зарплата</label>
-                  <p className="text-white">{selectedJobData.salary}</p>
+                  <label className="text-gray-400 text-sm font-medium mb-1 block">Тип работы</label>
+                  <p className="text-white">
+                    {selectedJobData.type === 'full-time' ? 'Полный день' : 
+                     selectedJobData.type === 'part-time' ? 'Частичная занятость' :
+                     selectedJobData.type === 'remote' ? 'Удаленно' : 
+                     selectedJobData.type === 'hybrid' ? 'Гибрид' :
+                     selectedJobData.type === 'internship' ? 'Стажировка' : 'Фриланс'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-gray-400 text-sm font-medium mb-1 block">Опыт</label>
+                  <p className="text-white">
+                    {selectedJobData.experience === 'no-experience' ? 'Нет опыта' :
+                     selectedJobData.experience === 'junior' ? 'Junior (до 2-х лет)' :
+                     selectedJobData.experience === 'middle' ? 'Middle (от 2 до 5 лет)' : 
+                     selectedJobData.experience === 'senior' ? 'Senior (более 5 лет)' : 'Lead'}
+                  </p>
+                </div>
+                {selectedJobData.workFormat && (
+                  <div>
+                    <label className="text-gray-400 text-sm font-medium mb-1 block">Формат работы</label>
+                    <p className="text-white">
+                      {selectedJobData.workFormat === 'office' ? 'Офис' :
+                       selectedJobData.workFormat === 'hybrid' ? 'Гибрид' : 'Удаленно'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Навыки и технологии */}
+              {(selectedJobData.technology && selectedJobData.technology.length > 0) ||
+               (selectedJobData.programmingLanguages && selectedJobData.programmingLanguages.length > 0) ||
+               (selectedJobData.additionalSkills && selectedJobData.additionalSkills.length > 0) ? (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">Требуемые навыки</h3>
+                  <div className="space-y-3">
+                    {selectedJobData.technology && selectedJobData.technology.length > 0 && (
+                      <div>
+                        <label className="text-gray-400 text-sm font-medium mb-2 block">Технологии</label>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedJobData.technology.map((tech, idx) => (
+                            <span 
+                              key={idx} 
+                              className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {selectedJobData.programmingLanguages && selectedJobData.programmingLanguages.length > 0 && (
+                      <div>
+                        <label className="text-gray-400 text-sm font-medium mb-2 block">Языки программирования</label>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedJobData.programmingLanguages.map((lang, idx) => (
+                            <span 
+                              key={idx} 
+                              className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full"
+                            >
+                              {lang}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {selectedJobData.additionalSkills && selectedJobData.additionalSkills.length > 0 && (
+                      <div>
+                        <label className="text-gray-400 text-sm font-medium mb-2 block">Дополнительные навыки</label>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedJobData.additionalSkills.map((skill, idx) => (
+                            <span 
+                              key={idx} 
+                              className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Совпадающие навыки */}
+              {selectedJobData.matchingSkills && selectedJobData.matchingSkills.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">Ваши совпадающие навыки</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJobData.matchingSkills.map((skill, idx) => (
+                      <span 
+                        key={idx} 
+                        className="px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
+
+              {/* Дополнительная информация */}
+              {(selectedJobData.englishLevel || selectedJobData.companySize || selectedJobData.industry) && (
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedJobData.englishLevel && (
+                    <div>
+                      <label className="text-gray-400 text-sm font-medium mb-1 block">Уровень английского</label>
+                      <p className="text-white">
+                        {selectedJobData.englishLevel === 'basic' ? 'Базовый' :
+                         selectedJobData.englishLevel === 'intermediate' ? 'Средний' :
+                         selectedJobData.englishLevel === 'advanced' ? 'Продвинутый' : 'Свободное владение'}
+                      </p>
+                    </div>
+                  )}
+                  {selectedJobData.companySize && (
+                    <div>
+                      <label className="text-gray-400 text-sm font-medium mb-1 block">Размер компании</label>
+                      <p className="text-white">
+                        {selectedJobData.companySize === 'startup' ? 'Стартап (<10)' :
+                         selectedJobData.companySize === 'small' ? 'Небольшая (10-50)' :
+                         selectedJobData.companySize === 'medium' ? 'Средняя (50-200)' : 'Большая (>200)'}
+                      </p>
+                    </div>
+                  )}
+                  {selectedJobData.industry && (
+                    <div className="col-span-2">
+                      <label className="text-gray-400 text-sm font-medium mb-1 block">Отрасль</label>
+                      <p className="text-white">{selectedJobData.industry}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Описание */}
               <div>
-                <label className="text-gray-400 text-sm">Тип работы</label>
-                <p className="text-white">
-                  {selectedJobData.type === 'full-time' ? 'Полный день' : 
-                   selectedJobData.type === 'part-time' ? 'Частичная занятость' :
-                   selectedJobData.type === 'remote' ? 'Удаленно' : 
-                   selectedJobData.type === 'hybrid' ? 'Гибрид' :
-                   selectedJobData.type === 'internship' ? 'Стажировка' : 'Фриланс'}
-                </p>
+                <h3 className="text-lg font-semibold text-white mb-2">Описание</h3>
+                <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{selectedJobData.description}</p>
               </div>
-              <div>
-                <label className="text-gray-400 text-sm">Опыт</label>
-                <p className="text-white">
-                  {selectedJobData.experience === 'no-experience' ? 'Нет опыта' :
-                   selectedJobData.experience === 'junior' ? 'Junior' :
-                   selectedJobData.experience === 'middle' ? 'Middle' : 
-                   selectedJobData.experience === 'senior' ? 'Senior' : 'Lead'}
-                </p>
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm">Описание</label>
-                <p className="text-white whitespace-pre-wrap">{selectedJobData.description}</p>
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm">Требования</label>
-                <p className="text-white whitespace-pre-wrap">{selectedJobData.requirements}</p>
-              </div>
-              {onApply && (
-                <div className="flex gap-2 pt-4">
+
+              {/* Требования */}
+              {selectedJobData.requirements && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Требования</h3>
+                  <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{selectedJobData.requirements}</p>
+                </div>
+              )}
+
+              {/* Кнопки действий */}
+              <div className="flex justify-between items-center pt-4 border-t border-dark-surface">
+                {onToggleFavorite && (
                   <button
-                    onClick={() => handleApply(selectedJobData.id)}
-                    className="btn-primary flex-1"
+                    onClick={() => onToggleFavorite(selectedJobData.id)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      favoriteIds.has(parseInt(selectedJobData.id, 10))
+                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                        : 'bg-dark-surface text-gray-400 hover:bg-dark-card hover:text-accent-cyan'
+                    }`}
+                    title={favoriteIds.has(parseInt(selectedJobData.id, 10)) ? 'Удалить из избранного' : 'Добавить в избранное'}
                   >
-                    Откликнуться
+                    <Heart 
+                      className={`h-5 w-5 ${favoriteIds.has(parseInt(selectedJobData.id, 10)) ? 'fill-current' : ''}`} 
+                    />
                   </button>
+                )}
+                <div className="flex gap-2 ml-auto">
+                  {onApply && (
+                    appliedIds.has(parseInt(selectedJobData.id, 10)) ? (
+                      <div className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg text-sm whitespace-nowrap flex items-center gap-2 justify-center border border-green-500/30">
+                        <Check className="h-4 w-4" />
+                        <span>Вы откликнулись</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleApply(selectedJobData.id)}
+                        className="btn-primary"
+                      >
+                        Откликнуться
+                      </button>
+                    )
+                  )}
                   <button
                     onClick={() => setSelectedJob(null)}
                     className="btn-secondary"
@@ -437,10 +690,12 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
                     Закрыть
                   </button>
                 </div>
-              )}
+              </div>
             </div>
-          </Card>
-        </div>
+            </Card>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   )

@@ -107,18 +107,11 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <Briefcase className="h-6 w-6 text-accent-cyan" />
           Мои вакансии ({vacancies.length})
         </h2>
-        <button
-          onClick={() => setShowForm(true)}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus className="h-5 w-5" />
-          Создать вакансию
-        </button>
       </div>
 
       {isLoading ? (
@@ -139,7 +132,17 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div>
+          <div className="text-center mb-6">
+            <button
+              onClick={() => setShowForm(true)}
+              className="btn-primary flex items-center gap-2 mx-auto"
+            >
+              <Plus className="h-5 w-5" />
+              Создать вакансию
+            </button>
+          </div>
+          <div className="space-y-4">
           {vacancies.map((vacancy) => (
             <div
               key={vacancy.id}
@@ -229,6 +232,7 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
               )}
             </div>
           ))}
+          </div>
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import { Outlet } from "react-router-dom";
 import { type User, type OutletContext } from "./types";
 import { Toaster } from "react-hot-toast";
+import ScrollToTop from "./components/common/ScrollToTop/ScrollToTop";
 
 const App = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -44,6 +45,7 @@ const App = () => {
   
   return (
     <div className="min-h-screen flex flex-col bg-dark-bg">
+      <ScrollToTop />
       <Toaster 
         position="top-right"
         toastOptions={{
@@ -71,7 +73,7 @@ const App = () => {
       <main className="flex-grow">
         <Outlet context={contextValue}/>
       </main>
-      <Footer />
+      <Footer user={user} />
     </div>
   );
 };
