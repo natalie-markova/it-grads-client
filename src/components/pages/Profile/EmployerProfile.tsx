@@ -51,6 +51,25 @@ const EmployerProfile = () => {
   const [profile, setProfile] = useState<EmployerProfileData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  // Функция для формирования полного URL изображения
+  const getImageUrl = (url: string | undefined): string => {
+    if (!url) return ''
+    // Если URL уже полный (начинается с http), возвращаем как есть
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url
+    }
+    // Если это относительный путь к загруженному файлу, добавляем базовый URL сервера
+    if (url.startsWith('/uploads/')) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+      const baseUrl = apiUrl.replace('/api', '')
+      return `${baseUrl}${url}`
+    }
+    return url
+  }
   const [formData, setFormData] = useState<EmployerProfileData>({
     companyName: '',
     companyDescription: '',
@@ -63,15 +82,25 @@ const EmployerProfile = () => {
   });
 
   useEffect(() => {
-    if (!user || user.role !== 'employer') {
+    // Проверяем авторизацию только один раз при монтировании или при изменении user
+    if (!user) {
       navigate('/login');
       return;
     }
+    if (user.role !== 'employer') {
+      navigate('/login');
+      return;
+    }
+    // Загружаем данные только если пользователь авторизован и является работодателем
     loadProfile();
     loadApplications();
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.role]); // Зависимости только от критических полей, чтобы избежать лишних редиректов
 
   const loadProfile = async () => {
+    if (!user || user.role !== 'employer') {
+      return; // Не загружаем профиль, если пользователь не авторизован или не работодатель
+    }
     try {
       const response = await $api.get(`/user/profile`);
       const data = response.data;
@@ -90,8 +119,14 @@ const EmployerProfile = () => {
 
       setProfile(profileData);
       setFormData(profileData);
-    } catch (error) {
+      setAvatarPreview(profileData.avatar || null);
+    } catch (error: any) {
       console.error('Error loading profile:', error);
+      // Если ошибка 401 или 403, не делаем редирект здесь - это обработается в useEffect
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        // Ошибка авторизации будет обработана в useEffect
+        return;
+      }
       // Если профиль не загружен, используем пустые данные
       const emptyProfile: EmployerProfileData = {
         companyName: '',
@@ -163,15 +198,13 @@ const EmployerProfile = () => {
       console.error('Error loading applications:', error);
       console.error('Error response:', error.response);
       console.error('Error message:', error.message);
-      if (error.response?.status === 403) {
-        console.log('Access denied - user may not be employer');
-        toast.error('Доступ запрещен');
-      } else if (error.response?.status === 401) {
-        console.log('Unauthorized - token may be invalid');
-        toast.error('Необходимо авторизоваться');
-      } else {
-        toast.error(error.response?.data?.error || 'Ошибка при загрузке откликов');
+      // Если ошибка 401 или 403, не делаем редирект здесь - это обработается в useEffect
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        console.log('Access denied or unauthorized - will be handled in useEffect');
+        // Ошибка авторизации будет обработана в useEffect, не делаем редирект здесь
+        return;
       }
+      toast.error(error.response?.data?.error || 'Ошибка при загрузке откликов');
     }
   };
 
@@ -210,6 +243,42 @@ const EmployerProfile = () => {
 
           {isEditing ? (
             <form onSubmit={handleSave} className="space-y-6">
+              {/* Загрузка аватара */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Аватар компании
+                </label>
+                <div className="space-y-3">
+                  {avatarPreview && (
+                    <div className="w-32 h-32 rounded-lg overflow-hidden border border-dark-card">
+                      <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <label className="flex-1 cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        className="hidden"
+                      />
+                      <span className="inline-block px-4 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors text-sm">
+                        {avatarFile ? 'Файл выбран' : 'Выбрать файл'}
+                      </span>
+                    </label>
+                    {avatarFile && (
+                      <button
+                        type="button"
+                        onClick={handleUploadAvatar}
+                        disabled={isUploadingAvatar}
+                        className="px-4 py-2 bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg font-medium rounded-lg transition-colors text-sm disabled:opacity-50"
+                      >
+                        {isUploadingAvatar ? 'Загрузка...' : 'Загрузить'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -344,7 +413,7 @@ const EmployerProfile = () => {
               <div className="flex items-start gap-6">
                 <div className="w-24 h-24 bg-accent-cyan/20 rounded-lg flex items-center justify-center">
                   {profile.avatar ? (
-                    <img src={profile.avatar} alt={profile.companyName} className="w-full h-full object-cover rounded-lg" />
+                    <img src={getImageUrl(profile.avatar)} alt={profile.companyName} className="w-full h-full object-cover rounded-lg" />
                   ) : (
                     <Building2 className="h-12 w-12 text-accent-cyan" />
                   )}
@@ -466,8 +535,8 @@ const EmployerProfile = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           {app.user?.avatar ? (
-                            <img 
-                              src={app.user.avatar} 
+                            <img
+                              src={getImageUrl(app.user.avatar)}
                               alt={app.user.username} 
                               className="w-12 h-12 rounded-full object-cover"
                             />
@@ -511,7 +580,7 @@ const EmployerProfile = () => {
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col gap-2 ml-4">
+                      <div className="flex gap-2 ml-4 items-center">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                           app.status === 'accepted' ? 'bg-green-500/20 text-green-400' :
                           app.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
@@ -522,7 +591,7 @@ const EmployerProfile = () => {
                            'На рассмотрении'}
                         </span>
                         {app.status === 'pending' && (
-                          <div className="flex gap-2">
+                          <>
                             <button
                               onClick={() => handleUpdateApplicationStatus(app.id, 'accepted')}
                               className="px-3 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-sm transition-colors flex items-center gap-1"
@@ -537,7 +606,7 @@ const EmployerProfile = () => {
                               <X className="h-4 w-4" />
                               Отклонить
                             </button>
-                          </div>
+                          </>
                         )}
                       </div>
                     </div>

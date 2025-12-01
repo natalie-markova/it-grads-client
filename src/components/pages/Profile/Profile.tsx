@@ -4,7 +4,7 @@ import { Edit, Trash2, X, Send, Mail, Phone, MapPin, Calendar, GraduationCap, Br
 import Card from '../../ui/Card'
 import Section from '../../ui/Section'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
-import { type User, type OutletContext } from '../../../types'
+import { type OutletContext } from '../../../types'
 import toast from 'react-hot-toast'
 import ResumeForm from '../Resume/ResumeForm'
 
@@ -42,6 +42,7 @@ interface Application {
   company: string
   appliedDate: string
   status?: 'pending' | 'accepted' | 'rejected'
+  vacancyId?: number
 }
 
 interface Resume {
@@ -85,10 +86,73 @@ interface ProfileEditFormProps {
 
 const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) => {
   const [formData, setFormData] = useState<Profile>(profile)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
   useEffect(() => {
     setFormData(profile)
+    setPhotoPreview(profile.photo || null)
   }, [profile])
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Проверяем тип файла
+      if (!file.type.startsWith('image/')) {
+        toast.error('Пожалуйста, выберите файл изображения')
+        return
+      }
+      // Проверяем размер файла (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Размер файла не должен превышать 5MB')
+        return
+      }
+      setPhotoFile(file)
+      // Создаем превью
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleUploadPhoto = async () => {
+    if (!photoFile) return
+
+    setIsUploading(true)
+    try {
+      const uploadFormData = new FormData()
+      uploadFormData.append('photo', photoFile)
+
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+      const token = localStorage.getItem('accessToken')
+      
+      const response = await fetch(`${apiUrl}/user/upload-photo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: uploadFormData,
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        throw new Error('Ошибка при загрузке фото')
+      }
+
+      const data = await response.json()
+      setFormData({ ...formData, photo: data.photo })
+      setPhotoFile(null)
+      toast.success('Фото успешно загружено')
+    } catch (error) {
+      console.error('Error uploading photo:', error)
+      toast.error('Ошибка при загрузке фото')
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -98,14 +162,48 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Фото (URL)</label>
-        <input
-          type="text"
-          value={formData.photo}
-          onChange={(e) => setFormData({ ...formData, photo: e.target.value })}
-          className="input-field"
-          placeholder="https://..."
-        />
+        <label className="block text-sm font-medium text-gray-300 mb-2">Фото профиля</label>
+        <div className="space-y-3">
+          {photoPreview && (
+            <div className="w-32 h-32 rounded-lg overflow-hidden border border-dark-card">
+              <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="flex gap-2">
+            <label className="flex-1 cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="hidden"
+              />
+              <span className="inline-block px-4 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors text-sm">
+                {photoFile ? 'Файл выбран' : 'Выбрать файл'}
+              </span>
+            </label>
+            {photoFile && (
+              <button
+                type="button"
+                onClick={handleUploadPhoto}
+                disabled={isUploading}
+                className="px-4 py-2 bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg font-medium rounded-lg transition-colors text-sm disabled:opacity-50"
+              >
+                {isUploading ? 'Загрузка...' : 'Загрузить'}
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-gray-400">Или введите URL фото</p>
+          <input
+            type="text"
+            value={formData.photo}
+            onChange={(e) => {
+              setFormData({ ...formData, photo: e.target.value })
+              setPhotoPreview(e.target.value || null)
+            }}
+            className="input-field"
+            placeholder="https://..."
+          />
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
@@ -259,7 +357,24 @@ const GraduateProfile = () => {
   const { user } = useOutletContext<OutletContext>()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
+
+  // Функция для формирования полного URL изображения
+  const getImageUrl = (url: string | undefined): string => {
+    if (!url) return ''
+    // Если URL уже полный (начинается с http), возвращаем как есть
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url
+    }
+    // Если это относительный путь к загруженному файлу, добавляем базовый URL сервера
+    if (url.startsWith('/uploads/')) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+      const baseUrl = apiUrl.replace('/api', '')
+      return `${baseUrl}${url}`
+    }
+    return url
+  }
   const [applications, setApplications] = useState<Application[]>([])
+  const [favorites, setFavorites] = useState<any[]>([])
   const [chats, setChats] = useState<Chat[]>([])
   const [resumes, setResumes] = useState<Resume[]>([])
   const [isCreatingResume, setIsCreatingResume] = useState(false)
@@ -281,6 +396,7 @@ const GraduateProfile = () => {
     }
       loadProfile()
       loadApplications()
+      loadFavorites()
       loadChats()
       loadResumes()
   }, [user])
@@ -434,11 +550,57 @@ const GraduateProfile = () => {
             month: 'long',
             day: 'numeric'
           }),
-          status: app.status || 'pending'
+          status: app.status || 'pending',
+          vacancyId: app.vacancyId || app.vacancy?.id
         })))
       }
     } catch (error) {
       console.error('Error loading applications:', error)
+    }
+  }
+
+  const loadFavorites = async () => {
+    if (!user) return
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const token = localStorage.getItem('accessToken') || '';
+      const response = await fetch(`${apiUrl}/favorites`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setFavorites(data || [])
+      }
+    } catch (error) {
+      console.error('Error loading favorites:', error)
+    }
+  }
+
+  const handleRemoveFavorite = async (vacancyId: number) => {
+    if (!user) return
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const token = localStorage.getItem('accessToken') || '';
+      const response = await fetch(`${apiUrl}/favorites/${vacancyId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      })
+      if (response.ok) {
+        setFavorites(favorites.filter(fav => fav.id !== vacancyId))
+        toast.success('Вакансия удалена из избранного')
+      } else {
+        const data = await response.json()
+        toast.error(data.error || 'Ошибка при удалении из избранного')
+      }
+    } catch (error) {
+      console.error('Error removing favorite:', error)
+      toast.error('Ошибка при удалении из избранного')
     }
   }
 
@@ -952,7 +1114,7 @@ const GraduateProfile = () => {
                     <div className="w-full md:w-56 h-56 bg-dark-surface rounded-2xl overflow-hidden border-2 border-accent-cyan/30 flex items-center justify-center shadow-lg">
                       {profile.photo ? (
                         <img 
-                          src={profile.photo} 
+                          src={getImageUrl(profile.photo)} 
                           alt={`${profile.firstName} ${profile.lastName}`}
                           className="w-full h-full object-cover" 
                         />
@@ -1311,6 +1473,61 @@ const GraduateProfile = () => {
           )}
         </Section>
 
+        {/* Favorites Section */}
+        <Section title="Избранные вакансии" className="bg-dark-bg py-0 scroll-animate-item">
+          {favorites.length > 0 ? (
+            <div className="space-y-4">
+              {favorites.map((fav, index) => (
+                <Card key={fav.id} className="scroll-animate-item" style={{ transitionDelay: `${index * 0.05}s` }}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-white mb-2">{fav.title}</h3>
+                      <p className="text-gray-300 mb-1">
+                        Компания: {fav.companyName || fav.employer?.companyName || fav.employer?.username || 'Неизвестная компания'}
+                      </p>
+                      {fav.location && (
+                        <p className="text-gray-400 text-sm mb-1">📍 {fav.location}</p>
+                      )}
+                      {fav.salary && (
+                        <p className="text-gray-400 text-sm mb-1">💰 {fav.salary.toLocaleString()} руб.</p>
+                      )}
+                      {fav.description && (
+                        <p className="text-gray-300 text-sm mt-2 line-clamp-2">{fav.description}</p>
+                      )}
+                      <p className="text-gray-400 text-xs mt-2">
+                        Добавлено: {new Date(fav.createdAt || Date.now()).toLocaleDateString('ru-RU', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 ml-4 items-center">
+                      <button
+                        onClick={() => navigate(`/vacancy/${fav.id}`)}
+                        className="btn-secondary text-sm whitespace-nowrap"
+                      >
+                        Подробнее
+                      </button>
+                      <button
+                        onClick={() => handleRemoveFavorite(fav.id)}
+                        className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
+                        title="Удалить из избранного"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <p className="text-gray-300 text-center py-8">У вас пока нет избранных вакансий</p>
+            </Card>
+          )}
+        </Section>
+
         {/* Applications Section */}
         <Section title="Мои отклики" className="bg-dark-bg py-0 scroll-animate-item">
           {applications.length > 0 ? (
@@ -1318,7 +1535,7 @@ const GraduateProfile = () => {
               {applications.map((app, index) => (
                 <Card key={app.id} className="scroll-animate-item" style={{ transitionDelay: `${index * 0.05}s` }}>
                   <div className="flex justify-between items-start">
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-xl font-semibold text-white mb-2">{app.jobTitle}</h3>
                       <p className="text-gray-300 mb-1">Компания: {app.company}</p>
                       <p className="text-gray-400 text-sm mb-2">Отклик отправлен: {app.appliedDate}</p>
@@ -1336,12 +1553,23 @@ const GraduateProfile = () => {
                         </div>
                       )}
                     </div>
-                    <button
-                      onClick={() => handleDeleteApplication(app.id)}
-                      className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
+                    <div className="flex gap-2 ml-4 items-center">
+                      {app.vacancyId && (
+                        <button
+                          onClick={() => navigate(`/vacancy/${app.vacancyId}`)}
+                          className="btn-secondary text-sm whitespace-nowrap"
+                        >
+                          Подробнее
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteApplication(app.id)}
+                        className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
+                        title="Удалить отклик"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -1440,7 +1668,7 @@ const GraduateProfile = () => {
                   {/* Messages Area */}
                   <div className="h-[500px] overflow-y-auto space-y-4 mb-4 custom-scrollbar pr-2">
                     {selectedChatData.messages.length > 0 ? (
-                      selectedChatData.messages.map((msg, index) => {
+                      selectedChatData.messages.map((msg) => {
                         const isEditing = editingMessageId === msg.id
                         return (
                       <div

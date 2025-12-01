@@ -28,6 +28,7 @@ import RoadmapDetail from './components/pages/Roadmap/RoadmapDetail';
 import Candidates from './components/pages/Candidates/Candidates';
 import EmployerPublicProfile from './components/pages/Employer/EmployerPublicProfile';
 import ProfileWrapper from './components/pages/Profile/ProfileWrapper';
+import VacancyDetail from './components/pages/Vacancies/VacancyDetail';
 
 const router = createBrowserRouter([
   {
@@ -136,6 +137,10 @@ const router = createBrowserRouter([
       {
         path: "/candidates",
         element: <Candidates />,
+      },
+      {
+        path: "/vacancy/:id",
+        element: <VacancyDetail />,
       },
 
     ]}

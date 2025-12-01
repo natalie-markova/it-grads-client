@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Filter, X, MapPin, DollarSign, Briefcase } from 'lucide-react'
+import { Search, Filter, X, MapPin, DollarSign, Briefcase, Heart, Check } from 'lucide-react'
 import Card from './ui/Card'
 import FilterWizard, { type FilterData } from './FilterWizard'
 
@@ -31,9 +31,12 @@ export interface Job {
 interface JobsListProps {
   jobs: Job[]
   onApply?: (jobId: string) => void
+  favoriteIds?: Set<number>
+  onToggleFavorite?: (jobId: string) => void
+  appliedIds?: Set<number>
 }
 
-const JobsList = ({ jobs, onApply }: JobsListProps) => {
+const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, appliedIds = new Set() }: JobsListProps) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedJob, setSelectedJob] = useState<string | null>(null)
   const [showFilterWizard, setShowFilterWizard] = useState(false)
@@ -403,19 +406,46 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 ml-4">
-                  <button
-                    onClick={() => setSelectedJob(job.id)}
-                    className="btn-secondary text-sm whitespace-nowrap"
-                  >
-                    Подробнее
-                  </button>
-                  {onApply && (
+                  <div className="flex gap-2">
+                    {onToggleFavorite && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onToggleFavorite(job.id)
+                        }}
+                        className={`p-2 rounded-lg transition-colors ${
+                          favoriteIds.has(parseInt(job.id, 10))
+                            ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                            : 'bg-dark-surface text-gray-400 hover:bg-dark-card hover:text-accent-cyan'
+                        }`}
+                        title={favoriteIds.has(parseInt(job.id, 10)) ? 'Удалить из избранного' : 'Добавить в избранное'}
+                      >
+                        <Heart 
+                          className={`h-5 w-5 ${favoriteIds.has(parseInt(job.id, 10)) ? 'fill-current' : ''}`} 
+                        />
+                      </button>
+                    )}
                     <button
-                      onClick={() => handleApply(job.id)}
-                      className="btn-primary text-sm whitespace-nowrap"
+                      onClick={() => setSelectedJob(job.id)}
+                      className="btn-secondary text-sm whitespace-nowrap flex-1"
                     >
-                      Откликнуться
+                      Подробнее
                     </button>
+                  </div>
+                  {onApply && (
+                    appliedIds.has(parseInt(job.id, 10)) ? (
+                      <div className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg text-sm whitespace-nowrap flex items-center gap-2 justify-center border border-green-500/30">
+                        <Check className="h-4 w-4" />
+                        <span>Вы откликнулись</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleApply(job.id)}
+                        className="btn-primary text-sm whitespace-nowrap"
+                      >
+                        Откликнуться
+                      </button>
+                    )
                   )}
                 </div>
               </div>
@@ -621,24 +651,38 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
               )}
 
               {/* Кнопки действий */}
-              {onApply && (
-                <div className="flex gap-3 pt-4 border-t border-dark-surface">
+              <div className="flex justify-between items-center pt-4 border-t border-dark-surface">
+                {onToggleFavorite && (
                   <button
-                    onClick={() => handleApply(selectedJobData.id)}
-                    className="btn-primary flex-1"
+                    onClick={() => onToggleFavorite(selectedJobData.id)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      favoriteIds.has(parseInt(selectedJobData.id, 10))
+                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                        : 'bg-dark-surface text-gray-400 hover:bg-dark-card hover:text-accent-cyan'
+                    }`}
+                    title={favoriteIds.has(parseInt(selectedJobData.id, 10)) ? 'Удалить из избранного' : 'Добавить в избранное'}
                   >
-                    Откликнуться
+                    <Heart 
+                      className={`h-5 w-5 ${favoriteIds.has(parseInt(selectedJobData.id, 10)) ? 'fill-current' : ''}`} 
+                    />
                   </button>
-                  <button
-                    onClick={() => setSelectedJob(null)}
-                    className="btn-secondary px-6"
-                  >
-                    Закрыть
-                  </button>
-                </div>
-              )}
-              {!onApply && (
-                <div className="flex justify-end pt-4 border-t border-dark-surface">
+                )}
+                <div className="flex gap-2 ml-auto">
+                  {onApply && (
+                    appliedIds.has(parseInt(selectedJobData.id, 10)) ? (
+                      <div className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg text-sm whitespace-nowrap flex items-center gap-2 justify-center border border-green-500/30">
+                        <Check className="h-4 w-4" />
+                        <span>Вы откликнулись</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleApply(selectedJobData.id)}
+                        className="btn-primary"
+                      >
+                        Откликнуться
+                      </button>
+                    )
+                  )}
                   <button
                     onClick={() => setSelectedJob(null)}
                     className="btn-secondary"
@@ -646,7 +690,7 @@ const JobsList = ({ jobs, onApply }: JobsListProps) => {
                     Закрыть
                   </button>
                 </div>
-              )}
+              </div>
             </div>
             </Card>
           </div>
