@@ -71,8 +71,8 @@ const Footer = ({ user }: FooterProps) => {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/ai" className="hover:text-accent-cyan transition-colors text-gray-400">
-                      ИИ и Автоматизация
+                    <Link to="/jobs" className="hover:text-accent-cyan transition-colors text-gray-400">
+                      Вакансии
                     </Link>
                   </li>
                 </>

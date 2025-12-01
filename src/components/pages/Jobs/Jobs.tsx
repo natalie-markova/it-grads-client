@@ -11,7 +11,7 @@ const Jobs = () => {
   useScrollAnimation()
   const { user } = useOutletContext<OutletContext>()
   const [jobs, setJobs] = useState<Job[]>([])
-  const [showRecommended, setShowRecommended] = useState(true)
+  const [showRecommended, setShowRecommended] = useState(false)
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set())
   const [appliedIds, setAppliedIds] = useState<Set<number>>(new Set())
 

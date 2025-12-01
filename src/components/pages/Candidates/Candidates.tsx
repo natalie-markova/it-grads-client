@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Briefcase, Filter } from 'lucide-react';
+import { Search, MapPin, Briefcase, Filter, Award, GraduationCap, Globe, Code } from 'lucide-react';
 import Card from '../../ui/Card';
 import Section from '../../ui/Section';
 
@@ -11,6 +11,9 @@ interface Resume {
   location: string;
   level: string;
   desiredSalary: number;
+  experience?: string;
+  education?: string;
+  portfolio?: string;
   user?: {
     username: string;
   };
@@ -76,7 +79,7 @@ const Candidates = () => {
                     </div>
 
                     {resume.description && (
-                      <p className="text-gray-300">{resume.description}</p>
+                      <p className="text-gray-300 whitespace-pre-wrap">{resume.description}</p>
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -94,16 +97,59 @@ const Candidates = () => {
                       )}
                     </div>
 
+                    {resume.experience && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                          <Award className="h-5 w-5 text-accent-cyan" />
+                          Опыт работы
+                        </h4>
+                        <p className="text-gray-300 whitespace-pre-wrap">{resume.experience}</p>
+                      </div>
+                    )}
+
+                    {resume.education && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                          <GraduationCap className="h-5 w-5 text-accent-cyan" />
+                          Образование
+                        </h4>
+                        <p className="text-gray-300 whitespace-pre-wrap">{resume.education}</p>
+                      </div>
+                    )}
+
+                    {resume.portfolio && (
+                      <div>
+                        <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                          <Globe className="h-5 w-5 text-accent-cyan" />
+                          Портфолио
+                        </h4>
+                        <a
+                          href={resume.portfolio}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-accent-cyan hover:text-accent-cyan/80 transition-colors break-all"
+                        >
+                          {resume.portfolio}
+                        </a>
+                      </div>
+                    )}
+
                     {resume.skillsArray && resume.skillsArray.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {resume.skillsArray.slice(0, 8).map((skill, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-dark-surface border border-accent-cyan/30 rounded-lg text-sm text-gray-300"
-                          >
-                            {skill}
-                          </span>
-                        ))}
+                      <div>
+                        <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                          <Code className="h-5 w-5 text-accent-cyan" />
+                          Навыки
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {resume.skillsArray.map((skill, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-dark-surface border border-accent-cyan/30 rounded-lg text-sm text-gray-300"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     )}
 

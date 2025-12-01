@@ -22,17 +22,13 @@
     scroll-behavior: smooth;
   }
 
-  /* Убираем каретку при наведении на элементы */
-  *:hover {
-    caret-color: transparent;
-  }
-
+  /* Голубая каретка для всех элементов ввода */
   input, textarea {
-    caret-color: transparent;
+    caret-color: #00a8c4;
   }
 
   input:focus, textarea:focus {
-    caret-color: transparent;
+    caret-color: #00a8c4;
   }
 }
 

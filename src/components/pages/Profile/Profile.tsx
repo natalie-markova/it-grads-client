@@ -7,6 +7,34 @@ import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
 import { type OutletContext } from '../../../types'
 import toast from 'react-hot-toast'
 import ResumeForm from '../Resume/ResumeForm'
+import { $api } from '../../../utils/axios.instance'
+
+// Функция для формирования полного URL изображения
+const getImageUrl = (url: string | undefined | null): string => {
+  if (!url || url.trim() === '') return ''
+  
+  // Если URL уже полный (начинается с http), возвращаем как есть
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  
+  // Если это относительный путь к загруженному файлу, добавляем базовый URL сервера
+  if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+    const baseUrl = apiUrl.replace('/api', '')
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`
+    return `${baseUrl}${cleanUrl}`
+  }
+  
+  // Если это просто путь без слеша в начале, добавляем базовый URL
+  if (!url.startsWith('/') && !url.startsWith('http')) {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+    const baseUrl = apiUrl.replace('/api', '')
+    return `${baseUrl}/uploads/avatars/${url}`
+  }
+  
+  return url
+}
 
 interface Profile {
   photo: string
@@ -89,10 +117,17 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    setFormData(profile)
-    setPhotoPreview(profile.photo || null)
+    if (profile) {
+      setFormData(profile)
+      // Устанавливаем превью с правильным URL
+      const photoUrl = profile.photo ? getImageUrl(profile.photo) : null
+      setPhotoPreview(photoUrl)
+      // Прокручиваем к верху формы при открытии редактирования
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }, [profile])
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,29 +161,42 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
       const uploadFormData = new FormData()
       uploadFormData.append('photo', photoFile)
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
-      const token = localStorage.getItem('accessToken')
+      // Не указываем Content-Type явно - axios автоматически установит правильный заголовок с boundary
+      const response = await $api.post('/user/upload-photo', uploadFormData)
+
+      const data = response.data
+      const photoUrl = data.photo || data.avatar || ''
       
-      const response = await fetch(`${apiUrl}/user/upload-photo`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: uploadFormData,
-        credentials: 'include'
+      console.log('Photo uploaded successfully, URL:', photoUrl)
+      
+      // Сохраняем URL загруженного фото
+      setUploadedPhotoUrl(photoUrl)
+      
+      // Обновляем форму с новым URL фото (сохраняем относительный путь)
+      setFormData(prev => {
+        const updated = { ...prev, photo: photoUrl }
+        console.log('Updated formData with photo:', updated.photo)
+        return updated
       })
-
-      if (!response.ok) {
-        throw new Error('Ошибка при загрузке фото')
-      }
-
-      const data = await response.json()
-      setFormData({ ...formData, photo: data.photo })
+      // Обновляем превью с правильным URL
+      setPhotoPreview(getImageUrl(photoUrl))
       setPhotoFile(null)
       toast.success('Фото успешно загружено')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading photo:', error)
-      toast.error('Ошибка при загрузке фото')
+      
+      // Более детальная обработка ошибок
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        toast.error('Ошибка подключения к серверу. Проверьте, что сервер запущен.')
+      } else if (error.response) {
+        // Сервер ответил с ошибкой
+        const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Ошибка при загрузке фото'
+        toast.error(errorMessage)
+      } else {
+        // Другая ошибка
+        const errorMessage = error.message || 'Ошибка при загрузке фото'
+        toast.error(errorMessage)
+      }
     } finally {
       setIsUploading(false)
     }
@@ -156,7 +204,15 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(formData)
+    // Убеждаемся, что если фото было загружено, оно включено в данные для сохранения
+    const dataToSave = {
+      ...formData,
+      photo: formData.photo || uploadedPhotoUrl || formData.photo || ''
+    }
+    console.log('Submitting form with photo:', dataToSave.photo)
+    console.log('formData.photo:', formData.photo)
+    console.log('uploadedPhotoUrl:', uploadedPhotoUrl)
+    onSave(dataToSave)
   }
 
   return (
@@ -197,8 +253,9 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
             type="text"
             value={formData.photo}
             onChange={(e) => {
-              setFormData({ ...formData, photo: e.target.value })
-              setPhotoPreview(e.target.value || null)
+              const newPhoto = e.target.value
+              setFormData({ ...formData, photo: newPhoto })
+              setPhotoPreview(newPhoto ? getImageUrl(newPhoto) : null)
             }}
             className="input-field"
             placeholder="https://..."
@@ -359,18 +416,29 @@ const GraduateProfile = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
 
   // Функция для формирования полного URL изображения
-  const getImageUrl = (url: string | undefined): string => {
-    if (!url) return ''
+  const getImageUrl = (url: string | undefined | null): string => {
+    if (!url || url.trim() === '') return ''
+    
     // Если URL уже полный (начинается с http), возвращаем как есть
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url
     }
+    
     // Если это относительный путь к загруженному файлу, добавляем базовый URL сервера
-    if (url.startsWith('/uploads/')) {
+    if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
       const baseUrl = apiUrl.replace('/api', '')
-      return `${baseUrl}${url}`
+      const cleanUrl = url.startsWith('/') ? url : `/${url}`
+      return `${baseUrl}${cleanUrl}`
     }
+    
+    // Если это просто путь без слеша в начале, добавляем базовый URL
+    if (!url.startsWith('/') && !url.startsWith('http')) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+      const baseUrl = apiUrl.replace('/api', '')
+      return `${baseUrl}/uploads/avatars/${url}`
+    }
+    
     return url
   }
   const [applications, setApplications] = useState<Application[]>([])
@@ -404,36 +472,40 @@ const GraduateProfile = () => {
   const loadProfile = async () => {
     if (!user) return
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-      const token = localStorage.getItem('accessToken') || '';
-      const response = await fetch(`${apiUrl}/user/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      })
-      if (response.ok) {
-        const data = await response.json()
-        const loadedProfile = {
-          photo: data.photo || '',
-          lastName: data.lastName || '',
-          firstName: data.firstName || '',
-          middleName: data.middleName || '',
-          birthDate: data.birthDate || '',
-          city: data.city || '',
-          education: data.education || '',
-          experience: data.experience || '',
-          about: data.about || '',
-          email: data.email || user.email || '',
-          phone: data.phone || '',
-          github: data.github || '',
-          linkedin: data.linkedin || '',
-          portfolio: data.portfolio || '',
-          skills: data.skills || [],
-          projects: data.projects || [],
-        }
-        setProfile(loadedProfile)
-      } else if (response.status === 404) {
+      const response = await $api.get('/user/profile')
+      const data = response.data
+      
+      // Правильно обрабатываем null значения - преобразуем их в пустые строки или массивы
+      const loadedProfile = {
+        photo: data.photo || data.avatar || '',
+        lastName: data.lastName ?? '',
+        firstName: data.firstName ?? '',
+        middleName: data.middleName ?? '',
+        birthDate: data.birthDate ?? '',
+        city: data.city ?? '',
+        education: data.education ?? '',
+        experience: data.experience ?? '',
+        about: data.about ?? '',
+        email: data.email || user.email || '',
+        phone: data.phone ?? '',
+        github: data.github ?? '',
+        linkedin: data.linkedin ?? '',
+        portfolio: data.portfolio ?? '',
+        skills: Array.isArray(data.skills) ? data.skills : (data.skills ? [data.skills] : []),
+        projects: Array.isArray(data.projects) ? data.projects : (data.projects ? [data.projects] : []),
+      }
+      
+      console.log('Profile loaded successfully:', loadedProfile)
+      console.log('About:', loadedProfile.about)
+      console.log('Education:', loadedProfile.education)
+      console.log('Experience:', loadedProfile.experience)
+      console.log('Skills:', loadedProfile.skills)
+      console.log('Projects:', loadedProfile.projects)
+      
+      setProfile(loadedProfile)
+    } catch (error: any) {
+      console.error('Error loading profile:', error)
+      if (error.response?.status === 404) {
         // Если профиль не найден, загружаем примерные данные для демонстрации
         setProfile({
           photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
@@ -477,53 +549,52 @@ const GraduateProfile = () => {
             }
           ]
         })
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error)
-      // В случае ошибки также загружаем примерные данные
-      if (!profile) {
-        setProfile({
-          photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-          lastName: 'Иванов',
-          firstName: 'Алексей',
-          middleName: 'Сергеевич',
-          birthDate: '1998-05-15',
-          city: 'Москва',
-          education: 'МГУ им. М.В. Ломоносова, Факультет вычислительной математики и кибернетики, Специалист по прикладной математике и информатике (2016-2021)',
-          experience: 'Frontend Developer в ООО "ТехноСофт" (2021-2023)\n• Разработка пользовательских интерфейсов на React и TypeScript\n• Оптимизация производительности приложений\n• Работа в команде по методологии Agile\n\nСтажер в IT-компании "СтартАп" (2020-2021)\n• Изучение современных технологий веб-разработки\n• Участие в разработке внутренних проектов',
-          about: 'Увлеченный разработчик с опытом создания современных веб-приложений. Специализируюсь на React, TypeScript и Node.js. Постоянно изучаю новые технологии и стремлюсь к профессиональному росту. Имею опыт работы в команде и готов к новым вызовам.',
-          email: user?.email || 'alexey.ivanov@example.com',
-          phone: '+7 (999) 123-45-67',
-          github: 'https://github.com/alexey-ivanov',
-          linkedin: 'https://linkedin.com/in/alexey-ivanov',
-          portfolio: 'https://alexey-ivanov.dev',
-          skills: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'HTML/CSS', 'Git', 'Redux', 'Next.js', 'MongoDB', 'PostgreSQL', 'Docker', 'AWS'],
-          projects: [
-            {
-              id: '1',
-              name: 'E-commerce платформа',
-              description: 'Полнофункциональная платформа для онлайн-торговли с корзиной, оплатой и админ-панелью. Реализована система рекомендаций на основе машинного обучения.',
-              technologies: ['React', 'TypeScript', 'Node.js', 'MongoDB', 'Stripe API'],
-              link: 'https://ecommerce-demo.example.com',
-              githubLink: 'https://github.com/alexey-ivanov/ecommerce-platform'
-            },
-            {
-              id: '2',
-              name: 'Система управления задачами',
-              description: 'Коллаборативное приложение для управления проектами с real-time обновлениями, уведомлениями и аналитикой.',
-              technologies: ['React', 'Socket.io', 'Express', 'PostgreSQL', 'Redis'],
-              link: 'https://taskmanager-demo.example.com',
-              githubLink: 'https://github.com/alexey-ivanov/task-manager'
-            },
-            {
-              id: '3',
-              name: 'Погодное приложение',
-              description: 'Мобильное веб-приложение для прогноза погоды с красивой визуализацией и интеграцией с несколькими API.',
-              technologies: ['React', 'TypeScript', 'Chart.js', 'Weather API'],
-              githubLink: 'https://github.com/alexey-ivanov/weather-app'
-            }
-          ]
-        })
+      } else {
+        // В случае другой ошибки также загружаем примерные данные
+        if (!profile) {
+          setProfile({
+            photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+            lastName: 'Иванов',
+            firstName: 'Алексей',
+            middleName: 'Сергеевич',
+            birthDate: '1998-05-15',
+            city: 'Москва',
+            education: 'МГУ им. М.В. Ломоносова, Факультет вычислительной математики и кибернетики, Специалист по прикладной математике и информатике (2016-2021)',
+            experience: 'Frontend Developer в ООО "ТехноСофт" (2021-2023)\n• Разработка пользовательских интерфейсов на React и TypeScript\n• Оптимизация производительности приложений\n• Работа в команде по методологии Agile\n\nСтажер в IT-компании "СтартАп" (2020-2021)\n• Изучение современных технологий веб-разработки\n• Участие в разработке внутренних проектов',
+            about: 'Увлеченный разработчик с опытом создания современных веб-приложений. Специализируюсь на React, TypeScript и Node.js. Постоянно изучаю новые технологии и стремлюсь к профессиональному росту. Имею опыт работы в команде и готов к новым вызовам.',
+            email: user?.email || 'alexey.ivanov@example.com',
+            phone: '+7 (999) 123-45-67',
+            github: 'https://github.com/alexey-ivanov',
+            linkedin: 'https://linkedin.com/in/alexey-ivanov',
+            portfolio: 'https://alexey-ivanov.dev',
+            skills: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'HTML/CSS', 'Git', 'Redux', 'Next.js', 'MongoDB', 'PostgreSQL', 'Docker', 'AWS'],
+            projects: [
+              {
+                id: '1',
+                name: 'E-commerce платформа',
+                description: 'Полнофункциональная платформа для онлайн-торговли с корзиной, оплатой и админ-панелью. Реализована система рекомендаций на основе машинного обучения.',
+                technologies: ['React', 'TypeScript', 'Node.js', 'MongoDB', 'Stripe API'],
+                link: 'https://ecommerce-demo.example.com',
+                githubLink: 'https://github.com/alexey-ivanov/ecommerce-platform'
+              },
+              {
+                id: '2',
+                name: 'Система управления задачами',
+                description: 'Коллаборативное приложение для управления проектами с real-time обновлениями, уведомлениями и аналитикой.',
+                technologies: ['React', 'Socket.io', 'Express', 'PostgreSQL', 'Redis'],
+                link: 'https://taskmanager-demo.example.com',
+                githubLink: 'https://github.com/alexey-ivanov/task-manager'
+              },
+              {
+                id: '3',
+                name: 'Погодное приложение',
+                description: 'Мобильное веб-приложение для прогноза погоды с красивой визуализацией и интеграцией с несколькими API.',
+                technologies: ['React', 'TypeScript', 'Chart.js', 'Weather API'],
+                githubLink: 'https://github.com/alexey-ivanov/weather-app'
+              }
+            ]
+          })
+        }
       }
     }
   }
@@ -821,45 +892,78 @@ const GraduateProfile = () => {
   const handleSaveProfile = async (newProfile: Profile) => {
     if (!user) return
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-      const response = await fetch(`${apiUrl}/profile/graduate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(newProfile)
-      })
-      if (response.ok) {
-        const updatedProfile = await response.json()
-        const savedProfile = {
-          photo: updatedProfile.photo || '',
-          lastName: updatedProfile.lastName || '',
-          firstName: updatedProfile.firstName || '',
-          middleName: updatedProfile.middleName || '',
-          birthDate: updatedProfile.birthDate || '',
-          city: updatedProfile.city || '',
-          education: updatedProfile.education || '',
-          experience: updatedProfile.experience || '',
-          about: updatedProfile.about || '',
-          email: updatedProfile.email || '',
-          phone: updatedProfile.phone || '',
-          github: updatedProfile.github || '',
-          linkedin: updatedProfile.linkedin || '',
-          portfolio: updatedProfile.portfolio || '',
-          skills: updatedProfile.skills || [],
-          projects: updatedProfile.projects || [],
-        }
-        setIsEditingProfile(false)
-        // Reload profile to ensure it's saved
-        await loadProfile()
-        setProfile(savedProfile)
-      } else {
-        const errorData = await response.json().catch(() => ({ error: 'Ошибка сохранения' }))
-        toast.error(errorData.error || 'Ошибка при сохранении профиля')
+      // Убеждаемся, что фото сохраняется (не отправляем null, если фото было загружено)
+      // Если photo пустое или null, но в профиле есть фото, сохраняем текущее фото
+      // Если photo есть в newProfile, используем его
+      let photoToSave: string | null = newProfile.photo || null
+      
+      // Если фото пустое, но в текущем профиле есть фото, сохраняем его
+      if (!photoToSave || photoToSave.trim() === '') {
+        photoToSave = profile?.photo || null
       }
-    } catch (error) {
+      
+      // Не отправляем null, если фото было загружено - отправляем пустую строку или текущее значение
+      if (photoToSave === null && profile?.photo) {
+        photoToSave = profile.photo
+      }
+      
+      console.log('Saving profile with photo:', photoToSave)
+      console.log('newProfile.photo:', newProfile.photo)
+      console.log('profile?.photo:', profile?.photo)
+      
+      const response = await $api.put('/user/profile', {
+        photo: photoToSave,
+        lastName: newProfile.lastName || null,
+        firstName: newProfile.firstName || null,
+        middleName: newProfile.middleName || null,
+        birthDate: newProfile.birthDate || null,
+        city: newProfile.city || null,
+        education: newProfile.education || null,
+        experience: newProfile.experience || null,
+        about: newProfile.about || null,
+        email: newProfile.email || null,
+        phone: newProfile.phone || null,
+        github: newProfile.github || null,
+        linkedin: newProfile.linkedin || null,
+        portfolio: newProfile.portfolio || null,
+        skills: newProfile.skills || [],
+        projects: newProfile.projects || [],
+      })
+      
+      // Обновляем профиль сразу из ответа сервера
+      const savedData = response.data
+      const updatedProfile = {
+        photo: savedData.photo || savedData.avatar || photoToSave || '',
+        lastName: savedData.lastName ?? '',
+        firstName: savedData.firstName ?? '',
+        middleName: savedData.middleName ?? '',
+        birthDate: savedData.birthDate ?? '',
+        city: savedData.city ?? '',
+        education: savedData.education ?? '',
+        experience: savedData.experience ?? '',
+        about: savedData.about ?? '',
+        email: savedData.email || user.email || '',
+        phone: savedData.phone ?? '',
+        github: savedData.github ?? '',
+        linkedin: savedData.linkedin ?? '',
+        portfolio: savedData.portfolio ?? '',
+        skills: Array.isArray(savedData.skills) ? savedData.skills : (savedData.skills ? [savedData.skills] : []),
+        projects: Array.isArray(savedData.projects) ? savedData.projects : (savedData.projects ? [savedData.projects] : []),
+      }
+      
+      setProfile(updatedProfile)
+      setIsEditingProfile(false)
+      
+      toast.success('Профиль успешно обновлен')
+      
+      // Прокручиваем страницу к верху
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }, 100)
+    } catch (error: any) {
       console.error('Error saving profile:', error)
+      const errorMessage = error.response?.data?.message || error.message || 'Ошибка при сохранении профиля'
+      toast.error(errorMessage)
     }
   }
 
@@ -867,16 +971,14 @@ const GraduateProfile = () => {
     if (!user) return
     if (confirm('Вы уверены, что хотите удалить профиль?')) {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-        const response = await fetch(`${apiUrl}/profile/graduate`, {
-          method: 'DELETE',
-          credentials: 'include'
-        })
-        if (response.ok) {
-          setProfile(null)
-        }
-      } catch (error) {
+        await $api.delete('/user/profile')
+        setProfile(null)
+        toast.success('Профиль успешно удален')
+        navigate('/login')
+      } catch (error: any) {
         console.error('Error deleting profile:', error)
+        const errorMessage = error.response?.data?.message || error.message || 'Ошибка при удалении профиля'
+        toast.error(errorMessage)
       }
     }
   }
@@ -1086,7 +1188,13 @@ const GraduateProfile = () => {
                   <h2 className="text-3xl font-bold text-white">Мой профиль</h2>
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => setIsEditingProfile(true)}
+                    onClick={() => {
+                      setIsEditingProfile(true)
+                      // Прокручиваем к верху страницы при открытии редактирования
+                      setTimeout(() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }, 100)
+                    }}
                     className="p-2 text-accent-cyan hover:bg-dark-surface rounded-lg transition-colors"
                       title="Редактировать профиль"
                   >
@@ -1111,13 +1219,20 @@ const GraduateProfile = () => {
               ) : (
                   <div className="flex flex-col md:flex-row gap-8">
                     {/* Photo */}
-                    <div className="w-full md:w-56 h-56 bg-dark-surface rounded-2xl overflow-hidden border-2 border-accent-cyan/30 flex items-center justify-center shadow-lg">
+                    <div className="w-full md:w-56 h-56 bg-dark-surface rounded-2xl overflow-hidden border-2 border-accent-cyan/30 flex items-center justify-center shadow-lg relative">
                       {profile.photo ? (
-                        <img 
-                          src={getImageUrl(profile.photo)} 
-                          alt={`${profile.firstName} ${profile.lastName}`}
-                          className="w-full h-full object-cover" 
-                        />
+                        <>
+                          <img 
+                            src={getImageUrl(profile.photo)} 
+                            alt={`${profile.firstName} ${profile.lastName}`}
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                              console.error('Error loading profile photo:', getImageUrl(profile.photo))
+                              e.currentTarget.style.display = 'none'
+                            }}
+                          />
+                          <span className="text-6xl text-gray-400 absolute" style={{ display: 'none' }}>👤</span>
+                        </>
                       ) : (
                         <span className="text-6xl text-gray-400">👤</span>
                       )}
@@ -1326,7 +1441,16 @@ const GraduateProfile = () => {
           ) : (
             <Card>
               <p className="text-gray-300 mb-4">Профиль не заполнен</p>
-              <button onClick={() => setIsEditingProfile(true)} className="btn-primary">
+              <button 
+                onClick={() => {
+                  setIsEditingProfile(true)
+                  // Прокручиваем к верху страницы при открытии редактирования
+                  setTimeout(() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }, 100)
+                }} 
+                className="btn-primary"
+              >
                 Создать профиль
               </button>
             </Card>
@@ -1344,24 +1468,14 @@ const GraduateProfile = () => {
                   </p>
                   <button
                     onClick={async () => {
-                      if (!confirm('Вы уверены, что хотите удалить радар навыков?')) return
                       try {
-                        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api"
-                        const response = await fetch(`${apiUrl}/resumes/${resumes[0].id}`, {
-                          method: 'PUT',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          credentials: 'include',
-                          body: JSON.stringify({ radarImage: null }),
-                        })
-                        if (response.ok) {
-                          toast.success('Радар навыков удалён')
-                          loadResumes()
-                        }
-                      } catch (error) {
+                        await $api.put(`/resumes/${resumes[0].id}`, { radarImage: null })
+                        toast.success('Радар навыков удалён')
+                        loadResumes()
+                      } catch (error: any) {
                         console.error('Error deleting radar:', error)
-                        toast.error('Ошибка при удалении радара')
+                        const errorMessage = error.response?.data?.error || error.message || 'Ошибка при удалении радара'
+                        toast.error(errorMessage)
                       }
                     }}
                     className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
@@ -1394,7 +1508,7 @@ const GraduateProfile = () => {
             />
           ) : (
             <>
-              <div className="mb-4">
+              <div className="mb-4 flex justify-center">
                 <button
                   onClick={() => setIsCreatingResume(true)}
                   className="btn-primary"
@@ -1407,40 +1521,86 @@ const GraduateProfile = () => {
               {resumes.map((resume, index) => (
                 <Card key={resume.id} className="scroll-animate-item" style={{ transitionDelay: `${index * 0.05}s` }}>
                   <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-white mb-2">{resume.title}</h3>
-                      {resume.description && (
-                        <p className="text-gray-300 mb-3">{resume.description}</p>
-                      )}
-                      <div className="flex flex-wrap gap-3 mb-3">
-                        {resume.location && (
-                          <span className="text-sm text-gray-400">
-                            <MapPin className="inline h-4 w-4 mr-1" />
-                            {resume.location}
-                          </span>
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <h3 className="text-xl font-semibold text-white mb-2">{resume.title}</h3>
+                        {resume.description && (
+                          <p className="text-gray-300 mb-3 whitespace-pre-wrap">{resume.description}</p>
                         )}
-                        {resume.level && (
-                          <span className="text-sm text-gray-400">
-                            <Briefcase className="inline h-4 w-4 mr-1" />
-                            {resume.level}
-                          </span>
-                        )}
-                        {resume.desiredSalary && (
-                          <span className="text-sm text-accent-cyan font-semibold">
-                            от {resume.desiredSalary.toLocaleString()} ₽
-                          </span>
-                        )}
-                      </div>
-                      {resume.skillsArray && resume.skillsArray.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {resume.skillsArray.slice(0, 10).map((skill, idx) => (
-                            <span
-                              key={idx}
-                              className="px-2 py-1 bg-dark-surface border border-accent-cyan/30 rounded text-xs text-gray-300"
-                            >
-                              {skill}
+                        <div className="flex flex-wrap gap-3 mb-3">
+                          {resume.location && (
+                            <span className="text-sm text-gray-400">
+                              <MapPin className="inline h-4 w-4 mr-1" />
+                              {resume.location}
                             </span>
-                          ))}
+                          )}
+                          {resume.level && (
+                            <span className="text-sm text-gray-400">
+                              <Briefcase className="inline h-4 w-4 mr-1" />
+                              {resume.level}
+                            </span>
+                          )}
+                          {resume.desiredSalary && (
+                            <span className="text-sm text-accent-cyan font-semibold">
+                              от {resume.desiredSalary.toLocaleString()} ₽
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {resume.experience && (
+                        <div>
+                          <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                            <Award className="h-5 w-5 text-accent-cyan" />
+                            Опыт работы
+                          </h4>
+                          <p className="text-gray-300 whitespace-pre-wrap">{resume.experience}</p>
+                        </div>
+                      )}
+
+                      {resume.education && (
+                        <div>
+                          <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                            <GraduationCap className="h-5 w-5 text-accent-cyan" />
+                            Образование
+                          </h4>
+                          <p className="text-gray-300 whitespace-pre-wrap">{resume.education}</p>
+                        </div>
+                      )}
+
+                      {resume.portfolio && (
+                        <div>
+                          <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                            <Globe className="h-5 w-5 text-accent-cyan" />
+                            Портфолио
+                          </h4>
+                          <a
+                            href={resume.portfolio}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-accent-cyan hover:text-accent-cyan/80 transition-colors break-all"
+                          >
+                            {resume.portfolio}
+                          </a>
+                        </div>
+                      )}
+
+                      {resume.skillsArray && resume.skillsArray.length > 0 && (
+                        <div>
+                          <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                            <Code className="h-5 w-5 text-accent-cyan" />
+                            Навыки
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {resume.skillsArray.map((skill, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-1 bg-dark-surface border border-accent-cyan/30 rounded text-xs text-gray-300"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1492,7 +1652,7 @@ const GraduateProfile = () => {
                         <p className="text-gray-400 text-sm mb-1">💰 {fav.salary.toLocaleString()} руб.</p>
                       )}
                       {fav.description && (
-                        <p className="text-gray-300 text-sm mt-2 line-clamp-2">{fav.description}</p>
+                        <p className="text-gray-300 text-sm mt-2 whitespace-pre-wrap">{fav.description}</p>
                       )}
                       <p className="text-gray-400 text-xs mt-2">
                         Добавлено: {new Date(fav.createdAt || Date.now()).toLocaleDateString('ru-RU', {
@@ -1590,7 +1750,7 @@ const GraduateProfile = () => {
                 <h3 className="text-xl font-semibold text-white">Чаты</h3>
                 <span className="text-sm text-gray-400">{chats.length} {chats.length === 1 ? 'чат' : chats.length < 5 ? 'чата' : 'чатов'}</span>
               </div>
-              <div className="space-y-2 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+              <div className="space-y-2 custom-scrollbar pr-2">
                 {chats.length > 0 ? (
                   chats.map((chat) => (
                     <div
@@ -1611,11 +1771,11 @@ const GraduateProfile = () => {
                               </span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-white font-semibold truncate">{chat.employerName}</p>
-                              <p className="text-gray-400 text-sm truncate">{chat.company}</p>
+                              <p className="text-white font-semibold">{chat.employerName}</p>
+                              <p className="text-gray-400 text-sm">{chat.company}</p>
                             </div>
                           </div>
-                          <p className="text-gray-500 text-sm mt-2 truncate">{chat.lastMessage}</p>
+                          <p className="text-gray-500 text-sm mt-2 whitespace-pre-wrap break-words">{chat.lastMessage}</p>
                           <p className="text-gray-600 text-xs mt-2">{chat.lastMessageTime}</p>
                         </div>
                         <button
@@ -1666,7 +1826,7 @@ const GraduateProfile = () => {
                   </div>
 
                   {/* Messages Area */}
-                  <div className="h-[500px] overflow-y-auto space-y-4 mb-4 custom-scrollbar pr-2">
+                  <div className="space-y-4 mb-4 custom-scrollbar pr-2">
                     {selectedChatData.messages.length > 0 ? (
                       selectedChatData.messages.map((msg) => {
                         const isEditing = editingMessageId === msg.id

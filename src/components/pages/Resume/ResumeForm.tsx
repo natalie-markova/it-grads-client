@@ -1,7 +1,8 @@
-import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, FormEvent, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Card from '../../ui/Card';
 import toast from 'react-hot-toast';
+import { $api } from '../../../utils/axios.instance';
 
 interface ResumeFormProps {
   onClose?: () => void;
@@ -10,6 +11,10 @@ interface ResumeFormProps {
 
 const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditing = !!id;
+  const [isLoading, setIsLoading] = useState(isEditing);
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -22,50 +27,91 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
     level: 'junior' as 'junior' | 'middle' | 'senior' | 'lead',
   });
 
+  useEffect(() => {
+    if (isEditing && id) {
+      loadResume(id);
+    }
+  }, [id, isEditing]);
+
+  const loadResume = async (resumeId: string) => {
+    try {
+      setIsLoading(true);
+      const response = await $api.get(`/resumes/${resumeId}`);
+      const resume = response.data;
+      
+      setFormData({
+        title: resume.title || '',
+        description: resume.description || '',
+        skills: Array.isArray(resume.skillsArray) ? resume.skillsArray.join(', ') : (resume.skills || ''),
+        experience: resume.experience || '',
+        education: resume.education || '',
+        portfolio: resume.portfolio || '',
+        desiredSalary: resume.desiredSalary ? resume.desiredSalary.toString() : '',
+        location: resume.location || '',
+        level: resume.level || 'junior',
+      });
+    } catch (error: any) {
+      console.error('Error loading resume:', error);
+      toast.error('Ошибка при загрузке резюме');
+      if (onClose) {
+        onClose();
+      } else {
+        navigate('/profile/graduate');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
       const skillsArray = formData.skills.split(',').map(s => s.trim()).filter(s => s);
 
-      const response = await fetch(`${apiUrl}/resumes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          ...formData,
-          skillsArray,
-          skills: JSON.stringify(skillsArray),
-          desiredSalary: parseInt(formData.desiredSalary) || 0,
-        }),
-      });
+      const payload = {
+        ...formData,
+        skillsArray,
+        skills: skillsArray.length > 0 ? JSON.stringify(skillsArray) : null,
+        desiredSalary: formData.desiredSalary ? parseInt(formData.desiredSalary) : null,
+      };
 
-      if (response.ok) {
-        toast.success('Резюме успешно создано!');
-        if (onSuccess) {
-          onSuccess();
-        }
-        if (onClose) {
-          onClose();
-        } else {
-          navigate('/profile/graduate');
-        }
+      if (isEditing && id) {
+        await $api.put(`/resumes/${id}`, payload);
+        toast.success('Резюме успешно обновлено!');
       } else {
-        const error = await response.json();
-        toast.error(error.message || 'Ошибка при создании резюме');
+        await $api.post('/resumes', payload);
+        toast.success('Резюме успешно создано!');
       }
-    } catch (error) {
-      console.error('Error creating resume:', error);
-      toast.error('Ошибка при создании резюме');
+
+      if (onSuccess) {
+        onSuccess();
+      }
+      if (onClose) {
+        onClose();
+      } else {
+        navigate('/profile/graduate');
+      }
+    } catch (error: any) {
+      console.error(`Error ${isEditing ? 'updating' : 'creating'} resume:`, error);
+      const errorMessage = error.response?.data?.message || error.message || `Ошибка при ${isEditing ? 'обновлении' : 'создании'} резюме`;
+      toast.error(errorMessage);
     }
   };
 
+  if (isLoading) {
+    return (
+      <Card className="max-w-4xl mx-auto">
+        <div className="text-center py-8">
+          <p className="text-gray-300">Загрузка резюме...</p>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-white mb-6">Создать резюме</h2>
+      <h2 className="text-2xl font-bold text-white mb-6">{isEditing ? 'Редактировать резюме' : 'Создать резюме'}</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -191,10 +237,15 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
 
         <div className="flex gap-4">
           <button type="submit" className="btn-primary">
-            Создать резюме
+            {isEditing ? 'Сохранить изменения' : 'Создать резюме'}
           </button>
           {onClose && (
             <button type="button" onClick={onClose} className="btn-secondary">
+              Отмена
+            </button>
+          )}
+          {!onClose && (
+            <button type="button" onClick={() => navigate('/profile/graduate')} className="btn-secondary">
               Отмена
             </button>
           )}

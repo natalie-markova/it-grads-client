@@ -501,9 +501,6 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
                             }
                             className="w-24"
                           />
-                          <span className="text-accent-cyan w-8 text-right">
-                            {skills[category.name]?.[skill.name] || 0}
-                          </span>
                         </div>
                       ) : (
                         <div className="flex gap-1">

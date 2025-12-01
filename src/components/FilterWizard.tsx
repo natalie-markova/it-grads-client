@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Check, Search } from 'lucide-react'
 import Card from './ui/Card'
 
 export interface FilterData {
@@ -107,6 +107,11 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
   }
 
   const handleApply = () => {
+    onApply(filters)
+    onClose()
+  }
+
+  const handleSearch = () => {
     onApply(filters)
     onClose()
   }
@@ -721,21 +726,20 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
                 Назад
               </button>
             )}
-            {currentStep < steps.length - 1 ? (
+            <button
+              onClick={handleSearch}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Search className="h-5 w-5" />
+              Поиск вакансий
+            </button>
+            {currentStep < steps.length - 1 && (
               <button
                 onClick={handleNext}
-                className="btn-primary flex items-center gap-2"
+                className="btn-secondary flex items-center gap-2"
               >
                 Далее
                 <ChevronRight className="h-5 w-5" />
-              </button>
-            ) : (
-              <button
-                onClick={handleApply}
-                className="btn-primary flex items-center gap-2"
-              >
-                Применить фильтры
-                <Check className="h-5 w-5" />
               </button>
             )}
           </div>

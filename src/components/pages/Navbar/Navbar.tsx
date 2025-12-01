@@ -34,7 +34,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
   }
 
     const baseNavLinks = [
-        { path: '/home', label: 'Главная' },
         { path: '/skills', label: 'Навыки и Проекты' },
         { path: '/interview', label: 'Собеседования' },
         { path: '/jobs', label: 'Вакансии' },
@@ -46,7 +45,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
     ]
 
     const employerNavLinks = [
-        { path: '/home', label: 'Главная' },
         { path: '/candidates', label: 'Кандидаты' },
         { path: '/jobs', label: 'Вакансии' },
     ]

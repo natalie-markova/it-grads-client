@@ -1,5 +1,5 @@
 import { Link, useOutletContext } from 'react-router-dom'
-import { ArrowRight, Users, Briefcase, Brain, Code, MessageCircle, TrendingUp } from 'lucide-react'
+import { ArrowRight, Users, Briefcase, Code, MessageCircle, TrendingUp } from 'lucide-react'
 import Section from '../../../components/ui/Section'
 import FeatureCard from '../../../components/ui/FeatureCard'
 import Card from '../../../components/ui/Card'
@@ -22,12 +22,6 @@ const Home = () => {
       title: 'Подготовка к Собеседованию',
       description: 'Симулятор для отработки навыков прохождения интервью.',
       link: '/interview',
-    },
-    {
-      icon: <Brain className="h-8 w-8" />,
-      title: 'ИИ и Автоматизация',
-      description: 'Персонализированные рекомендации и оптимизация поиска.',
-      link: '/ai',
     },
     {
       icon: <Briefcase className="h-8 w-8" />,
@@ -72,25 +66,27 @@ const Home = () => {
 
       {/* Top Features */}
       <Section className="bg-dark-bg">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {topFeatures.map((feature, index) => (
-            <Link key={index} to={feature.link} className="block h-full">
-              <FeatureCard
-                icon={feature.icon}
-                title={feature.title}
-                description={feature.description}
-                className="h-full scroll-animate-item"
-                style={{ transitionDelay: `${index * 0.1}s` }}
-              />
-            </Link>
-          ))}
+        <div className="flex justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl">
+            {topFeatures.map((feature, index) => (
+              <Link key={index} to={feature.link} className="block h-full">
+                <FeatureCard
+                  icon={feature.icon}
+                  title={feature.title}
+                  description={feature.description}
+                  className="h-full scroll-animate-item"
+                  style={{ transitionDelay: `${index * 0.1}s` }}
+                />
+              </Link>
+            ))}
+          </div>
         </div>
       </Section>
 
       {/* Skills and Projects Section */}
       <Section 
         title="Фокус на навыках и проектах"
-        className="bg-dark-bg scroll-animate-item"
+        className="bg-dark-surface scroll-animate-item"
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Left Column */}
@@ -195,7 +191,7 @@ const Home = () => {
       {/* Ratings and Simulation Section */}
       <Section 
         title="Рейтинги и симуляция"
-        className="bg-dark-surface scroll-animate-item"
+        className="bg-dark-bg scroll-animate-item"
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Left Column */}
