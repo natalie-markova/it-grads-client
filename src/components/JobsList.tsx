@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Filter, X, MapPin, DollarSign, Briefcase, Heart, Check } from 'lucide-react'
+import { useNavigate, useOutletContext } from 'react-router-dom'
+import { Search, Filter, X, MapPin, DollarSign, Briefcase, Heart, Check, MessageSquare } from 'lucide-react'
 import Card from './ui/Card'
 import FilterWizard, { type FilterData } from './FilterWizard'
+import { chatAPI } from '../utils/chat.api'
+import { OutletContext } from '../types'
+import toast from 'react-hot-toast'
 
 export interface Job {
   id: string
@@ -26,6 +30,7 @@ export interface Job {
   createdAt: string
   matchScore?: number
   matchingSkills?: string[]
+  employerId?: number
 }
 
 interface JobsListProps {
@@ -37,9 +42,12 @@ interface JobsListProps {
 }
 
 const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, appliedIds = new Set() }: JobsListProps) => {
+  const navigate = useNavigate()
+  const { user } = useOutletContext<OutletContext>()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedJob, setSelectedJob] = useState<string | null>(null)
   const [showFilterWizard, setShowFilterWizard] = useState(false)
+  const [isCreatingChat, setIsCreatingChat] = useState(false)
 
   // Scroll-driven animation setup
   useEffect(() => {
@@ -210,6 +218,31 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
       companySize: '',
       industry: '',
     })
+  }
+
+  const handleStartChat = async (employerId: number) => {
+    if (!user) {
+      toast.error('Войдите в систему, чтобы написать сообщение')
+      navigate('/login')
+      return
+    }
+
+    if (user.role !== 'graduate') {
+      toast.error('Только выпускники могут писать работодателям')
+      return
+    }
+
+    setIsCreatingChat(true)
+    try {
+      const chat = await chatAPI.createChat(employerId)
+      toast.success('Чат создан!')
+      navigate(`/messenger/${chat.id}`)
+    } catch (error) {
+      console.error('Error creating chat:', error)
+      toast.error('Ошибка при создании чата')
+    } finally {
+      setIsCreatingChat(false)
+    }
   }
 
 
@@ -668,6 +701,16 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                   </button>
                 )}
                 <div className="flex gap-2 ml-auto">
+                  {user && user.role === 'graduate' && selectedJobData.employerId && appliedIds.has(parseInt(selectedJobData.id, 10)) && (
+                    <button
+                      onClick={() => handleStartChat(selectedJobData.employerId!)}
+                      disabled={isCreatingChat}
+                      className="btn-secondary flex items-center gap-2 disabled:opacity-50"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      {isCreatingChat ? 'Создание...' : 'Написать'}
+                    </button>
+                  )}
                   {onApply && (
                     appliedIds.has(parseInt(selectedJobData.id, 10)) ? (
                       <div className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg text-sm whitespace-nowrap flex items-center gap-2 justify-center border border-green-500/30">
