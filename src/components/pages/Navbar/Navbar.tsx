@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Menu, X, Users, LogIn, UserCircle, LogOut } from 'lucide-react'
+import { Menu, X, Users, LogIn, UserCircle, LogOut, MessageSquare } from 'lucide-react'
 import { $api } from "../../../utils/axios.instance";
+import { chatAPI } from '../../../utils/chat.api';
 import { User } from "../../../types";
 
 interface NavbarProps {
@@ -14,6 +15,16 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
     const location = useLocation()
     const navigate = useNavigate()
     const userType = user?.role || null
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    // Загрузка количества непрочитанных сообщений
+    useEffect(() => {
+        if (user) {
+            chatAPI.getUnreadCount()
+                .then(data => setUnreadCount(data.unreadCount))
+                .catch(err => console.error('Error loading unread count:', err));
+        }
+    }, [user]);
 
     const isActive = (path: string) => {
     if (path === '/home') {
@@ -87,6 +98,17 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                         {user && userType ? (
                             <>
                                 <Link
+                                    to="/messenger"
+                                    className="relative text-gray-300 hover:text-accent-cyan px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                                >
+                                    <MessageSquare className="h-5 w-5" />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                                            {unreadCount > 9 ? '9+' : unreadCount}
+                                        </span>
+                                    )}
+                                </Link>
+                                <Link
                                     to={userType === 'graduate' ? "/profile/graduate" : "/profile/employer"}
                                     className="text-gray-300 hover:text-accent-cyan px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
                                 >
@@ -153,6 +175,19 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                         <div className="pt-4 space-y-2">
                             {user && userType ? (
                                 <>
+                                    <Link
+                                        to="/messenger"
+                                        onClick={() => setIsOpen(false)}
+                                        className="relative flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-accent-cyan hover:bg-dark-card"
+                                    >
+                                        <MessageSquare className="h-5 w-5" />
+                                        <span>Сообщения</span>
+                                        {unreadCount > 0 && (
+                                            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                                                {unreadCount > 9 ? '9+' : unreadCount}
+                                            </span>
+                                        )}
+                                    </Link>
                                     <Link
                                         to={userType === 'graduate' ? "/profile/graduate" : "/profile/employer"}
                                         onClick={() => setIsOpen(false)}

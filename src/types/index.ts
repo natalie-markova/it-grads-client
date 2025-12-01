@@ -108,3 +108,29 @@ export interface EmployerProfile {
   vacancies: Vacancy[];
   vacanciesCount: number;
 }
+
+export interface Chat {
+  id: number;
+  user1Id: number;
+  user2Id: number;
+  lastMessageAt: string;
+  user1?: User;
+  user2?: User;
+  messages?: Message[];
+  unreadCount?: number;
+}
+
+export interface Message {
+  id: number;
+  chatId: number;
+  senderId: number;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+  updatedAt: string;
+  sender?: {
+    id: number;
+    username: string;
+    avatar?: string;
+  };
+}
