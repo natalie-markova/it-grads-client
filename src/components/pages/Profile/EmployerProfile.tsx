@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Edit, Trash2, Building2, Globe, MapPin, Users, Briefcase } from 'lucide-react';
+import { Edit, Trash2, Building2, Globe, MapPin, Users, Briefcase, Check, X, User as UserIcon, RefreshCw } from 'lucide-react';
 import { OutletContext } from '../../../types';
 import { $api } from '../../../utils/axios.instance';
 import toast from 'react-hot-toast';
 import VacanciesManagement from '../Vacancies/VacanciesManagement';
+import Card from '../../ui/Card';
 
 
 interface EmployerProfileData {
@@ -19,11 +20,37 @@ interface EmployerProfileData {
   avatar?: string;
 }
 
+interface Application {
+  id: number;
+  vacancyId: number;
+  userId: number;
+  status: 'pending' | 'accepted' | 'rejected';
+  coverLetter?: string;
+  createdAt: string;
+  vacancy?: {
+    id: number;
+    title: string;
+    companyName?: string;
+  };
+  user?: {
+    id: number;
+    username: string;
+    email: string;
+    phone?: string;
+    avatar?: string;
+    resumes?: Array<{
+      id: number;
+      title: string;
+    }>;
+  };
+}
+
 const EmployerProfile = () => {
   const navigate = useNavigate();
   const { user } = useOutletContext<OutletContext>();
   const [profile, setProfile] = useState<EmployerProfileData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [formData, setFormData] = useState<EmployerProfileData>({
     companyName: '',
     companyDescription: '',
@@ -41,6 +68,7 @@ const EmployerProfile = () => {
       return;
     }
     loadProfile();
+    loadApplications();
   }, [user]);
 
   const loadProfile = async () => {
@@ -99,6 +127,63 @@ const EmployerProfile = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const loadApplications = async () => {
+    if (!user) {
+      console.log('No user, skipping loadApplications');
+      return;
+    }
+    if (user.role !== 'employer') {
+      console.log('User is not employer, skipping loadApplications');
+      return;
+    }
+    try {
+      console.log('Loading applications for employer:', user.id);
+      const response = await $api.get('/applications/employer/all');
+      console.log('Applications API response:', response);
+      console.log('Applications data:', response.data);
+      console.log('Applications data type:', typeof response.data);
+      console.log('Is array?', Array.isArray(response.data));
+      console.log('Applications count:', response.data?.length || 0);
+      
+      // Убеждаемся, что данные - это массив
+      const apps = Array.isArray(response.data) ? response.data : [];
+      console.log('Processed applications:', apps);
+      console.log('Processed applications count:', apps.length);
+      
+      if (apps.length > 0) {
+        console.log('First application:', apps[0]);
+        console.log('First application user:', apps[0]?.user);
+        console.log('First application vacancy:', apps[0]?.vacancy);
+      }
+      
+      setApplications(apps);
+    } catch (error: any) {
+      console.error('Error loading applications:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
+      if (error.response?.status === 403) {
+        console.log('Access denied - user may not be employer');
+        toast.error('Доступ запрещен');
+      } else if (error.response?.status === 401) {
+        console.log('Unauthorized - token may be invalid');
+        toast.error('Необходимо авторизоваться');
+      } else {
+        toast.error(error.response?.data?.error || 'Ошибка при загрузке откликов');
+      }
+    }
+  };
+
+  const handleUpdateApplicationStatus = async (applicationId: number, status: 'accepted' | 'rejected') => {
+    try {
+      await $api.put(`/applications/${applicationId}/status`, { status });
+      toast.success(`Отклик ${status === 'accepted' ? 'принят' : 'отклонен'}`);
+      loadApplications();
+    } catch (error: any) {
+      console.error('Error updating application status:', error);
+      toast.error(error.response?.data?.error || 'Ошибка при обновлении статуса отклика');
+    }
   };
 
   if (!profile) {
@@ -357,6 +442,118 @@ const EmployerProfile = () => {
               )}
             </div>
           )}
+        </div>
+
+        {/* Applications Section */}
+        <div className="mt-8 bg-dark-surface rounded-lg p-8 border border-dark-card">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-white">Отклики на вакансии</h2>
+            <button
+              onClick={loadApplications}
+              className="p-2 text-accent-cyan hover:bg-dark-card rounded-lg transition-colors"
+              title="Обновить список откликов"
+            >
+              <RefreshCw className="h-5 w-5" />
+            </button>
+          </div>
+          {applications.length > 0 ? (
+              <div className="space-y-4">
+                {applications.map((app) => {
+                  console.log('Rendering application:', app);
+                  return (
+                  <Card key={app.id} className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          {app.user?.avatar ? (
+                            <img 
+                              src={app.user.avatar} 
+                              alt={app.user.username} 
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-accent-cyan/20 flex items-center justify-center">
+                              <UserIcon className="h-6 w-6 text-accent-cyan" />
+                            </div>
+                          )}
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">
+                              {app.user?.username || app.user?.email || 'Пользователь'}
+                            </h3>
+                            {app.user?.email && (
+                              <p className="text-gray-400 text-sm">{app.user.email}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="ml-16">
+                          <p className="text-white font-medium mb-1">
+                            Вакансия: {app.vacancy?.title || `Вакансия #${app.vacancyId}` || 'Вакансия удалена'}
+                          </p>
+                          <p className="text-gray-400 text-sm mb-2">
+                            Отклик отправлен: {new Date(app.createdAt).toLocaleDateString('ru-RU', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                          {app.coverLetter && (
+                            <div className="mt-3 p-3 bg-dark-card rounded-lg">
+                              <p className="text-gray-300 text-sm whitespace-pre-wrap">{app.coverLetter}</p>
+                            </div>
+                          )}
+                          {app.user?.resumes && app.user.resumes.length > 0 && (
+                            <div className="mt-3">
+                              <p className="text-gray-400 text-sm mb-1">Резюме:</p>
+                              <p className="text-accent-cyan text-sm">{app.user.resumes[0].title}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 ml-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          app.status === 'accepted' ? 'bg-green-500/20 text-green-400' :
+                          app.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                          'bg-yellow-500/20 text-yellow-400'
+                        }`}>
+                          {app.status === 'accepted' ? 'Принят' :
+                           app.status === 'rejected' ? 'Отклонен' :
+                           'На рассмотрении'}
+                        </span>
+                        {app.status === 'pending' && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleUpdateApplicationStatus(app.id, 'accepted')}
+                              className="px-3 py-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-sm transition-colors flex items-center gap-1"
+                            >
+                              <Check className="h-4 w-4" />
+                              Принять
+                            </button>
+                            <button
+                              onClick={() => handleUpdateApplicationStatus(app.id, 'rejected')}
+                              className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors flex items-center gap-1"
+                            >
+                              <X className="h-4 w-4" />
+                              Отклонить
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <Card>
+                <p className="text-gray-300 text-center py-8">
+                  У вас пока нет откликов на вакансии
+                  <br />
+                  <span className="text-gray-400 text-sm">Убедитесь, что у вас есть активные вакансии и на них есть отклики</span>
+                </p>
+              </Card>
+            )}
         </div>
 
         {/* My Vacancies Section */}

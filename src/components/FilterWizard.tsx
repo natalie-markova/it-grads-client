@@ -29,7 +29,6 @@ interface FilterWizardProps {
 const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0)
   const [customSkillInput, setCustomSkillInput] = useState('')
-  const [validationError, setValidationError] = useState(false)
 
   // Блокируем скролл body при открытии модального окна
   useEffect(() => {
@@ -93,61 +92,23 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
         }
       }
     })
-    // Сбрасываем ошибку валидации при изменении фильтров
-    if (validationError) {
-      setValidationError(false)
-    }
-  }
-
-  const validateCurrentStep = (): boolean => {
-    switch (currentStep) {
-      case 0: // Тип занятости и формат работы
-        return filters.employmentType.length > 0 || filters.workFormat.length > 0
-      case 1: // Опыт работы
-        return filters.experience !== ''
-      case 2: // Регион/Город и знание языка
-        return filters.region !== '' || filters.englishLevel !== ''
-      case 3: // Диапазон зарплаты
-        return filters.salary !== '' || filters.salaryUnlimited
-      case 4: // Отрасль бизнеса работодателя
-        return filters.industry !== ''
-      case 5: // Языки программирования
-        return filters.programmingLanguages.length > 0
-      case 6: // Технологическое направление
-        return filters.technology.length > 0
-      case 7: // Дополнительные навыки
-        return filters.additionalSkills.length > 0
-      default:
-        return true
-    }
   }
 
   const handleNext = () => {
-    if (validateCurrentStep()) {
-      setValidationError(false)
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
-      }
-    } else {
-      setValidationError(true)
     }
   }
 
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
-      setValidationError(false)
     }
   }
 
   const handleApply = () => {
-    if (validateCurrentStep()) {
-      setValidationError(false)
     onApply(filters)
     onClose()
-    } else {
-      setValidationError(true)
-    }
   }
 
   const handleReset = () => {
@@ -711,7 +672,6 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
                   <button
                     onClick={() => {
                       setCurrentStep(index)
-                      setValidationError(false)
                     }}
                     className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors cursor-pointer ${
                       index <= currentStep
@@ -741,11 +701,6 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
         {/* Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
           {renderStepContent()}
-          {validationError && (
-            <div className="mt-4 p-3 bg-red-500/20 border border-red-500 rounded-lg">
-              <p className="text-red-500 text-sm">Выберите хотя-бы один пункт</p>
-            </div>
-          )}
         </div>
 
         {/* Footer */}

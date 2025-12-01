@@ -41,6 +41,7 @@ interface Application {
   jobTitle: string
   company: string
   appliedDate: string
+  status?: 'pending' | 'accepted' | 'rejected'
 }
 
 interface Resume {
@@ -288,7 +289,11 @@ const GraduateProfile = () => {
     if (!user) return
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-      const response = await fetch(`${apiUrl}/profile/graduate`, {
+      const token = localStorage.getItem('accessToken') || '';
+      const response = await fetch(`${apiUrl}/user/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         credentials: 'include'
       })
       if (response.ok) {
@@ -411,16 +416,25 @@ const GraduateProfile = () => {
     if (!user) return
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-      const response = await fetch(`${apiUrl}/applications`, {
+      const token = localStorage.getItem('accessToken') || '';
+      const response = await fetch(`${apiUrl}/applications/my`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         credentials: 'include'
       })
       if (response.ok) {
         const data = await response.json()
         setApplications(data.map((app: any) => ({
           id: app.id.toString(),
-          jobTitle: app.title,
-          company: app.company,
-          appliedDate: app.applied_at,
+          jobTitle: app.vacancy?.title || 'Вакансия удалена',
+          company: app.vacancy?.companyName || app.vacancy?.employer?.companyName || app.vacancy?.employer?.username || 'Неизвестная компания',
+          appliedDate: new Date(app.createdAt).toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          status: app.status || 'pending'
         })))
       }
     } catch (error) {
@@ -432,7 +446,11 @@ const GraduateProfile = () => {
     if (!user) return
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const token = localStorage.getItem('accessToken') || '';
       const response = await fetch(`${apiUrl}/chats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         credentials: 'include'
       })
       if (response.ok) {
@@ -705,15 +723,24 @@ const GraduateProfile = () => {
     if (!user) return
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const token = localStorage.getItem('accessToken') || '';
       const response = await fetch(`${apiUrl}/applications/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         credentials: 'include'
       })
       if (response.ok) {
         setApplications(applications.filter(app => app.id !== id))
+        toast.success('Отклик удален')
+      } else {
+        const data = await response.json()
+        toast.error(data.error || 'Ошибка при удалении отклика')
       }
     } catch (error) {
       console.error('Error deleting application:', error)
+      toast.error('Ошибка при удалении отклика')
     }
   }
 
@@ -1294,7 +1321,20 @@ const GraduateProfile = () => {
                     <div>
                       <h3 className="text-xl font-semibold text-white mb-2">{app.jobTitle}</h3>
                       <p className="text-gray-300 mb-1">Компания: {app.company}</p>
-                      <p className="text-gray-400 text-sm">Отклик отправлен: {app.appliedDate}</p>
+                      <p className="text-gray-400 text-sm mb-2">Отклик отправлен: {app.appliedDate}</p>
+                      {app.status && (
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            app.status === 'accepted' ? 'bg-green-500/20 text-green-400' :
+                            app.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                            'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            {app.status === 'accepted' ? 'Принят' :
+                             app.status === 'rejected' ? 'Отклонен' :
+                             'На рассмотрении'}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={() => handleDeleteApplication(app.id)}

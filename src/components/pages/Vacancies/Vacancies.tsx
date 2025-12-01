@@ -171,12 +171,14 @@ const Vacancies = () => {
                 </button>
               </div>
             ))
+              );
+            })
           )}
         </div>
 
         {/* Модальное окно создания вакансии */}
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100] p-4">
             <div className="bg-dark-surface rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-dark-card">
               <h2 className="text-2xl font-bold text-white mb-6">Создать вакансию</h2>
               <form onSubmit={handleCreateVacancy} className="space-y-4">

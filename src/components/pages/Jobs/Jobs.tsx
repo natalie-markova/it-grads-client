@@ -4,6 +4,7 @@ import JobsList, { type Job } from '../../../components/JobsList'
 import Section from '../../ui/Section'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
 import { type OutletContext } from '../../../types'
+import { $api } from '../../../utils/axios.instance'
 import toast from 'react-hot-toast'
 
 const Jobs = () => {
@@ -62,26 +63,25 @@ const Jobs = () => {
   }
 
   const handleApply = async (jobId: string) => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-      const response = await fetch(`${apiUrl}/applications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ jobId })
-      })
+    if (!user) {
+      toast.error('Необходимо авторизоваться')
+      return
+    }
 
-      if (response.ok) {
-        toast.success('Отклик успешно отправлен!')
-      } else {
-        const data = await response.json()
-        toast.error(data.error || 'Ошибка при отправке отклика')
+    try {
+      const vacancyId = parseInt(jobId, 10)
+      
+      if (isNaN(vacancyId)) {
+        toast.error('Неверный ID вакансии')
+        return
       }
-    } catch (error) {
+
+      await $api.post('/applications', { vacancyId })
+      toast.success('Отклик успешно отправлен!')
+    } catch (error: any) {
       console.error('Error applying to job:', error)
-      toast.error('Ошибка при отправке отклика')
+      const errorMessage = error.response?.data?.error || 'Ошибка при отправке отклика'
+      toast.error(errorMessage)
     }
   }
 
