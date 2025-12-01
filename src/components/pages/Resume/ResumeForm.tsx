@@ -69,7 +69,7 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Название должности *
+            Название должности
           </label>
           <input
             type="text"
@@ -77,13 +77,12 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             className="input-field w-full"
             placeholder="например: Frontend разработчик"
-            required
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            О себе *
+            О себе
           </label>
           <textarea
             value={formData.description}
@@ -91,20 +90,18 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
             className="input-field w-full"
             rows={4}
             placeholder="Расскажите о себе, своем опыте и целях..."
-            required
           />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Уровень *
+              Уровень
             </label>
             <select
               value={formData.level}
               onChange={(e) => setFormData({ ...formData, level: e.target.value as any })}
               className="input-field w-full"
-              required
             >
               <option value="junior">Junior</option>
               <option value="middle">Middle</option>
@@ -142,7 +139,7 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
 
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Навыки * (через запятую)
+            Навыки (через запятую)
           </label>
           <input
             type="text"
@@ -150,7 +147,6 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
             onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
             className="input-field w-full"
             placeholder="JavaScript, React, TypeScript, Node.js"
-            required
           />
         </div>
 

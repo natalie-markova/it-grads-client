@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, MapPin, DollarSign, Briefcase } from 'lucide-react';
+import { Plus, MapPin, DollarSign, Briefcase, Heart } from 'lucide-react';
 import { Vacancy } from '../../../types';
 import { $api } from '../../../utils/axios.instance';
 import { useNavigate, useOutletContext } from 'react-router-dom';
@@ -10,6 +10,7 @@ const Vacancies = () => {
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const { user } = useOutletContext<OutletContext>();
   const navigate = useNavigate();
 
@@ -24,7 +25,52 @@ const Vacancies = () => {
 
   useEffect(() => {
     fetchVacancies();
-  }, []);
+    if (user) {
+      loadFavorites();
+    }
+  }, [user]);
+
+  const loadFavorites = async () => {
+    if (!user) return;
+    try {
+      const response = await $api.get('/favorites');
+      const favoriteVacancyIds = new Set(response.data.map((v: any) => v.id));
+      setFavoriteIds(favoriteVacancyIds);
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+    }
+  };
+
+  const handleToggleFavorite = async (vacancyId: number) => {
+    if (!user) {
+      toast.error('Необходимо авторизоваться');
+      return;
+    }
+
+    try {
+      const isFavorite = favoriteIds.has(vacancyId);
+
+      if (isFavorite) {
+        // Удаляем из избранного
+        await $api.delete(`/favorites/${vacancyId}`);
+        setFavoriteIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(vacancyId);
+          return newSet;
+        });
+        toast.success('Вакансия удалена из избранного');
+      } else {
+        // Добавляем в избранное
+        await $api.post('/favorites', { vacancyId });
+        setFavoriteIds(prev => new Set(prev).add(vacancyId));
+        toast.success('Вакансия добавлена в избранное');
+      }
+    } catch (error: any) {
+      console.error('Error toggling favorite:', error);
+      const errorMessage = error.response?.data?.error || 'Ошибка при изменении избранного';
+      toast.error(errorMessage);
+    }
+  };
 
   const fetchVacancies = async () => {
     try {
@@ -163,12 +209,33 @@ const Vacancies = () => {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => navigate(`/vacancy/${vacancy.id}`)}
-                  className="w-full px-4 py-2 bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg font-medium rounded-lg transition-colors"
-                >
-                  Подробнее
-                </button>
+                <div className="flex gap-2">
+                  {user && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleToggleFavorite(vacancy.id);
+                      }}
+                      className={`p-2 rounded-lg transition-colors ${
+                        favoriteIds.has(vacancy.id)
+                          ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                          : 'bg-dark-card text-gray-400 hover:bg-dark-card/80 hover:text-accent-cyan'
+                      }`}
+                      title={favoriteIds.has(vacancy.id) ? 'Удалить из избранного' : 'Добавить в избранное'}
+                    >
+                      <Heart 
+                        className={`h-5 w-5 ${favoriteIds.has(vacancy.id) ? 'fill-current' : ''}`} 
+                      />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => navigate(`/vacancy/${vacancy.id}`)}
+                    className="flex-1 px-4 py-2 bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg font-medium rounded-lg transition-colors"
+                  >
+                    Подробнее
+                  </button>
+                </div>
               </div>
             ))
               );
