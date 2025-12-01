@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { Github, ExternalLink } from 'lucide-react'
 import Section from '../../ui/Section'
 import Card from '../../ui/Card'
-import SkillsRadar from '../../../components/SkillsRadar'
+import SkillsRadarCompact from '../../SkillsRadarCompact'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
 import { type OutletContext } from '../../../types'
 import toast from 'react-hot-toast'
@@ -26,12 +26,12 @@ const Skills = () => {
   return (
     <div className="bg-dark-bg min-h-screen">
       <Section
-        title="Навыки и Проекты"
-        subtitle="Визуализируйте свои умения и демонстрируйте портфолио"
+        title="Радар навыков"
+        subtitle="Визуализируйте свои умения и отслеживайте прогресс"
         className="bg-dark-bg scroll-animate-item"
       >
         {user ? (
-          <SkillsRadar user={user} redirectToJobs={true} />
+          <SkillsRadarCompact user={user} />
         ) : (
           <Card>
             <div className="text-center py-12">

@@ -1333,55 +1333,6 @@ const GraduateProfile = () => {
           )}
         </Section>
 
-        {/* Skills Radar Section */}
-        {resumes.length > 0 && resumes[0].radarImage && (
-          <Section title="Радар навыков" className="bg-dark-bg py-0 scroll-animate-item">
-            <Card>
-              <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-start">
-                  <p className="text-gray-300">
-                    Визуализация ваших навыков, созданная на основе интерактивного радара
-                  </p>
-                  <button
-                    onClick={async () => {
-                      if (!confirm('Вы уверены, что хотите удалить радар навыков?')) return
-                      try {
-                        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api"
-                        const response = await fetch(`${apiUrl}/resumes/${resumes[0].id}`, {
-                          method: 'PUT',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          credentials: 'include',
-                          body: JSON.stringify({ radarImage: null }),
-                        })
-                        if (response.ok) {
-                          toast.success('Радар навыков удалён')
-                          loadResumes()
-                        }
-                      } catch (error) {
-                        console.error('Error deleting radar:', error)
-                        toast.error('Ошибка при удалении радара')
-                      }
-                    }}
-                    className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
-                    title="Удалить радар навыков"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                </div>
-                <div className="flex justify-center">
-                  <img
-                    src={resumes[0].radarImage}
-                    alt="Радар навыков"
-                    className="max-w-full h-auto rounded-lg border border-dark-card"
-                  />
-                </div>
-              </div>
-            </Card>
-          </Section>
-        )}
-
         {/* Resumes Section */}
         <Section title="Мои резюме" className="bg-dark-bg py-0 scroll-animate-item">
           {isCreatingResume ? (
