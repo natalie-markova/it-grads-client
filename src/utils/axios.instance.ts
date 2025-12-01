@@ -50,10 +50,10 @@ $api.interceptors.response.use((response) => {
                    return $api(prevRequest)
                }
            } catch (refreshError) {
-               // Если обновление токена не удалось, очищаем токен и перенаправляем на логин
+               // Если обновление токена не удалось, очищаем токен
                clearAccessToken()
-               // Можно добавить редирект на страницу логина
-               window.location.href = '/login'
+               // Не делаем автоматический редирект, чтобы избежать проблем с навигацией
+               // Редирект будет обработан в компонентах через проверку user
                return Promise.reject(refreshError)
            }
        }
