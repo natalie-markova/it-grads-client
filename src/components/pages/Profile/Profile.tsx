@@ -1457,7 +1457,6 @@ const GraduateProfile = () => {
           )}
         </Section>
 
-<<<<<<< HEAD
         {/* Skills Radar Section */}
         {resumes.length > 0 && resumes[0].radarImage && (
           <Section title="Радар навыков" className="bg-dark-bg py-0 scroll-animate-item">
