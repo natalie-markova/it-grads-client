@@ -30,6 +30,7 @@ import EmployerPublicProfile from './components/pages/Employer/EmployerPublicPro
 import MessengerPage from './components/pages/Messenger/MessengerPage';
 import AudioInterview from './components/pages/AudioInterview/AudioInterview';
 import VacancyDetail from './components/pages/Vacancies/VacancyDetail';
+import InterviewTracker from './components/pages/InterviewTracker/InterviewTracker';
 
 const router = createBrowserRouter([
   {
@@ -93,6 +94,13 @@ const router = createBrowserRouter([
         element:
         <ProtectedRoute>
           <AudioInterview />
+        </ProtectedRoute>,
+      },
+      {
+        path: "/interview/tracker",
+        element:
+        <ProtectedRoute>
+          <InterviewTracker />
         </ProtectedRoute>,
       },
       {

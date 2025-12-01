@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Bot, ArrowRight, Mic } from 'lucide-react';
+import { MessageSquare, Bot, ArrowRight, Mic, Calendar } from 'lucide-react';
 import Section from '../../ui/Section';
 import Card from '../../ui/Card';
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation';
@@ -15,7 +15,7 @@ const InterviewHub = () => {
         subtitle="Выберите формат подготовки"
         className="bg-dark-bg py-0"
       >
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
           {/* Practice Quiz */}
           <Card className="scroll-animate-item hover:scale-105 transition-transform h-full">
             <div className="flex flex-col h-full text-center p-6">
@@ -123,6 +123,42 @@ const InterviewHub = () => {
               >
                 Начать аудио-интервью
                 <Mic className="w-4 h-4" />
+              </button>
+            </div>
+          </Card>
+
+          {/* Interview Tracker */}
+          <Card className="scroll-animate-item hover:scale-105 transition-transform h-full" style={{ transitionDelay: '0.3s' }}>
+            <div className="flex flex-col h-full text-center p-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-3">
+                Трекер собеседований
+              </h3>
+              <p className="text-gray-300 mb-6 flex-grow">
+                Управляйте своими собеседованиями. Календарь, напоминания и заметки.
+              </p>
+              <ul className="text-left text-gray-300 mb-6 space-y-2">
+                <li className="flex items-start">
+                  <span className="text-accent-cyan mr-2">✓</span>
+                  <span>Календарь встреч</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-accent-cyan mr-2">✓</span>
+                  <span>Напоминания</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-accent-cyan mr-2">✓</span>
+                  <span>Заметки и результаты</span>
+                </li>
+              </ul>
+              <button
+                onClick={() => navigate('/interview/tracker')}
+                className="btn-primary w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 mt-auto"
+              >
+                Открыть трекер
+                <Calendar className="w-4 h-4" />
               </button>
             </div>
           </Card>
