@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom';
 import {
   ArrowLeft,
   Clock,
@@ -7,10 +7,15 @@ import {
   BookOpen,
   CheckCircle,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  Save,
+  RotateCcw,
+  Calendar,
+  Trophy
 } from 'lucide-react';
 import { $api } from '../../../utils/axios.instance';
 import toast from 'react-hot-toast';
+import type { OutletContext } from '../../../types';
 
 interface LearningStep {
   title: string;
@@ -42,18 +47,38 @@ interface Roadmap {
   popularityScore?: number;
 }
 
+interface ProgressData {
+  completedSteps: number[];
+  progress: number;
+  startedAt: string | null;
+  lastActivityAt: string | null;
+  completedAt: string | null;
+}
+
 const RoadmapDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
   const [loading, setLoading] = useState(true);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [savedProgress, setSavedProgress] = useState<ProgressData | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  const { user } = useOutletContext<OutletContext>();
+  const isAuthenticated = !!user;
 
   useEffect(() => {
     if (slug) {
       fetchRoadmap(slug);
     }
   }, [slug]);
+
+  useEffect(() => {
+    if (slug && isAuthenticated) {
+      fetchProgress(slug);
+    }
+  }, [slug, isAuthenticated]);
 
   const fetchRoadmap = async (slug: string) => {
     try {
@@ -69,6 +94,19 @@ const RoadmapDetail = () => {
     }
   };
 
+  const fetchProgress = async (slug: string) => {
+    try {
+      const response = await $api.get(`/roadmaps/${slug}/progress`);
+      const data = response.data;
+      setSavedProgress(data);
+      if (data.completedSteps && data.completedSteps.length > 0) {
+        setCompletedSteps(new Set(data.completedSteps));
+      }
+    } catch (error) {
+      console.error('Error fetching progress:', error);
+    }
+  };
+
   const toggleStepCompletion = (index: number) => {
     const newCompleted = new Set(completedSteps);
     if (newCompleted.has(index)) {
@@ -77,18 +115,61 @@ const RoadmapDetail = () => {
       newCompleted.add(index);
     }
     setCompletedSteps(newCompleted);
+    setHasUnsavedChanges(true);
+  };
+
+  const saveProgress = async () => {
+    if (!slug || !isAuthenticated) {
+      toast.error('Войдите в аккаунт, чтобы сохранить прогресс');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await $api.post(`/roadmaps/${slug}/progress`, {
+        completedSteps: Array.from(completedSteps)
+      });
+      setSavedProgress(response.data.progress);
+      setHasUnsavedChanges(false);
+      toast.success('Прогресс сохранён!');
+    } catch (error) {
+      console.error('Error saving progress:', error);
+      toast.error('Ошибка при сохранении прогресса');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const resetProgress = async () => {
+    if (!slug || !isAuthenticated) return;
+
+    if (!confirm('Вы уверены, что хотите сбросить весь прогресс?')) return;
+
+    try {
+      await $api.delete(`/roadmaps/${slug}/progress`);
+      setCompletedSteps(new Set());
+      setSavedProgress(null);
+      setHasUnsavedChanges(false);
+      toast.success('Прогресс сброшен');
+    } catch (error) {
+      console.error('Error resetting progress:', error);
+      toast.error('Ошибка при сбросе прогресса');
+    }
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return null;
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
   };
 
   const difficultyLabels = {
     beginner: 'Начальный',
     intermediate: 'Средний',
     advanced: 'Продвинутый'
-  };
-
-  const difficultyColors = {
-    beginner: 'bg-green-500/20 text-green-400 border-green-500/30',
-    intermediate: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    advanced: 'bg-red-500/20 text-red-400 border-red-500/30'
   };
 
   const resourceTypeLabels = {
@@ -115,6 +196,7 @@ const RoadmapDetail = () => {
   }
 
   const progress = (completedSteps.size / roadmap.learningPath.length) * 100;
+  const isCompleted = progress === 100;
 
   return (
     <div className="min-h-screen bg-dark-bg">
@@ -149,6 +231,12 @@ const RoadmapDetail = () => {
                 >
                   {difficultyLabels[roadmap.difficulty]}
                 </span>
+                {isCompleted && (
+                  <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-500/20 text-green-400 border border-green-500/30 flex items-center gap-1">
+                    <Trophy className="w-3 h-3" />
+                    Завершено
+                  </span>
+                )}
               </div>
 
               <p className="text-lg opacity-90 mb-4 max-w-3xl">{roadmap.description}</p>
@@ -208,14 +296,56 @@ const RoadmapDetail = () => {
 
               {/* Progress Bar */}
               <div className="mb-6">
-                <div className="w-full bg-dark-surface rounded-full h-2">
+                <div className="w-full bg-dark-surface rounded-full h-3">
                   <div
-                    className="bg-accent-cyan h-2 rounded-full transition-all duration-300"
+                    className={`h-3 rounded-full transition-all duration-300 ${
+                      isCompleted ? 'bg-green-500' : 'bg-accent-cyan'
+                    }`}
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <p className="text-sm text-gray-400 mt-2">{Math.round(progress)}% завершено</p>
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-sm text-gray-400">{Math.round(progress)}% завершено</p>
+                  {hasUnsavedChanges && (
+                    <p className="text-sm text-yellow-400">Есть несохранённые изменения</p>
+                  )}
+                </div>
               </div>
+
+              {/* Save/Reset Buttons */}
+              {isAuthenticated && (
+                <div className="flex gap-3 mb-6">
+                  <button
+                    onClick={saveProgress}
+                    disabled={saving || !hasUnsavedChanges}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                      hasUnsavedChanges
+                        ? 'bg-accent-cyan text-dark-bg hover:bg-accent-cyan/90'
+                        : 'bg-dark-surface text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    <Save className="w-4 h-4" />
+                    {saving ? 'Сохранение...' : 'Сохранить прогресс'}
+                  </button>
+                  {completedSteps.size > 0 && (
+                    <button
+                      onClick={resetProgress}
+                      className="flex items-center gap-2 px-4 py-2 bg-dark-surface text-gray-400 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Сбросить
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {!isAuthenticated && (
+                <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                  <p className="text-yellow-400 text-sm">
+                    Войдите в аккаунт, чтобы сохранять прогресс обучения
+                  </p>
+                </div>
+              )}
 
               {/* Steps */}
               <div className="space-y-4">
@@ -273,6 +403,59 @@ const RoadmapDetail = () => {
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
+            {/* Progress Stats */}
+            {isAuthenticated && savedProgress && (savedProgress.startedAt || savedProgress.completedAt) && (
+              <div className="bg-dark-card rounded-xl p-6 border border-dark-surface">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-accent-cyan" />
+                  Ваш прогресс
+                </h3>
+                <div className="space-y-4">
+                  {savedProgress.startedAt && (
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-400">Начато</p>
+                        <p className="text-white">{formatDate(savedProgress.startedAt)}</p>
+                      </div>
+                    </div>
+                  )}
+                  {savedProgress.lastActivityAt && (
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-400">Последняя активность</p>
+                        <p className="text-white">{formatDate(savedProgress.lastActivityAt)}</p>
+                      </div>
+                    </div>
+                  )}
+                  {savedProgress.completedAt && (
+                    <div className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/30">
+                      <Trophy className="w-5 h-5 text-green-400" />
+                      <div>
+                        <p className="text-sm text-green-400">Завершено</p>
+                        <p className="text-white">{formatDate(savedProgress.completedAt)}</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="pt-3 border-t border-dark-surface">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Прогресс</span>
+                      <span className="text-white font-bold">{savedProgress.progress}%</span>
+                    </div>
+                    <div className="w-full bg-dark-surface rounded-full h-2 mt-2">
+                      <div
+                        className={`h-2 rounded-full ${
+                          savedProgress.progress === 100 ? 'bg-green-500' : 'bg-accent-cyan'
+                        }`}
+                        style={{ width: `${savedProgress.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Resources */}
             {roadmap.resources && roadmap.resources.length > 0 && (
               <div className="bg-dark-card rounded-xl p-6 border border-dark-surface">
