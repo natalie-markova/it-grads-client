@@ -28,6 +28,7 @@ import RoadmapDetail from './components/pages/Roadmap/RoadmapDetail';
 import Candidates from './components/pages/Candidates/Candidates';
 import EmployerPublicProfile from './components/pages/Employer/EmployerPublicProfile';
 import ProfileWrapper from './components/pages/Profile/ProfileWrapper';
+import MessengerPage from './components/pages/Messenger/MessengerPage';
 
 const router = createBrowserRouter([
   {
@@ -136,6 +137,20 @@ const router = createBrowserRouter([
       {
         path: "/candidates",
         element: <Candidates />,
+      },
+      {
+        path: "/messenger",
+        element:
+        <ProtectedRoute>
+          <MessengerPage />
+        </ProtectedRoute>,
+      },
+      {
+        path: "/messenger/:chatId",
+        element:
+        <ProtectedRoute>
+          <MessengerPage />
+        </ProtectedRoute>,
       },
 
     ]}
