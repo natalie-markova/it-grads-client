@@ -116,8 +116,44 @@ const AudioInterview = () => {
     synthRef.current.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ru-RU';
-    utterance.rate = 1.0;
+    utterance.rate = 0.95;
     utterance.pitch = 1.0;
+
+    // Получаем все доступные голоса
+    const voices = synthRef.current.getVoices();
+
+    // Фильтруем русские голоса
+    const russianVoices = voices.filter(voice =>
+      voice.lang.startsWith('ru') || voice.lang === 'ru-RU'
+    );
+
+    // Разделяем на мужские и женские голоса (по имени голоса)
+    const femaleKeywords = ['female', 'женск', 'мария', 'anna', 'elena', 'irina', 'milena', 'svetlana', 'tatiana', 'natalia', 'oksana', 'julia'];
+    const maleKeywords = ['male', 'мужск', 'dmitri', 'dmitry', 'pavel', 'maxim', 'yuri', 'sergei', 'alexander', 'ivan', 'nikolay', 'boris'];
+
+    const femaleVoices = russianVoices.filter(voice =>
+      femaleKeywords.some(kw => voice.name.toLowerCase().includes(kw))
+    );
+    const maleVoices = russianVoices.filter(voice =>
+      maleKeywords.some(kw => voice.name.toLowerCase().includes(kw))
+    );
+
+    // Выбираем случайно мужской или женский голос
+    const useFemale = Math.random() > 0.5;
+    let selectedVoice = null;
+
+    if (useFemale && femaleVoices.length > 0) {
+      selectedVoice = femaleVoices[Math.floor(Math.random() * femaleVoices.length)];
+    } else if (!useFemale && maleVoices.length > 0) {
+      selectedVoice = maleVoices[Math.floor(Math.random() * maleVoices.length)];
+    } else if (russianVoices.length > 0) {
+      // Если конкретный пол не найден, выбираем случайный русский голос
+      selectedVoice = russianVoices[Math.floor(Math.random() * russianVoices.length)];
+    }
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
 
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);

@@ -114,31 +114,39 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
         const response = await $api.get(`/skills/radar/${actualUserId}`)
         const data = response.data
 
-        if (Array.isArray(data.skills)) {
-          const skillsMap: Record<string, Record<string, number>> = {}
-          SKILL_CATEGORIES.forEach(category => {
-            skillsMap[category.name] = {}
-            category.skills.forEach(skill => {
-              const hasSkill = data.skills.includes(skill)
-              skillsMap[category.name][skill] = hasSkill ? 3 : 0
+        // Инициализируем skillsMap со всеми категориями
+        const skillsMap: Record<string, Record<string, number>> = {}
+        SKILL_CATEGORIES.forEach(category => {
+          skillsMap[category.name] = {}
+          category.skills.forEach(skill => {
+            skillsMap[category.name][skill] = 0
+          })
+        })
+
+        // Проверяем новый формат с уровнями (массив объектов {category, skill, level})
+        const skillsData = data.skillsWithLevels || data.skills
+
+        if (Array.isArray(skillsData) && skillsData.length > 0) {
+          // Новый формат - массив объектов с category, skill, level
+          if (typeof skillsData[0] === 'object' && skillsData[0].level !== undefined) {
+            skillsData.forEach((item: Skill) => {
+              if (skillsMap[item.category] && item.skill in skillsMap[item.category]) {
+                skillsMap[item.category][item.skill] = item.level
+              }
             })
-          })
-          setSkills(skillsMap)
-        } else if (Array.isArray(data)) {
-          const skillsMap: Record<string, Record<string, number>> = {}
-          SKILL_CATEGORIES.forEach(category => {
-            skillsMap[category.name] = {}
-            category.skills.forEach(skill => {
-              skillsMap[category.name][skill] = 0
+          } else {
+            // Старый формат - массив строк (названия навыков)
+            skillsData.forEach((skillName: string) => {
+              SKILL_CATEGORIES.forEach(category => {
+                if (category.skills.includes(skillName)) {
+                  skillsMap[category.name][skillName] = 3  // Уровень по умолчанию для старого формата
+                }
+              })
             })
-          })
-          data.forEach((item: Skill & { skill: string }) => {
-            if (skillsMap[item.category]) {
-              skillsMap[item.category][item.skill] = item.level
-            }
-          })
-          setSkills(skillsMap)
+          }
         }
+
+        setSkills(skillsMap)
       } catch (error) {
         console.error('Error loading skills:', error)
         initializeDefaultSkills()

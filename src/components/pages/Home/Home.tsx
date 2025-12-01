@@ -13,7 +13,7 @@ const Home = () => {
   const topFeatures = [
     {
       icon: <Code className="h-8 w-8" />,
-      title: 'Навыки и Проекты',
+      title: 'Радар навыков',
       description: 'Визуализируйте свои умения и демонстрируйте портфолио.',
       link: '/skills',
     },
@@ -113,7 +113,7 @@ const Home = () => {
                   <span>Рекомендуемые курсы</span>
                 </li>
               </ul>
-              <div className="bg-dark-surface rounded-xl p-8 border border-dark-card hover:border-accent-cyan transition-all cursor-pointer">
+              <div className="bg-dark-surface rounded-xl p-8 border border-dark-card hover:border-accent-cyan transition-all ">
                 <div className="relative w-full h-64 bg-gradient-to-br from-accent-cyan/20 via-accent-blue/20 to-dark-card rounded-lg flex items-center justify-center overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-32 h-32 bg-accent-cyan/30 rounded-full shadow-glow-cyan animate-pulse"></div>
@@ -164,7 +164,7 @@ const Home = () => {
               </li>
             </ul>
             <Link to="/skills" className="block">
-              <div className="bg-dark-surface rounded-xl p-8 border border-dark-card hover:border-accent-cyan transition-all cursor-pointer">
+              <div className="bg-dark-surface rounded-xl p-8 border border-dark-card hover:border-accent-cyan transition-all ">
                 <div className="relative w-full h-64 bg-gradient-to-br from-dark-card via-accent-blue/10 to-dark-surface rounded-lg flex items-center justify-center overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-24 h-24 bg-accent-blue/20 rounded-lg shadow-glow-cyan rotate-45"></div>
@@ -218,7 +218,7 @@ const Home = () => {
                   <span>Возможность для компаний отвечать на отзывы</span>
                 </li>
               </ul>
-              <div className="bg-dark-card rounded-xl p-8 border border-dark-surface hover:border-accent-cyan transition-all cursor-pointer">
+              <div className="bg-dark-card rounded-xl p-8 border border-dark-surface hover:border-accent-cyan transition-all ">
                 <div className="relative w-full h-64 bg-gradient-to-br from-accent-gold/20 via-accent-cyan/20 to-dark-card rounded-lg flex items-center justify-center overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-32 h-32 bg-accent-gold/30 rounded-full shadow-glow-gold animate-pulse"></div>
@@ -269,7 +269,7 @@ const Home = () => {
                   <span>Советы от опытных специалистов для улучшения ответов</span>
                 </li>
               </ul>
-              <div className="bg-dark-card rounded-xl p-8 border border-dark-surface hover:border-accent-cyan transition-all cursor-pointer">
+              <div className="bg-dark-card rounded-xl p-8 border border-dark-surface hover:border-accent-cyan transition-all ">
                 <div className="relative w-full h-64 bg-gradient-to-br from-dark-surface via-accent-cyan/10 to-dark-card rounded-lg flex items-center justify-center overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-32 h-32 bg-accent-cyan/20 rounded-full border-4 border-accent-cyan border-dashed animate-spin-slow"></div>

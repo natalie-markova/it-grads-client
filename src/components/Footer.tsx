@@ -62,7 +62,7 @@ const Footer = ({ user }: FooterProps) => {
                   </li>
                   <li>
                     <Link to="/skills" className="hover:text-accent-cyan transition-colors text-gray-400">
-                      Навыки и Проекты
+                      Радар навыков
                     </Link>
                   </li>
                   <li>

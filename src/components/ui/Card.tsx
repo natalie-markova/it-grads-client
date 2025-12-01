@@ -7,7 +7,7 @@ export interface CardProps {
   style?: React.CSSProperties
 }
 
-const Card = ({ children, className = '', hover = true, style }: CardProps) => {
+const Card = ({ children, className = '', hover = false, style }: CardProps) => {
   return (
     <div className={`card ${hover ? 'hover:shadow-glow-cyan' : ''} ${className}`} style={style}>
       {children}
