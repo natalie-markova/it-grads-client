@@ -114,6 +114,9 @@ const Jobs = () => {
           createdAt: job.createdAt || new Date().toISOString(),
           matchScore: job.matchScore || 0,
           matchingSkills: job.matchingSkills || [],
+          learningPathSkills: job.learningPathSkills || [],
+          matchedRoadmap: job.matchedRoadmap || null,
+          matchReason: job.matchReason || null,
           employerId: job.employerId || (job.employer ? job.employer.id : undefined)
         })))
       } else if (response.status === 404) {

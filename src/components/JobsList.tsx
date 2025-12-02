@@ -30,6 +30,9 @@ export interface Job {
   createdAt: string
   matchScore?: number
   matchingSkills?: string[]
+  learningPathSkills?: string[]
+  matchedRoadmap?: string
+  matchReason?: 'skills' | 'roadmap' | 'skills_and_roadmap' | 'learning_path' | 'no_profile'
   employerId?: number
 }
 
@@ -376,7 +379,7 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
             <Card key={job.id} className="scroll-animate-item" style={{ transitionDelay: `${index * 0.05}s` }}>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
                     <h3 className="text-xl font-semibold text-white">{job.title}</h3>
                     {job.matchScore !== undefined && job.matchScore > 0 && (
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -385,6 +388,21 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                         'bg-gray-500/20 text-gray-400'
                       }`}>
                         {job.matchScore}% совпадение
+                      </span>
+                    )}
+                    {job.matchReason === 'skills_and_roadmap' && (
+                      <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full">
+                        Навыки + Карта
+                      </span>
+                    )}
+                    {job.matchReason === 'roadmap' && (
+                      <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+                        По карте специальностей
+                      </span>
+                    )}
+                    {job.matchReason === 'learning_path' && (
+                      <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded-full">
+                        По пути обучения
                       </span>
                     )}
                   </div>
@@ -405,23 +423,44 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                     )}
                   </div>
                   <p className="text-gray-400 text-sm mb-2 line-clamp-2">{job.description}</p>
-                  {job.matchingSkills && job.matchingSkills.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-xs text-gray-400 mb-1">Совпадающие навыки:</p>
-                      <div className="flex gap-1 flex-wrap">
-                        {job.matchingSkills.slice(0, 5).map((skill, idx) => (
-                          <span key={idx} className="px-2 py-0.5 bg-accent-cyan/20 text-accent-cyan text-xs rounded">
-                            {skill}
-                          </span>
-                        ))}
-                        {job.matchingSkills.length > 5 && (
-                          <span className="px-2 py-0.5 text-gray-400 text-xs">
-                            +{job.matchingSkills.length - 5}
-                          </span>
-                        )}
-                      </div>
+                  {(job.matchingSkills && job.matchingSkills.length > 0) || (job.learningPathSkills && job.learningPathSkills.length > 0) ? (
+                    <div className="mb-3 space-y-2">
+                      {job.matchingSkills && job.matchingSkills.length > 0 && (
+                        <div>
+                          <p className="text-xs text-gray-400 mb-1">Ваши навыки:</p>
+                          <div className="flex gap-1 flex-wrap">
+                            {job.matchingSkills.slice(0, 5).map((skill, idx) => (
+                              <span key={idx} className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">
+                                {skill}
+                              </span>
+                            ))}
+                            {job.matchingSkills.length > 5 && (
+                              <span className="px-2 py-0.5 text-gray-400 text-xs">
+                                +{job.matchingSkills.length - 5}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {job.learningPathSkills && job.learningPathSkills.length > 0 && (
+                        <div>
+                          <p className="text-xs text-gray-400 mb-1">Изучаете сейчас:</p>
+                          <div className="flex gap-1 flex-wrap">
+                            {job.learningPathSkills.slice(0, 4).map((skill, idx) => (
+                              <span key={idx} className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded">
+                                {skill}
+                              </span>
+                            ))}
+                            {job.learningPathSkills.length > 4 && (
+                              <span className="px-2 py-0.5 text-gray-400 text-xs">
+                                +{job.learningPathSkills.length - 4}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ) : null}
                   <div className="flex gap-2 mt-4 flex-wrap">
                     <span className="px-2 py-1 bg-dark-surface text-accent-cyan text-xs rounded">
                       {job.type === 'full-time' ? 'Полный день' :
@@ -620,20 +659,48 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                 </div>
               ) : null}
 
-              {/* Совпадающие навыки */}
-              {selectedJobData.matchingSkills && selectedJobData.matchingSkills.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-3">Ваши совпадающие навыки</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedJobData.matchingSkills.map((skill, idx) => (
-                      <span 
-                        key={idx} 
-                        className="px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full"
-                      >
-                        {skill}
+              {/* Совпадающие навыки и путь обучения */}
+              {((selectedJobData.matchingSkills && selectedJobData.matchingSkills.length > 0) ||
+                (selectedJobData.learningPathSkills && selectedJobData.learningPathSkills.length > 0)) && (
+                <div className="space-y-4">
+                  {selectedJobData.matchedRoadmap && (
+                    <div className="flex items-center gap-2 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                      <span className="text-purple-400 text-sm">
+                        Соответствует вашей карте специальности: <strong>{selectedJobData.matchedRoadmap}</strong>
                       </span>
-                    ))}
-                  </div>
+                    </div>
+                  )}
+                  {selectedJobData.matchingSkills && selectedJobData.matchingSkills.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-3">Ваши подтвержденные навыки</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedJobData.matchingSkills.map((skill, idx) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {selectedJobData.learningPathSkills && selectedJobData.learningPathSkills.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-3">Навыки из пути обучения</h3>
+                      <p className="text-gray-400 text-sm mb-2">Эти навыки входят в ваш план обучения по карте специальностей</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedJobData.learningPathSkills.map((skill, idx) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1 bg-orange-500/20 text-orange-400 text-sm rounded-full"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
