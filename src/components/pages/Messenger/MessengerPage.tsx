@@ -6,6 +6,7 @@ import type { Chat, Message, User, OutletContext } from '../../../types';
 import ChatListItem from './ChatListItem';
 import MessageItem from './MessageItem';
 import toast from 'react-hot-toast';
+import { socketService } from '../../../utils/socket.service';
 
 const MessengerPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -19,6 +20,7 @@ const MessengerPage = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Загрузка списка чатов
   useEffect(() => {
@@ -40,6 +42,48 @@ const MessengerPage = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+    // WebSocket подключение
+    useEffect(() => {
+    if (!user) return;
+    
+    // Получить токен из localStorage или cookies
+    const token = localStorage.getItem('accessToken') || '';
+    
+    if (token) {
+        socketService.connect(token);
+    }
+
+    return () => {
+        socketService.disconnect();
+    };
+    }, [user]);
+
+    // Подписка на новые сообщения в активном чате
+    useEffect(() => {
+    if (!chatId || !user) return;
+
+    socketService.joinChat(Number(chatId));
+
+    socketService.onNewMessage((message) => {
+        console.log('Новое сообщение получено:', message);
+        setMessages((prev) => [...prev, message]);
+
+        // Если сообщение от другого пользователя, автоматически отмечаем как прочитанное
+        if (message.senderId !== user.id) {
+            chatAPI.markAsRead(Number(chatId))
+                .then(() => {
+                    console.log('Сообщение автоматически отмечено как прочитанное');
+                })
+                .catch(err => console.error('Error auto-marking as read:', err));
+        }
+    });
+
+    return () => {
+        socketService.leaveChat(Number(chatId));
+        socketService.off('new-message');
+    };
+    }, [chatId, user]);  
 
   const loadChats = async () => {
     try {
@@ -72,15 +116,25 @@ const MessengerPage = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newMessage.trim() || !activeChat || !user) return;
-    
+
     setSending(true);
     try {
-      const message = await chatAPI.sendMessage(activeChat.id, newMessage.trim());
-      setMessages([...messages, message]);
-      setNewMessage('');
-      
+      // Попытка отправить через WebSocket
+      if (socketService.isConnected()) {
+        // Отправляем через WebSocket
+        socketService.sendMessage(activeChat.id, newMessage.trim());
+        setNewMessage('');
+        console.log('Сообщение отправлено через WebSocket');
+      } else {
+        // Fallback на HTTP если WebSocket не подключен
+        console.log('WebSocket отключен, используем HTTP API');
+        const message = await chatAPI.sendMessage(activeChat.id, newMessage.trim());
+        setMessages([...messages, message]);
+        setNewMessage('');
+      }
+
       // Обновить список чатов
       loadChats();
     } catch (error: any) {
@@ -92,7 +146,9 @@ const MessengerPage = () => {
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   };
 
   if (!user) {
@@ -176,7 +232,7 @@ const MessengerPage = () => {
             </div>
 
             {/* Сообщения */}
-            <div className="flex-1 overflow-y-auto p-4 bg-dark-surface">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 bg-dark-surface">
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <p className="text-gray-400">Начните разговор</p>
