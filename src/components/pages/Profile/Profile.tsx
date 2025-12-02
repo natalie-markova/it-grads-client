@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { Edit, Trash2, Mail, Phone, MapPin, Calendar, GraduationCap, Briefcase, Code, Github, Linkedin, Globe, Award } from 'lucide-react'
 import Card from '../../ui/Card'
 import Section from '../../ui/Section'
@@ -8,6 +8,7 @@ import { type OutletContext } from '../../../types'
 import toast from 'react-hot-toast'
 import ResumeForm from '../Resume/ResumeForm'
 import { $api } from '../../../utils/axios.instance'
+import GraduateProfileNav from './GraduateProfileNav'
 
 // Функция для формирования полного URL изображения
 const getImageUrl = (url: string | undefined | null): string => {
@@ -810,11 +811,25 @@ const GraduateProfile = () => {
 
   useScrollAnimation()
 
+  const [searchParams] = useSearchParams()
+  // Читаем активную вкладку напрямую из URL
+  const activeTab = searchParams.get('tab') || 'profile'
+
+  const handleTabChange = (tab: string) => {
+    // Мгновенный переход по нужному URL
+    navigate(`/profile/graduate?tab=${tab}`, { replace: true })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <div className="bg-dark-bg min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Navigation Menu */}
+        <GraduateProfileNav activeTab={activeTab} onTabChange={handleTabChange} />
+
         {/* Profile Header Section */}
-        <Section title="" className="bg-dark-bg py-0 scroll-animate-item">
+        {activeTab === 'profile' && (
+          <Section key="profile" title="" className="bg-dark-bg py-0 scroll-animate-item">
           {profile ? (
             <>
               {/* Header Card with Photo and Basic Info */}
@@ -1091,48 +1106,58 @@ const GraduateProfile = () => {
             </Card>
           )}
         </Section>
+        )}
 
         {/* Skills Radar Section */}
-        {resumes.length > 0 && resumes[0].radarImage && (
-          <Section title="Радар навыков" className="bg-dark-bg py-0 scroll-animate-item">
-            <Card>
-              <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-start">
-                  <p className="text-gray-300">
-                    Визуализация ваших навыков, созданная на основе интерактивного радара
-                  </p>
-                  <button
-                    onClick={async () => {
-                      try {
-                        await $api.put(`/resumes/${resumes[0].id}`, { radarImage: null })
-                        toast.success('Радар навыков удалён')
-                        loadResumes()
-                      } catch (error: any) {
-                        console.error('Error deleting radar:', error)
-                        const errorMessage = error.response?.data?.error || error.message || 'Ошибка при удалении радара'
-                        toast.error(errorMessage)
-                      }
-                    }}
-                    className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
-                    title="Удалить радар навыков"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
+        {activeTab === 'radar' && (
+          <Section key="radar" title="Радар навыков" className="bg-dark-bg py-0 scroll-animate-item">
+            {resumes.length > 0 && resumes[0].radarImage ? (
+              <Card>
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-start">
+                    <p className="text-gray-300">
+                      Визуализация ваших навыков, созданная на основе интерактивного радара
+                    </p>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await $api.put(`/resumes/${resumes[0].id}`, { radarImage: null })
+                          toast.success('Радар навыков удалён')
+                          loadResumes()
+                        } catch (error: any) {
+                          console.error('Error deleting radar:', error)
+                          const errorMessage = error.response?.data?.error || error.message || 'Ошибка при удалении радара'
+                          toast.error(errorMessage)
+                        }
+                      }}
+                      className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
+                      title="Удалить радар навыков"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <div className="flex justify-center">
+                    <img
+                      src={resumes[0].radarImage}
+                      alt="Радар навыков"
+                      className="max-w-full h-auto rounded-lg border border-dark-card"
+                    />
+                  </div>
                 </div>
-                <div className="flex justify-center">
-                  <img
-                    src={resumes[0].radarImage}
-                    alt="Радар навыков"
-                    className="max-w-full h-auto rounded-lg border border-dark-card"
-                  />
-                </div>
-              </div>
-            </Card>
+              </Card>
+            ) : (
+              <Card>
+                <p className="text-gray-300 text-center py-8">
+                  У вас пока нет радара навыков. Создайте резюме и сгенерируйте радар навыков!
+                </p>
+              </Card>
+            )}
           </Section>
         )}
 
         {/* Resumes Section */}
-        <Section title="Мои резюме" className="bg-dark-bg py-0 scroll-animate-item">
+        {activeTab === 'resumes' && (
+          <Section key="resumes" title="Мои резюме" className="bg-dark-bg py-0 scroll-animate-item">
           {isCreatingResume ? (
             <ResumeForm
               onClose={() => setIsCreatingResume(false)}
@@ -1267,9 +1292,11 @@ const GraduateProfile = () => {
             </>
           )}
         </Section>
+        )}
 
         {/* Favorites Section */}
-        <Section title="Избранные вакансии" className="bg-dark-bg py-0 scroll-animate-item">
+        {activeTab === 'favorites' && (
+          <Section key="favorites" title="Избранные вакансии" className="bg-dark-bg py-0 scroll-animate-item">
           {favorites.length > 0 ? (
             <div className="space-y-4">
               {favorites.map((fav, index) => (
@@ -1322,9 +1349,11 @@ const GraduateProfile = () => {
             </Card>
           )}
         </Section>
+        )}
 
         {/* Applications Section */}
-        <Section title="Мои отклики" className="bg-dark-bg py-0 scroll-animate-item">
+        {activeTab === 'applications' && (
+          <Section key="applications" title="Мои отклики" className="bg-dark-bg py-0 scroll-animate-item">
           {applications.length > 0 ? (
             <div className="space-y-4">
               {applications.map((app, index) => (
@@ -1375,6 +1404,7 @@ const GraduateProfile = () => {
             </Card>
           )}
         </Section>
+        )}
 
       </div>
     </div>

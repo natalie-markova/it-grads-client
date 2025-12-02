@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { Edit, Trash2, Building2, Globe, MapPin, Users, Briefcase, Check, X, User as UserIcon, RefreshCw } from 'lucide-react';
 import { OutletContext } from '../../../types';
 import { $api } from '../../../utils/axios.instance';
 import toast from 'react-hot-toast';
 import VacanciesManagement from '../Vacancies/VacanciesManagement';
 import Card from '../../ui/Card';
+import EmployerProfileNav from './EmployerProfileNav';
 
 
 interface EmployerProfileData {
@@ -126,7 +127,13 @@ const EmployerProfile = () => {
     if (!user) return
 
     try {
-      const response = await $api.put('/user/profile', formData)
+      // Убеждаемся, что если аватар был загружен, он включен в данные для сохранения
+      const dataToSave = {
+        ...formData,
+        avatar: formData.avatar || (avatarPreview && avatarPreview.startsWith('data:') ? null : avatarPreview) || formData.avatar || ''
+      }
+
+      const response = await $api.put('/user/profile', dataToSave)
       // Обновляем профиль из ответа сервера, чтобы получить актуальные данные
       if (response.data) {
         const profileData: EmployerProfileData = {
@@ -138,11 +145,11 @@ const EmployerProfile = () => {
           industry: response.data.industry || '',
           phone: response.data.phone || '',
           email: response.data.email || user.email || '',
-          avatar: response.data.avatar
+          avatar: response.data.avatar || response.data.photo
         }
         setProfile(profileData)
         setFormData(profileData)
-        setAvatarPreview(profileData.avatar || null)
+        setAvatarPreview(profileData.avatar ? getImageUrl(profileData.avatar) : null)
       } else {
         setProfile(formData)
         setFormData(formData)
@@ -151,8 +158,21 @@ const EmployerProfile = () => {
       toast.success('Профиль обновлен')
     } catch (error: any) {
       console.error('Error saving profile:', error)
-      const errorMessage = error.response?.data?.message || error.message || 'Ошибка при сохранении профиля'
-      toast.error(errorMessage)
+      
+      // Обработка различных типов ошибок
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        toast.error('Ошибка подключения к серверу. Проверьте, что сервер запущен.')
+      } else if (error.response?.status === 401) {
+        // Ошибка авторизации - не разлогиниваем автоматически, показываем сообщение
+        toast.error('Ошибка авторизации. Пожалуйста, войдите заново.')
+        // Не делаем автоматический редирект, чтобы пользователь мог увидеть ошибку
+      } else if (error.response?.status === 403) {
+        toast.error('Недостаточно прав для выполнения этого действия.')
+      } else {
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Ошибка при сохранении профиля'
+        toast.error(errorMessage)
+      }
+      // Не закрываем форму редактирования при ошибке, чтобы пользователь мог исправить данные
     }
   }
 
@@ -162,6 +182,70 @@ const EmployerProfile = () => {
       [e.target.name]: e.target.value
     });
   };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Проверяем тип файла
+      if (!file.type.startsWith('image/')) {
+        toast.error('Пожалуйста, выберите файл изображения')
+        return
+      }
+      // Проверяем размер файла (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Размер файла не должен превышать 5MB')
+        return
+      }
+      setAvatarFile(file)
+      // Создаем превью
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleUploadAvatar = async () => {
+    if (!avatarFile) return
+
+    setIsUploadingAvatar(true)
+    try {
+      const uploadFormData = new FormData()
+      uploadFormData.append('photo', avatarFile)
+
+      const response = await $api.post('/user/upload-photo', uploadFormData)
+
+      const data = response.data
+      const avatarUrl = data.photo || data.avatar || ''
+      
+      // Обновляем форму с новым URL аватара
+      setFormData(prev => ({
+        ...prev,
+        avatar: avatarUrl
+      }))
+      setAvatarPreview(getImageUrl(avatarUrl))
+      setAvatarFile(null)
+      toast.success('Аватар успешно загружен')
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error)
+      
+      // Более детальная обработка ошибок
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        toast.error('Ошибка подключения к серверу. Проверьте, что сервер запущен.')
+      } else if (error.response) {
+        // Сервер ответил с ошибкой
+        const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Ошибка при загрузке аватара'
+        toast.error(errorMessage)
+      } else {
+        // Другая ошибка
+        const errorMessage = error.message || 'Ошибка при загрузке аватара'
+        toast.error(errorMessage)
+      }
+    } finally {
+      setIsUploadingAvatar(false)
+    }
+  }
 
   const loadApplications = async () => {
     if (!user) return
@@ -185,6 +269,14 @@ const EmployerProfile = () => {
     }
   };
 
+  const [searchParams] = useSearchParams()
+  const activeTab = searchParams.get('tab') || 'profile'
+
+  const handleTabChange = (tab: string) => {
+    navigate(`/profile/employer?tab=${tab}`, { replace: true })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   if (!profile) {
     return (
       <div className="min-h-screen bg-dark-bg flex items-center justify-center">
@@ -196,7 +288,12 @@ const EmployerProfile = () => {
   return (
     <div className="min-h-screen bg-dark-bg py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-dark-surface rounded-lg p-8 border border-dark-card">
+        {/* Navigation Menu */}
+        <EmployerProfileNav activeTab={activeTab} onTabChange={handleTabChange} />
+
+        {/* Profile Tab */}
+        {activeTab === 'profile' && (
+          <div className="bg-dark-surface rounded-lg p-8 border border-dark-card">
           <div className="flex justify-between items-start mb-8">
             <h1 className="text-3xl font-bold text-white">Профиль работодателя</h1>
             <button
@@ -365,7 +462,12 @@ const EmployerProfile = () => {
                   type="button"
                   onClick={() => {
                     setIsEditing(false);
-                    setFormData(profile);
+                    // Восстанавливаем данные из сохраненного профиля
+                    if (profile) {
+                      setFormData(profile);
+                      setAvatarPreview(profile.avatar ? getImageUrl(profile.avatar) : null);
+                      setAvatarFile(null);
+                    }
                   }}
                   className="px-6 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors"
                 >
@@ -477,12 +579,14 @@ const EmployerProfile = () => {
               )}
             </div>
           )}
-        </div>
+          </div>
+        )}
 
-        {/* Applications Section */}
-        <div className="mt-8 bg-dark-surface rounded-lg p-8 border border-dark-card">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-white">Отклики на вакансии</h2>
+        {/* Applications Tab */}
+        {activeTab === 'applications' && (
+          <div className="bg-dark-surface rounded-lg p-8 border border-dark-card">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-white">Отклики на вакансии</h2>
             <button
               onClick={loadApplications}
               className="p-2 text-accent-cyan hover:bg-dark-card rounded-lg transition-colors"
@@ -589,12 +693,15 @@ const EmployerProfile = () => {
                 </p>
               </Card>
             )}
-        </div>
+          </div>
+        )}
 
-        {/* My Vacancies Section */}
-        <div className="mt-8 bg-dark-surface rounded-lg p-8 border border-dark-card">
-          <VacanciesManagement userId={user?.id} />
-        </div>
+        {/* Vacancies Tab */}
+        {activeTab === 'vacancies' && (
+          <div className="bg-dark-surface rounded-lg p-8 border border-dark-card">
+            <VacanciesManagement userId={user?.id} />
+          </div>
+        )}
       </div>
     </div>
   );

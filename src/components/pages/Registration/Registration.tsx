@@ -14,11 +14,108 @@ function Registration() {
     const [emailError, setEmailError] = useState<string>('');
     
     function validateEmail(email: string): boolean {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            setEmailError('Некорректный формат email');
+        // Убираем пробелы в начале и конце
+        const trimmedEmail = email.trim();
+        
+        // Проверка на пустой email
+        if (!trimmedEmail) {
+            setEmailError('Email не может быть пустым');
             return false;
         }
+        
+        // Проверка на пробелы внутри email
+        if (email.includes(' ')) {
+            setEmailError('Email не должен содержать пробелы');
+            return false;
+        }
+        
+        // Проверка на наличие символа @
+        if (!trimmedEmail.includes('@')) {
+            setEmailError('Email должен содержать символ @');
+            return false;
+        }
+        
+        // Проверка на количество символов @ (должен быть только один)
+        const atCount = (trimmedEmail.match(/@/g) || []).length;
+        if (atCount > 1) {
+            setEmailError('Email должен содержать только один символ @');
+            return false;
+        }
+        
+        // Разделяем на локальную и доменную части
+        const [localPart, domainPart] = trimmedEmail.split('@');
+        
+        // Проверка локальной части (до @)
+        if (!localPart || localPart.length === 0) {
+            setEmailError('Введите адрес до символа @ (например: имя@домен.com)');
+            return false;
+        }
+        
+        if (localPart.length > 64) {
+            setEmailError('Часть до символа @ слишком длинная (максимум 64 символа)');
+            return false;
+        }
+        
+        // Проверка на недопустимые символы в локальной части
+        const invalidLocalChars = /[<>()[\]\\,;:"\s]/;
+        if (invalidLocalChars.test(localPart)) {
+            setEmailError('Часть до символа @ содержит недопустимые символы (<>()[]\\,;:")');
+            return false;
+        }
+        
+        // Проверка доменной части (после @)
+        if (!domainPart || domainPart.length === 0) {
+            setEmailError('Введите домен после символа @ (например: имя@домен.com)');
+            return false;
+        }
+        
+        // Проверка на точку в доменной части
+        if (!domainPart.includes('.')) {
+            setEmailError('Домен должен содержать точку (например: домен.com)');
+            return false;
+        }
+        
+        // Проверка на точку в начале или конце домена
+        if (domainPart.startsWith('.') || domainPart.endsWith('.')) {
+            setEmailError('Домен не может начинаться или заканчиваться точкой');
+            return false;
+        }
+        
+        // Проверка на две точки подряд
+        if (domainPart.includes('..')) {
+            setEmailError('Домен не может содержать две точки подряд');
+            return false;
+        }
+        
+        // Разделяем домен на части по точкам
+        const domainParts = domainPart.split('.');
+        const tld = domainParts[domainParts.length - 1];
+        
+        // Проверка TLD (последняя часть после последней точки)
+        if (!tld || tld.length < 2) {
+            setEmailError('Доменное расширение (после последней точки) должно быть не менее 2 символов');
+            return false;
+        }
+        
+        if (tld.length > 63) {
+            setEmailError('Доменное расширение слишком длинное');
+            return false;
+        }
+        
+        // Проверка на недопустимые символы в домене
+        const invalidDomainChars = /[<>()[\]\\,;:"\s@]/;
+        if (invalidDomainChars.test(domainPart)) {
+            setEmailError('Домен содержит недопустимые символы');
+            return false;
+        }
+        
+        // Проверка на дефисы в начале или конце домена
+        if (domainPart.startsWith('-') || domainPart.endsWith('-')) {
+            setEmailError('Домен не может начинаться или заканчиваться дефисом');
+            return false;
+        }
+        
+        // Если все проверки пройдены
         setEmailError('');
         return true;
     }
