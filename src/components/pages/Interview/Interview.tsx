@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Play, CheckCircle, XCircle, RotateCcw, ArrowRight, Trophy, Target, TrendingUp } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Play, CheckCircle, XCircle, RotateCcw, ArrowRight, Trophy, Target, TrendingUp, Home } from 'lucide-react'
 import Section from '../../ui/Section'
 import Card from '../../ui/Card'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
@@ -1189,6 +1190,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 }
 
 const Interview = () => {
+  const navigate = useNavigate()
   useScrollAnimation()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
@@ -1244,6 +1246,13 @@ const Interview = () => {
       setIsFinished(true)
     }
   }
+
+  // Прокручиваем страницу наверх при завершении интервью
+  useEffect(() => {
+    if (isFinished) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [isFinished])
 
   const handleReset = () => {
     setIsStarted(false)
@@ -1396,6 +1405,13 @@ const Interview = () => {
               >
                 <Play className="h-4 w-4" />
                 Пройти тест снова
+              </button>
+              <button
+                onClick={() => navigate('/home')}
+                className="btn-secondary flex-1 flex items-center justify-center gap-2"
+              >
+                <Home className="h-4 w-4" />
+                На главную
               </button>
             </div>
           </Card>

@@ -48,5 +48,10 @@ export const chatAPI = {
   getUnreadCount: async (): Promise<UnreadCountResponse> => {
     const response = await $api.get<UnreadCountResponse>('/chats/unread/count');
     return response.data;
+  },
+
+  // Удалить чат
+  deleteChat: async (chatId: number): Promise<void> => {
+    await $api.delete(`/chats/${chatId}`);
   }
 };

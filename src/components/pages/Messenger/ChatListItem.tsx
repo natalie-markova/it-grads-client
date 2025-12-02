@@ -1,14 +1,15 @@
 import { Link } from 'react-router-dom';
-import { MessageCircle, User as UserIcon } from 'lucide-react';
+import { MessageCircle, User as UserIcon, Trash2 } from 'lucide-react';
 import type { Chat, User } from '../../../types';
 
 interface ChatListItemProps {
   chat: Chat;
   currentUser: User;
   isActive?: boolean;
+  onDelete?: (chatId: number) => void;
 }
 
-const ChatListItem = ({ chat, currentUser, isActive }: ChatListItemProps) => {
+const ChatListItem = ({ chat, currentUser, isActive, onDelete }: ChatListItemProps) => {
   // Определяем собеседника (не текущего пользователя)
   const otherUser = chat.user1Id === currentUser.id ? chat.user2 : chat.user1;
   
@@ -22,6 +23,14 @@ const ChatListItem = ({ chat, currentUser, isActive }: ChatListItemProps) => {
         minute: '2-digit'
       })
     : '';
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(chat.id);
+    }
+  };
 
   return (
     <Link
@@ -66,14 +75,23 @@ const ChatListItem = ({ chat, currentUser, isActive }: ChatListItemProps) => {
           )}
         </div>
 
-        {/* Unread badge */}
-        {chat.unreadCount && chat.unreadCount > 0 && (
-          <div className="flex-shrink-0">
+        {/* Unread badge and delete button */}
+        <div className="flex-shrink-0 flex items-center gap-2">
+          {chat.unreadCount && chat.unreadCount > 0 && (
             <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-accent-cyan rounded-full">
               {chat.unreadCount > 9 ? '9+' : chat.unreadCount}
             </span>
-          </div>
-        )}
+          )}
+          {onDelete && (
+            <button
+              onClick={handleDeleteClick}
+              className="p-1.5 text-red-400 hover:text-red-300 hover:bg-dark-surface rounded-lg transition-colors"
+              title="Удалить чат"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
     </Link>
   );

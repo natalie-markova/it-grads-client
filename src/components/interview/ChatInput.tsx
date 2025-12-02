@@ -24,7 +24,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
   };
 
   return (
-    <div className="flex gap-3 items-end">
+    <div className="flex gap-3 items-center">
       <div className="flex-1">
         <textarea
           value={message}
@@ -41,7 +41,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
       <button
         onClick={handleSubmit}
         disabled={disabled || !message.trim()}
-        className="btn-primary flex items-center gap-2 h-[88px] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
       >
         {disabled ? (
           <Loader2 className="h-5 w-5 animate-spin" />
