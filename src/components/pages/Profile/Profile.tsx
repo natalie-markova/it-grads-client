@@ -479,8 +479,8 @@ const GraduateProfile = () => {
       console.log('Experience:', loadedProfile.experience)
       console.log('Skills:', loadedProfile.skills)
       console.log('Projects:', loadedProfile.projects)
-      
-      setProfile(loadedProfile)
+
+      setProfile({...loadedProfile})
     } catch (error: any) {
       console.error('Error loading profile:', error)
       if (error.response?.status === 404) {
@@ -731,8 +731,8 @@ const GraduateProfile = () => {
         skills: Array.isArray(savedData.skills) ? savedData.skills : (savedData.skills ? [savedData.skills] : []),
         projects: Array.isArray(savedData.projects) ? savedData.projects : (savedData.projects ? [savedData.projects] : []),
       }
-      
-      setProfile(updatedProfile)
+
+      setProfile({...updatedProfile})
       setIsEditingProfile(false)
       
       toast.success('Профиль успешно обновлен')
