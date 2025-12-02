@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mic, MicOff, Volume2, VolumeX, Award, TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
 import { $api } from '../../../utils/axios.instance';
@@ -24,6 +24,12 @@ interface FeedbackResult {
   weaknesses: string[];
   feedback: string;
   duration: number;
+}
+
+interface VoiceInfo {
+  id: string;
+  name: string;
+  gender: string;
 }
 
 const POSITIONS = [
@@ -68,35 +74,81 @@ const AudioInterview = () => {
   // Feedback
   const [feedback, setFeedback] = useState<FeedbackResult | null>(null);
 
-  // Web Speech API
+  // Voice info for current interview (random per session)
+  const [currentVoice, setCurrentVoice] = useState<VoiceInfo | null>(null);
+
+  // Web Speech API for recognition
   const recognitionRef = useRef<any>(null);
-  const synthRef = useRef<SpeechSynthesis | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const interimTranscriptRef = useRef<string>('');
 
   useEffect(() => {
-    synthRef.current = window.speechSynthesis;
+    // Create audio element for Yandex TTS
+    audioRef.current = new Audio();
+    audioRef.current.onended = () => setIsSpeaking(false);
+    audioRef.current.onerror = () => setIsSpeaking(false);
 
-    // Initialize speech recognition
+    // Initialize speech recognition with improved settings
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'ru-RU';
+      recognitionRef.current.maxAlternatives = 3;
 
       recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setCurrentMessage(transcript);
-        setIsListening(false);
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        if (interimTranscript) {
+          interimTranscriptRef.current = interimTranscript;
+          setCurrentMessage(prev => {
+            const base = prev.replace(interimTranscriptRef.current, '');
+            return base + interimTranscript;
+          });
+        }
+
+        if (finalTranscript) {
+          setCurrentMessage(prev => {
+            const base = prev.replace(interimTranscriptRef.current, '');
+            return (base + ' ' + finalTranscript).trim();
+          });
+          interimTranscriptRef.current = '';
+        }
       };
 
       recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-        toast.error('Ошибка распознавания речи');
+        if (event.error !== 'no-speech') {
+          setIsListening(false);
+          if (event.error === 'not-allowed') {
+            toast.error('Доступ к микрофону запрещен. Разрешите доступ в настройках браузера.');
+          } else if (event.error === 'network') {
+            toast.error('Ошибка сети при распознавании речи');
+          }
+        }
       };
 
       recognitionRef.current.onend = () => {
-        setIsListening(false);
+        if (isListening && recognitionRef.current) {
+          try {
+            recognitionRef.current.start();
+          } catch (e) {
+            setIsListening(false);
+          }
+        } else {
+          setIsListening(false);
+        }
       };
     }
 
@@ -104,63 +156,44 @@ const AudioInterview = () => {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
-      if (synthRef.current) {
-        synthRef.current.cancel();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
     };
-  }, []);
+  }, [isListening]);
 
-  const speak = (text: string) => {
-    if (!audioEnabled || !synthRef.current) return;
+  // Синтез речи через Yandex SpeechKit
+  const speak = useCallback(async (text: string) => {
+    if (!audioEnabled) return;
 
-    synthRef.current.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ru-RU';
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
+    try {
+      setIsSpeaking(true);
 
-    // Получаем все доступные голоса
-    const voices = synthRef.current.getVoices();
+      const response = await $api.post('/interviews/tts', {
+        text,
+        gender: currentVoice?.gender,
+        voiceId: currentVoice?.id
+      });
 
-    // Фильтруем русские голоса
-    const russianVoices = voices.filter(voice =>
-      voice.lang.startsWith('ru') || voice.lang === 'ru-RU'
-    );
+      // Сохраняем информацию о голосе для использования в течение сессии
+      if (response.data.voice && !currentVoice) {
+        setCurrentVoice(response.data.voice);
+      }
 
-    // Разделяем на мужские и женские голоса (по имени голоса)
-    const femaleKeywords = ['female', 'женск', 'мария', 'anna', 'elena', 'irina', 'milena', 'svetlana', 'tatiana', 'natalia', 'oksana', 'julia'];
-    const maleKeywords = ['male', 'мужск', 'dmitri', 'dmitry', 'pavel', 'maxim', 'yuri', 'sergei', 'alexander', 'ivan', 'nikolay', 'boris'];
+      // Декодируем base64 аудио и воспроизводим
+      const audioData = `data:${response.data.format};base64,${response.data.audio}`;
 
-    const femaleVoices = russianVoices.filter(voice =>
-      femaleKeywords.some(kw => voice.name.toLowerCase().includes(kw))
-    );
-    const maleVoices = russianVoices.filter(voice =>
-      maleKeywords.some(kw => voice.name.toLowerCase().includes(kw))
-    );
-
-    // Выбираем случайно мужской или женский голос
-    const useFemale = Math.random() > 0.5;
-    let selectedVoice = null;
-
-    if (useFemale && femaleVoices.length > 0) {
-      selectedVoice = femaleVoices[Math.floor(Math.random() * femaleVoices.length)];
-    } else if (!useFemale && maleVoices.length > 0) {
-      selectedVoice = maleVoices[Math.floor(Math.random() * maleVoices.length)];
-    } else if (russianVoices.length > 0) {
-      // Если конкретный пол не найден, выбираем случайный русский голос
-      selectedVoice = russianVoices[Math.floor(Math.random() * russianVoices.length)];
+      if (audioRef.current) {
+        audioRef.current.src = audioData;
+        await audioRef.current.play();
+      }
+    } catch (error) {
+      console.error('Yandex TTS error:', error);
+      setIsSpeaking(false);
+      toast.error('Ошибка синтеза речи');
     }
-
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    synthRef.current.speak(utterance);
-  };
+  }, [audioEnabled, currentVoice]);
 
   const startListening = () => {
     if (!recognitionRef.current) {
@@ -187,6 +220,9 @@ const AudioInterview = () => {
     }
 
     try {
+      // Сбрасываем голос для нового интервью (будет выбран случайный)
+      setCurrentVoice(null);
+
       const response = await $api.post('/interviews/audio', {
         interviewerPersona: persona,
         position: position.trim()
@@ -256,8 +292,10 @@ const AudioInterview = () => {
 
   const toggleAudio = () => {
     setAudioEnabled(!audioEnabled);
-    if (audioEnabled && synthRef.current) {
-      synthRef.current.cancel();
+    if (audioEnabled) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
       setIsSpeaking(false);
     }
   };
@@ -424,14 +462,29 @@ const AudioInterview = () => {
             {isSpeaking && (
               <div className="text-center text-sm text-gray-400 animate-pulse">
                 🔊 Интервьюер говорит...
+                {currentVoice && (
+                  <span className="ml-2 text-xs opacity-75">
+                    ({currentVoice.name}, {currentVoice.gender === 'female' ? 'женский' : 'мужской'} голос)
+                  </span>
+                )}
               </div>
             )}
 
             {isListening && (
               <div className="text-center text-sm text-red-400 animate-pulse">
-                🎙️ Слушаю...
+                🎙️ Слушаю... (говорите чётко)
               </div>
             )}
+
+            {/* Кнопка досрочного завершения */}
+            <div className="mt-6 text-center">
+              <button
+                onClick={completeInterview}
+                className="px-6 py-2 bg-red-600/20 border border-red-600 text-red-400 rounded-lg hover:bg-red-600/40 transition-all text-sm"
+              >
+                Завершить интервью досрочно
+              </button>
+            </div>
           </div>
         )}
 
@@ -496,6 +549,7 @@ const AudioInterview = () => {
                   setMessages([]);
                   setCurrentMessage('');
                   setFeedback(null);
+                  setCurrentVoice(null);
                 }}
                 className="flex-1 py-3 bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
               >

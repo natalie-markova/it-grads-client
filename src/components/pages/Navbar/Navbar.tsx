@@ -46,6 +46,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
 
     const employerNavLinks = [
         { path: '/candidates', label: 'Кандидаты' },
+        { path: '/candidates/map', label: 'Карта соискателей' },
         { path: '/jobs', label: 'Вакансии' },
     ]
 

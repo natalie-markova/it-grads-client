@@ -26,6 +26,7 @@ import InterviewHub from './components/pages/Interview/InterviewHub';
 import RoadmapList from './components/pages/Roadmap/RoadmapList';
 import RoadmapDetail from './components/pages/Roadmap/RoadmapDetail';
 import Candidates from './components/pages/Candidates/Candidates';
+import CandidatesMap from './components/pages/CandidatesMap/CandidatesMap';
 import EmployerPublicProfile from './components/pages/Employer/EmployerPublicProfile';
 import MessengerPage from './components/pages/Messenger/MessengerPage';
 import AudioInterview from './components/pages/AudioInterview/AudioInterview';
@@ -154,6 +155,10 @@ const router = createBrowserRouter([
       {
         path: "/candidates",
         element: <Candidates />,
+      },
+      {
+        path: "/candidates/map",
+        element: <CandidatesMap />,
       },
       {
         path: "/messenger",

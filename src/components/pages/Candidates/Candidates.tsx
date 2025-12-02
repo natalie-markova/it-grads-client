@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Search, MapPin, Briefcase, Filter, Award, GraduationCap, Globe, Code, MessageSquare } from 'lucide-react';
+import { Search, MapPin, Briefcase, Filter, Award, GraduationCap, Globe, Code, MessageSquare, Map, Users, X } from 'lucide-react';
 import Card from '../../ui/Card';
 import Section from '../../ui/Section';
 import { chatAPI } from '../../../utils/chat.api';
-import { OutletContext } from '../../../types';
+import type { OutletContext } from '../../../types';
 import toast from 'react-hot-toast';
 
 interface Resume {
@@ -32,6 +32,14 @@ const Candidates = () => {
   const [loading, setLoading] = useState(true);
   const [creatingChatFor, setCreatingChatFor] = useState<number | null>(null);
 
+  // Фильтры
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [selectedLevel, setSelectedLevel] = useState<string>('');
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [salaryRange, setSalaryRange] = useState<{ min: number | null; max: number | null }>({ min: null, max: null });
+
   useEffect(() => {
     loadResumes();
   }, []);
@@ -51,6 +59,67 @@ const Candidates = () => {
       setLoading(false);
     }
   };
+
+  // Получаем все уникальные значения для фильтров
+  const filterOptions = useMemo(() => {
+    const skills = new Set<string>();
+    const locations = new Set<string>();
+
+    resumes.forEach(r => {
+      r.skillsArray?.forEach(s => skills.add(s));
+      if (r.location) locations.add(r.location);
+    });
+
+    return {
+      skills: Array.from(skills).sort(),
+      locations: Array.from(locations).sort(),
+    };
+  }, [resumes]);
+
+  // Фильтруем резюме
+  const filteredResumes = useMemo(() => {
+    return resumes.filter(resume => {
+      // Поиск по тексту
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch =
+          resume.title?.toLowerCase().includes(searchLower) ||
+          resume.description?.toLowerCase().includes(searchLower) ||
+          resume.user?.username?.toLowerCase().includes(searchLower) ||
+          resume.location?.toLowerCase().includes(searchLower) ||
+          resume.skillsArray?.some(s => s.toLowerCase().includes(searchLower));
+        if (!matchesSearch) return false;
+      }
+
+      // Фильтр по навыкам
+      if (selectedSkills.length > 0) {
+        const hasSkills = selectedSkills.some(skill =>
+          resume.skillsArray?.includes(skill)
+        );
+        if (!hasSkills) return false;
+      }
+
+      // Фильтр по уровню
+      if (selectedLevel && resume.level !== selectedLevel) {
+        return false;
+      }
+
+      // Фильтр по локации
+      if (selectedLocation && resume.location !== selectedLocation) {
+        return false;
+      }
+
+      // Фильтр по зарплате
+      if (salaryRange.min && resume.desiredSalary && resume.desiredSalary < salaryRange.min) {
+        return false;
+      }
+      if (salaryRange.max && resume.desiredSalary && resume.desiredSalary > salaryRange.max) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [resumes, searchTerm, selectedSkills, selectedLevel, selectedLocation, salaryRange]);
 
   const handleStartChat = async (candidateId: number) => {
     if (!user) {
@@ -77,17 +146,219 @@ const Candidates = () => {
     }
   };
 
+  const toggleSkill = (skill: string) => {
+    setSelectedSkills(prev =>
+      prev.includes(skill)
+        ? prev.filter(s => s !== skill)
+        : [...prev, skill]
+    );
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedSkills([]);
+    setSelectedLevel('');
+    setSelectedLocation('');
+    setSalaryRange({ min: null, max: null });
+  };
+
+  const hasActiveFilters = searchTerm || selectedSkills.length > 0 || selectedLevel || selectedLocation || salaryRange.min || salaryRange.max;
+
+  // Статистика
+  const stats = useMemo(() => ({
+    total: resumes.length,
+    filtered: filteredResumes.length,
+    locations: filterOptions.locations.length,
+  }), [resumes, filteredResumes, filterOptions]);
+
   return (
     <div className="bg-dark-bg min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Section title="" className="bg-dark-bg py-0">
+          {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-4">Кандидаты</h1>
-            <p className="text-gray-300 text-lg">
-              Просмотрите резюме специалистов и найдите подходящих кандидатов
-            </p>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">Кандидаты</h1>
+                <p className="text-gray-300 text-lg">
+                  Просмотрите резюме специалистов и найдите подходящих кандидатов
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/candidates/map')}
+                className="btn-primary flex items-center gap-2 whitespace-nowrap"
+              >
+                <Map className="h-5 w-5" />
+                Карта соискателей
+              </button>
+            </div>
           </div>
 
+          {/* Статистика */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <Card className="text-center py-4">
+              <Users className="h-8 w-8 text-accent-cyan mx-auto mb-2" />
+              <p className="text-2xl font-bold text-white">{stats.total}</p>
+              <p className="text-sm text-gray-400">Всего кандидатов</p>
+            </Card>
+            <Card className="text-center py-4">
+              <Filter className="h-8 w-8 text-accent-cyan mx-auto mb-2" />
+              <p className="text-2xl font-bold text-white">{stats.filtered}</p>
+              <p className="text-sm text-gray-400">По фильтрам</p>
+            </Card>
+            <Card className="text-center py-4">
+              <MapPin className="h-8 w-8 text-accent-cyan mx-auto mb-2" />
+              <p className="text-2xl font-bold text-white">{stats.locations}</p>
+              <p className="text-sm text-gray-400">Городов</p>
+            </Card>
+            <Card className="text-center py-4">
+              <Code className="h-8 w-8 text-accent-cyan mx-auto mb-2" />
+              <p className="text-2xl font-bold text-white">{filterOptions.skills.length}</p>
+              <p className="text-sm text-gray-400">Навыков</p>
+            </Card>
+          </div>
+
+          {/* Поиск и фильтры */}
+          <Card className="mb-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Поиск по навыкам, городам, имени..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-dark-surface border border-dark-card rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-accent-cyan"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`btn-secondary flex items-center gap-2 ${showFilters ? 'border-accent-cyan text-accent-cyan' : ''}`}
+                >
+                  <Filter className="h-4 w-4" />
+                  Фильтры
+                  {hasActiveFilters && (
+                    <span className="bg-accent-cyan text-dark-bg text-xs px-2 py-0.5 rounded-full">
+                      {selectedSkills.length + (selectedLevel ? 1 : 0) + (selectedLocation ? 1 : 0)}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Развернутые фильтры */}
+              {showFilters && (
+                <div className="pt-4 border-t border-dark-card">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Уровень */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Уровень</label>
+                      <select
+                        value={selectedLevel}
+                        onChange={(e) => setSelectedLevel(e.target.value)}
+                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan"
+                      >
+                        <option value="">Все уровни</option>
+                        <option value="junior">Junior</option>
+                        <option value="middle">Middle</option>
+                        <option value="senior">Senior</option>
+                        <option value="lead">Lead</option>
+                      </select>
+                    </div>
+
+                    {/* Локация */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Город</label>
+                      <select
+                        value={selectedLocation}
+                        onChange={(e) => setSelectedLocation(e.target.value)}
+                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan"
+                      >
+                        <option value="">Все города</option>
+                        {filterOptions.locations.map(loc => (
+                          <option key={loc} value={loc}>{loc}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Зарплата от */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Зарплата от</label>
+                      <input
+                        type="number"
+                        placeholder="мин. ₽"
+                        value={salaryRange.min || ''}
+                        onChange={(e) => setSalaryRange(prev => ({ ...prev, min: e.target.value ? Number(e.target.value) : null }))}
+                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan"
+                      />
+                    </div>
+
+                    {/* Зарплата до */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Зарплата до</label>
+                      <input
+                        type="number"
+                        placeholder="макс. ₽"
+                        value={salaryRange.max || ''}
+                        onChange={(e) => setSalaryRange(prev => ({ ...prev, max: e.target.value ? Number(e.target.value) : null }))}
+                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Навыки */}
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Навыки</label>
+                    <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-dark-surface rounded-lg">
+                      {filterOptions.skills.map(skill => (
+                        <button
+                          key={skill}
+                          onClick={() => toggleSkill(skill)}
+                          className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                            selectedSkills.includes(skill)
+                              ? 'bg-accent-cyan text-dark-bg'
+                              : 'bg-dark-card border border-dark-card text-gray-300 hover:border-accent-cyan'
+                          }`}
+                        >
+                          {skill}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Выбранные навыки */}
+                  {selectedSkills.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <span className="text-sm text-gray-400">Выбрано:</span>
+                      {selectedSkills.map(skill => (
+                        <span
+                          key={skill}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-accent-cyan/20 text-accent-cyan rounded-lg text-sm"
+                        >
+                          {skill}
+                          <button onClick={() => toggleSkill(skill)} className="hover:text-white">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Кнопка сброса */}
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="mt-4 text-accent-cyan hover:text-accent-cyan/80 text-sm"
+                    >
+                      Сбросить все фильтры
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Список резюме */}
           {loading ? (
             <Card>
               <div className="text-center py-12">
@@ -95,9 +366,25 @@ const Candidates = () => {
                 <p className="text-gray-300 mt-4">Загрузка резюме...</p>
               </div>
             </Card>
+          ) : filteredResumes.length === 0 ? (
+            <Card>
+              <div className="text-center py-12">
+                <Users className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-300 text-lg">Кандидаты не найдены</p>
+                <p className="text-gray-500 mt-2">Попробуйте изменить параметры поиска</p>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="mt-4 text-accent-cyan hover:text-accent-cyan/80"
+                  >
+                    Сбросить фильтры
+                  </button>
+                )}
+              </div>
+            </Card>
           ) : (
             <div className="grid grid-cols-1 gap-6">
-              {resumes.map((resume) => (
+              {filteredResumes.map((resume) => (
                 <Card key={resume.id} className="hover:border-accent-cyan/50 transition-all">
                   <div className="flex flex-col gap-4">
                     <div className="flex justify-between items-start">
@@ -113,7 +400,7 @@ const Candidates = () => {
                     </div>
 
                     {resume.description && (
-                      <p className="text-gray-300 whitespace-pre-wrap">{resume.description}</p>
+                      <p className="text-gray-300 whitespace-pre-wrap line-clamp-3">{resume.description}</p>
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -126,7 +413,7 @@ const Candidates = () => {
                       {resume.level && (
                         <div className="flex items-center gap-2 text-gray-300">
                           <Briefcase className="h-4 w-4 text-accent-cyan" />
-                          <span>{resume.level}</span>
+                          <span className="capitalize">{resume.level}</span>
                         </div>
                       )}
                     </div>
@@ -137,7 +424,7 @@ const Candidates = () => {
                           <Award className="h-5 w-5 text-accent-cyan" />
                           Опыт работы
                         </h4>
-                        <p className="text-gray-300 whitespace-pre-wrap">{resume.experience}</p>
+                        <p className="text-gray-300 whitespace-pre-wrap line-clamp-2">{resume.experience}</p>
                       </div>
                     )}
 
@@ -147,7 +434,7 @@ const Candidates = () => {
                           <GraduationCap className="h-5 w-5 text-accent-cyan" />
                           Образование
                         </h4>
-                        <p className="text-gray-300 whitespace-pre-wrap">{resume.education}</p>
+                        <p className="text-gray-300 whitespace-pre-wrap line-clamp-2">{resume.education}</p>
                       </div>
                     )}
 
@@ -178,7 +465,11 @@ const Candidates = () => {
                           {resume.skillsArray.map((skill, index) => (
                             <span
                               key={index}
-                              className="px-3 py-1 bg-dark-surface border border-accent-cyan/30 rounded-lg text-sm text-gray-300"
+                              className={`px-3 py-1 border rounded-lg text-sm ${
+                                selectedSkills.includes(skill)
+                                  ? 'bg-accent-cyan/20 border-accent-cyan text-accent-cyan'
+                                  : 'bg-dark-surface border-accent-cyan/30 text-gray-300'
+                              }`}
                             >
                               {skill}
                             </span>
