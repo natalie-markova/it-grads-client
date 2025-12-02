@@ -697,70 +697,70 @@ const CompanyDetails = () => {
                   {/* Текст отзыва */}
                   <p className="text-gray-300 mb-4 leading-relaxed">{review.comment}</p>
 
-                  {/* Ответ работодателя */}
-                  {review.employerResponse && editingResponseId !== review.id && (
-                    <div className="mt-4 p-4 bg-dark-surface rounded-lg border-l-4 border-accent-cyan">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-accent-cyan font-semibold">Ответ компании:</span>
-                          <span className="text-gray-400 text-sm">
-                            {review.employerResponseCreatedAt && formatDate(review.employerResponseCreatedAt)}
-                          </span>
+                  {/* Ответ работодателя - показываем либо ответ, либо форму редактирования */}
+                  {review.employerResponse ? (
+                    editingResponseId === review.id ? (
+                      // Форма редактирования ответа (как в профиле работодателя)
+                      <div className="mt-4 p-4 bg-dark-surface rounded-lg border-l-4 border-accent-cyan">
+                        <div className="flex items-center justify-between mb-4">
+                          <label className="block text-accent-cyan font-semibold">Редактировать ответ:</label>
                         </div>
-                        {user && user.role === 'employer' && (
+                        <textarea
+                          value={editingResponseText}
+                          onChange={(e) => setEditingResponseText(e.target.value)}
+                          placeholder="Напишите ответ на этот отзыв..."
+                          className="w-full p-3 bg-dark-card border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-accent-cyan resize-none mb-4"
+                          rows={4}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleSaveEmployerResponse(review.id)}
+                            className="btn-primary text-sm flex items-center gap-2"
+                          >
+                            <Save className="h-4 w-4" />
+                            Сохранить
+                          </button>
+                          <button
+                            onClick={handleCancelEditResponse}
+                            className="px-6 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors text-sm"
+                          >
+                            Отмена
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Отображение ответа (как просмотр профиля работодателя)
+                      <div className="mt-4 p-4 bg-dark-surface rounded-lg border-l-4 border-accent-cyan">
+                        <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleEditEmployerResponse(review.id, review.employerResponse || '')}
-                              className="btn-secondary flex items-center gap-2 text-sm px-3 py-1.5"
-                              title="Редактировать ответ"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                              Редактировать
-                            </button>
-                            <button
-                              onClick={() => handleDeleteEmployerResponse(review.id)}
-                              className="btn-secondary flex items-center gap-2 text-sm px-3 py-1.5 text-red-400 hover:text-red-300 hover:border-red-400/50"
-                              title="Удалить ответ"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Удалить
-                            </button>
+                            <span className="text-accent-cyan font-semibold">Ответ компании:</span>
+                            <span className="text-gray-400 text-sm">
+                              {review.employerResponseCreatedAt && formatDate(review.employerResponseCreatedAt)}
+                            </span>
                           </div>
-                        )}
+                          {user && user.role === 'employer' && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleEditEmployerResponse(review.id, review.employerResponse || '')}
+                                className="p-2 text-accent-cyan hover:bg-dark-card rounded-lg transition-colors"
+                                title="Редактировать ответ"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteEmployerResponse(review.id)}
+                                className="p-2 text-red-400 hover:bg-dark-card rounded-lg transition-colors"
+                                title="Удалить ответ"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-gray-300 whitespace-pre-wrap">{review.employerResponse}</p>
                       </div>
-                      <p className="text-gray-300">{review.employerResponse}</p>
-                    </div>
-                  )}
-
-                  {/* Форма редактирования ответа работодателя */}
-                  {user && user.role === 'employer' && editingResponseId === review.id && (
-                    <div className="mt-4 p-4 bg-dark-surface rounded-lg border-l-4 border-accent-cyan">
-                      <label className="block text-gray-300 mb-2">Редактировать ответ:</label>
-                      <textarea
-                        value={editingResponseText}
-                        onChange={(e) => setEditingResponseText(e.target.value)}
-                        placeholder="Напишите ответ на этот отзыв..."
-                        className="w-full p-3 bg-dark-card border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-accent-cyan resize-none mb-2"
-                        rows={3}
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleSaveEmployerResponse(review.id)}
-                          className="btn-primary text-sm flex items-center gap-2"
-                        >
-                          <Save className="h-4 w-4" />
-                          Сохранить
-                        </button>
-                        <button
-                          onClick={handleCancelEditResponse}
-                          className="btn-secondary text-sm flex items-center gap-2"
-                        >
-                          <X className="h-4 w-4" />
-                          Отмена
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                    )
+                  ) : null}
 
                   {/* Форма ответа работодателя */}
                   {user && user.role === 'employer' && !review.employerResponse && editingResponseId !== review.id && (
