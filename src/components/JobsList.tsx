@@ -504,7 +504,7 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                       Подробнее
                     </button>
                   </div>
-                  {onApply && (
+                  {onApply && user && user.role === 'graduate' && (
                     appliedIds.has(parseInt(job.id, 10)) ? (
                       <div className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg text-sm whitespace-nowrap flex items-center gap-2 justify-center border border-green-500/30">
                         <Check className="h-4 w-4" />
@@ -778,7 +778,7 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                       {isCreatingChat ? 'Создание...' : 'Написать'}
                     </button>
                   )}
-                  {onApply && (
+                  {onApply && user && user.role === 'graduate' && (
                     appliedIds.has(parseInt(selectedJobData.id, 10)) ? (
                       <div className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg text-sm whitespace-nowrap flex items-center gap-2 justify-center border border-green-500/30">
                         <Check className="h-4 w-4" />

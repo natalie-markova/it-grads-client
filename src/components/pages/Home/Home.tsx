@@ -1,15 +1,75 @@
 import { Link, useOutletContext } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { ArrowRight, Users, Briefcase, Code, MessageCircle, TrendingUp } from 'lucide-react'
 import Section from '../../../components/ui/Section'
 import FeatureCard from '../../../components/ui/FeatureCard'
 import Card from '../../../components/ui/Card'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
 import { OutletContext } from '../../../types'
+import { $api } from '../../../utils/axios.instance'
 
 const Home = () => {
   const { user } = useOutletContext<OutletContext>()
+  const [totalUsers, setTotalUsers] = useState(0)
+  const [onlineUsers, setOnlineUsers] = useState(0)
   
   useScrollAnimation()
+
+  // Загрузка статистики пользователей
+  useEffect(() => {
+    const loadUserStats = async () => {
+      try {
+        // Получаем количество пользователей из API
+        const response = await $api.get('/user/count')
+        const count = response.data.count || 0
+        // Умножаем на 10
+        setTotalUsers(count * 10)
+        // Для онлайн пользователей используем случайное число от 10% до 30% от общего
+        setOnlineUsers(Math.floor((count * 10) * (0.1 + Math.random() * 0.2)))
+      } catch (error) {
+        console.error('Error loading user stats:', error)
+        // Fallback значения
+        setTotalUsers(1000)
+        setOnlineUsers(150)
+      }
+    }
+
+    if (user) {
+      loadUserStats()
+      // Обновляем каждые 30 секунд
+      const interval = setInterval(loadUserStats, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [user])
+
+  // Анимация счетчика
+  const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?: number }) => {
+    const [displayValue, setDisplayValue] = useState(0)
+
+    useEffect(() => {
+      let startTime: number
+      let animationFrame: number
+
+      const animate = (currentTime: number) => {
+        if (!startTime) startTime = currentTime
+        const progress = Math.min((currentTime - startTime) / duration, 1)
+        
+        const currentValue = Math.floor(progress * value)
+        setDisplayValue(currentValue)
+
+        if (progress < 1) {
+          animationFrame = requestAnimationFrame(animate)
+        } else {
+          setDisplayValue(value)
+        }
+      }
+
+      animationFrame = requestAnimationFrame(animate)
+      return () => cancelAnimationFrame(animationFrame)
+    }, [value, duration])
+
+    return <span>{displayValue.toLocaleString('ru-RU')}</span>
+  }
   const topFeatures = [
     {
       icon: <Code className="h-8 w-8" />,
@@ -44,22 +104,32 @@ const Home = () => {
               Мы создаем платформу, которая поможет выпускникам IT-школ и молодым специалистам 
               найти работу мечты и пройти собеседования с уверенностью.
             </p>
-            {!user 
-              ? <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link to="/registration" className="btn-primary inline-flex items-center justify-center">
-                    Начать бесплатно
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                  <Link to="/home" className="btn-secondary">
-                    Узнать больше
-                  </Link>
+            {user && (
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-8">
+                <div className="flex items-center gap-2 text-accent-cyan animate-pulse">
+                  <Users className="h-5 w-5" />
+                  <span className="text-gray-300">Всего пользователей:</span>
+                  <span className="text-accent-cyan font-bold text-lg">
+                    <AnimatedCounter value={totalUsers} />
+                  </span>
                 </div>
-              : <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link to="/home" className="btn-secondary">
-                    Узнать больше
-                  </Link>
+                <div className="flex items-center gap-2 text-green-400 animate-pulse">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-gray-300">Пользователей онлайн:</span>
+                  <span className="text-green-400 font-bold text-lg">
+                    <AnimatedCounter value={onlineUsers} />
+                  </span>
                 </div>
-            }
+              </div>
+            )}
+            {!user && (
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/registration" className="btn-primary inline-flex items-center justify-center">
+                  Начать бесплатно
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>

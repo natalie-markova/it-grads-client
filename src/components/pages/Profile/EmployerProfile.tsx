@@ -127,10 +127,18 @@ const EmployerProfile = () => {
     if (!user) return
 
     try {
-      // Убеждаемся, что если аватар был загружен, он включен в данные для сохранения
+      // Убеждаемся, что если аватар был загружен или введен через URL, он включен в данные для сохранения
+      let avatarToSave = formData.avatar || ''
+      
+      // Если avatarPreview это data URL (превью загруженного файла), не сохраняем его
+      // Используем только если это не data URL
+      if (avatarPreview && !avatarPreview.startsWith('data:') && !formData.avatar) {
+        avatarToSave = avatarPreview
+      }
+      
       const dataToSave = {
         ...formData,
-        avatar: formData.avatar || (avatarPreview && avatarPreview.startsWith('data:') ? null : avatarPreview) || formData.avatar || ''
+        avatar: avatarToSave
       }
 
       const response = await $api.put('/user/profile', dataToSave)
@@ -340,6 +348,18 @@ const EmployerProfile = () => {
                       </button>
                     )}
                   </div>
+                  <p className="text-xs text-gray-400">Или введите URL фото</p>
+                  <input
+                    type="text"
+                    value={formData.avatar || ''}
+                    onChange={(e) => {
+                      const newAvatar = e.target.value
+                      setFormData({ ...formData, avatar: newAvatar })
+                      setAvatarPreview(newAvatar ? getImageUrl(newAvatar) : null)
+                    }}
+                    className="w-full px-4 py-2 bg-dark-bg border border-dark-card rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan"
+                    placeholder="https://..."
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

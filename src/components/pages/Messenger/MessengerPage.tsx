@@ -7,6 +7,7 @@ import ChatListItem from './ChatListItem';
 import MessageItem from './MessageItem';
 import toast from 'react-hot-toast';
 import { socketService } from '../../../utils/socket.service';
+import Card from '../../ui/Card';
 
 const MessengerPage = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -19,6 +20,7 @@ const MessengerPage = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [deleteConfirmChatId, setDeleteConfirmChatId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -151,6 +153,35 @@ const MessengerPage = () => {
     }
   };
 
+  const handleDeleteChat = (chatId: number) => {
+    setDeleteConfirmChatId(chatId);
+  };
+
+  const confirmDeleteChat = async () => {
+    if (!deleteConfirmChatId) return;
+
+    try {
+      await chatAPI.deleteChat(deleteConfirmChatId);
+      toast.success('Чат успешно удален');
+      
+      // Если удаленный чат был активным, перенаправляем на список чатов
+      if (activeChat && activeChat.id === deleteConfirmChatId) {
+        navigate('/messenger');
+        setActiveChat(null);
+        setMessages([]);
+      }
+      
+      // Обновляем список чатов
+      loadChats();
+      setDeleteConfirmChatId(null);
+    } catch (error: any) {
+      console.error('Error deleting chat:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Ошибка при удалении чата';
+      toast.error(errorMessage);
+      setDeleteConfirmChatId(null);
+    }
+  };
+
   if (!user) {
     return null;
   }
@@ -164,7 +195,7 @@ const MessengerPage = () => {
     <div className="h-[calc(100vh-64px)] bg-dark-bg flex">
       {/* Список чатов */}
       <div className={`w-full md:w-80 lg:w-96 border-r border-dark-card flex flex-col ${chatId ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-4 border-b border-dark-card">
+        <div className="h-[73px] px-4 border-b border-dark-card flex items-center">
           <h1 className="text-2xl font-bold text-white">Сообщения</h1>
         </div>
         
@@ -188,6 +219,7 @@ const MessengerPage = () => {
                 chat={chat}
                 currentUser={user}
                 isActive={chat.id === Number(chatId)}
+                onDelete={handleDeleteChat}
               />
             ))
           )}
@@ -199,7 +231,7 @@ const MessengerPage = () => {
         {activeChat && otherUser ? (
           <>
             {/* Шапка чата */}
-            <div className="p-4 border-b border-dark-card flex items-center gap-3">
+            <div className="h-[73px] px-4 border-b border-dark-card flex items-center gap-3">
               <button
                 onClick={() => navigate('/messenger')}
                 className="md:hidden p-2 hover:bg-dark-card rounded-lg transition-colors"
@@ -286,6 +318,43 @@ const MessengerPage = () => {
           </div>
         )}
       </div>
+
+      {/* Модальное окно подтверждения удаления */}
+      {deleteConfirmChatId && (
+        <div 
+          className="fixed inset-0 bg-black/75 flex items-center justify-center z-[100] p-4"
+          onClick={() => setDeleteConfirmChatId(null)}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+        >
+          <Card 
+            className="max-w-md w-full"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-semibold text-white mb-4">
+                Подтверждение удаления
+              </h3>
+              <p className="text-gray-300 mb-6">
+                Вы уверены, что хотите удалить этот чат? Это действие нельзя отменить.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={confirmDeleteChat}
+                  className="btn-primary flex-1"
+                >
+                  Удалить
+                </button>
+                <button
+                  onClick={() => setDeleteConfirmChatId(null)}
+                  className="btn-secondary flex-1"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

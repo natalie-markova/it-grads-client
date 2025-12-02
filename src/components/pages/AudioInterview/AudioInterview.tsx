@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Mic, MicOff, Volume2, VolumeX, Award, TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
 import { $api } from '../../../utils/axios.instance';
 import toast from 'react-hot-toast';
+import Card from '../../ui/Card';
+import Section from '../../ui/Section';
 
 interface InterviewSession {
   id: number;
@@ -319,18 +321,15 @@ const AudioInterview = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-dark-bg text-white py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">🎙️ Аудио-интервью с AI</h1>
-          <p className="text-gray-400">Практикуйтесь в собеседованиях с виртуальным интервьюером</p>
-        </div>
+        <Section title="🎙️ Аудио-интервью с AI" subtitle="Практикуйтесь в собеседованиях с виртуальным интервьюером" className="bg-dark-bg py-0 mb-8" />
 
         {/* Setup Step */}
         {step === 'setup' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-xl">
-            <h2 className="text-2xl font-bold mb-6">Настройка интервью</h2>
+          <Card>
+            <h2 className="text-2xl font-bold text-white mb-6">Настройка интервью</h2>
 
             {/* Position Select */}
             <div className="mb-6">
@@ -339,7 +338,7 @@ const AudioInterview = () => {
                 <select
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
+                  className="w-full px-4 py-3 bg-dark-surface border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-accent-cyan focus:border-transparent outline-none appearance-none cursor-pointer"
                 >
                   <option value="">Выберите позицию...</option>
                   {POSITIONS.map((pos) => (
@@ -360,8 +359,8 @@ const AudioInterview = () => {
                     onClick={() => setPersona(key)}
                     className={`p-4 rounded-lg border-2 transition-all ${
                       persona === key
-                        ? 'border-blue-500 bg-blue-500/20'
-                        : 'border-gray-600 bg-gray-700 hover:border-gray-500'
+                        ? 'border-accent-cyan bg-accent-cyan/20 text-white'
+                        : 'border-gray-700 bg-dark-surface text-gray-300 hover:border-accent-cyan/50 hover:bg-dark-card'
                     }`}
                   >
                     <div className="text-4xl mb-2">{info.icon}</div>
@@ -375,16 +374,16 @@ const AudioInterview = () => {
             {/* Start Button */}
             <button
               onClick={startInterview}
-              className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all"
+              className="w-full btn-primary"
             >
               Начать интервью
             </button>
-          </div>
+          </Card>
         )}
 
         {/* Interview Step */}
         {step === 'interview' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-xl">
+          <Card>
             {/* Progress */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
@@ -393,9 +392,9 @@ const AudioInterview = () => {
                   Вопрос {session?.currentQuestionIndex || 0} из 5
                 </span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-dark-surface rounded-full h-2">
                 <div
-                  className="bg-blue-500 h-2 rounded-full transition-all"
+                  className="bg-accent-cyan h-2 rounded-full transition-all"
                   style={{ width: `${((session?.currentQuestionIndex || 0) / 5) * 100}%` }}
                 />
               </div>
@@ -408,14 +407,14 @@ const AudioInterview = () => {
                   key={idx}
                   className={`p-4 rounded-lg ${
                     msg.role === 'assistant'
-                      ? 'bg-blue-900/30 border border-blue-700'
-                      : 'bg-gray-700 ml-12'
+                      ? 'bg-accent-cyan/20 border border-accent-cyan/50'
+                      : 'bg-dark-surface ml-12 border border-gray-700'
                   }`}
                 >
                   <div className="text-xs text-gray-400 mb-1">
                     {msg.role === 'assistant' ? 'Интервьюер' : 'Вы'}
                   </div>
-                  <div>{msg.content}</div>
+                  <div className="text-gray-300">{msg.content}</div>
                 </div>
               ))}
             </div>
@@ -424,7 +423,8 @@ const AudioInterview = () => {
             <div className="flex gap-4 mb-4">
               <button
                 onClick={toggleAudio}
-                className="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all"
+                className="btn-secondary px-4 py-2"
+                title={audioEnabled ? 'Отключить звук' : 'Включить звук'}
               >
                 {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
               </button>
@@ -435,16 +435,17 @@ const AudioInterview = () => {
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   placeholder="Или напишите ответ..."
-                  className="w-full px-4 py-3 bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none pr-20"
+                  className="input-field pr-20"
                   onKeyPress={(e) => e.key === 'Enter' && sendAnswer()}
                 />
                 <button
                   onClick={isListening ? stopListening : startListening}
                   className={`absolute right-2 top-2 p-2 rounded-lg transition-all ${
                     isListening
-                      ? 'bg-red-500 animate-pulse'
-                      : 'bg-blue-600 hover:bg-blue-700'
+                      ? 'bg-red-500 animate-pulse text-white'
+                      : 'bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg'
                   }`}
+                  title={isListening ? 'Остановить запись' : 'Начать запись'}
                 >
                   {isListening ? <MicOff size={20} /> : <Mic size={20} />}
                 </button>
@@ -453,17 +454,17 @@ const AudioInterview = () => {
               <button
                 onClick={sendAnswer}
                 disabled={!currentMessage.trim() || isSpeaking}
-                className="px-6 py-3 bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Отправить
               </button>
             </div>
 
             {isSpeaking && (
-              <div className="text-center text-sm text-gray-400 animate-pulse">
+              <div className="text-center text-sm text-accent-cyan animate-pulse mb-2">
                 🔊 Интервьюер говорит...
                 {currentVoice && (
-                  <span className="ml-2 text-xs opacity-75">
+                  <span className="ml-2 text-xs opacity-75 text-gray-400">
                     ({currentVoice.name}, {currentVoice.gender === 'female' ? 'женский' : 'мужской'} голос)
                   </span>
                 )}
@@ -471,7 +472,7 @@ const AudioInterview = () => {
             )}
 
             {isListening && (
-              <div className="text-center text-sm text-red-400 animate-pulse">
+              <div className="text-center text-sm text-red-400 animate-pulse mb-2">
                 🎙️ Слушаю... (говорите чётко)
               </div>
             )}
@@ -480,21 +481,21 @@ const AudioInterview = () => {
             <div className="mt-6 text-center">
               <button
                 onClick={completeInterview}
-                className="px-6 py-2 bg-red-600/20 border border-red-600 text-red-400 rounded-lg hover:bg-red-600/40 transition-all text-sm"
+                className="px-6 py-2 bg-red-500/20 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/30 transition-all text-sm"
               >
                 Завершить интервью досрочно
               </button>
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Feedback Step */}
         {step === 'feedback' && feedback && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-xl">
+          <Card>
             <div className="text-center mb-8">
-              <Award className="w-16 h-16 mx-auto mb-4 text-yellow-400" />
-              <h2 className="text-3xl font-bold mb-2">Интервью завершено!</h2>
-              <div className="text-5xl font-bold text-blue-400 mb-2">
+              <Award className="w-16 h-16 mx-auto mb-4 text-accent-gold" />
+              <h2 className="text-3xl font-bold text-white mb-2">Интервью завершено!</h2>
+              <div className="text-5xl font-bold text-accent-cyan mb-2">
                 {feedback.overallScore}/100
               </div>
               <div className="text-gray-400">
@@ -506,7 +507,7 @@ const AudioInterview = () => {
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp className="text-green-400" />
-                <h3 className="text-xl font-semibold">Сильные стороны</h3>
+                <h3 className="text-xl font-semibold text-white">Сильные стороны</h3>
               </div>
               <ul className="space-y-2">
                 {feedback.strengths.map((strength, idx) => (
@@ -522,7 +523,7 @@ const AudioInterview = () => {
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingDown className="text-orange-400" />
-                <h3 className="text-xl font-semibold">Области для улучшения</h3>
+                <h3 className="text-xl font-semibold text-white">Области для улучшения</h3>
               </div>
               <ul className="space-y-2">
                 {feedback.weaknesses.map((weakness, idx) => (
@@ -535,8 +536,8 @@ const AudioInterview = () => {
             </div>
 
             {/* Detailed Feedback */}
-            <div className="mb-8 p-4 bg-gray-700 rounded-lg">
-              <h3 className="text-xl font-semibold mb-2">Комментарий интервьюера</h3>
+            <div className="mb-8 p-4 bg-dark-surface rounded-lg border border-gray-700">
+              <h3 className="text-xl font-semibold text-white mb-2">Комментарий интервьюера</h3>
               <p className="text-gray-300">{feedback.feedback}</p>
             </div>
 
@@ -551,18 +552,18 @@ const AudioInterview = () => {
                   setFeedback(null);
                   setCurrentVoice(null);
                 }}
-                className="flex-1 py-3 bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
+                className="btn-primary flex-1"
               >
                 Новое интервью
               </button>
               <button
                 onClick={() => navigate('/home')}
-                className="flex-1 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all"
+                className="btn-secondary flex-1"
               >
                 На главную
               </button>
             </div>
-          </div>
+          </Card>
         )}
       </div>
     </div>
