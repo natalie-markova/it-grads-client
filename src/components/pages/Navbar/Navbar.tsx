@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, X, LogIn, UserCircle, LogOut, MessageSquare } from 'lucide-react'
 import { $api } from "../../../utils/axios.instance";
 import { chatAPI } from '../../../utils/chat.api';
+import { socketService } from '../../../utils/socket.service';
 import { User } from "../../../types";
 
 interface NavbarProps {
@@ -17,13 +18,57 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
     const userType = user?.role || null
     const [unreadCount, setUnreadCount] = useState(0);
 
-    // Загрузка количества непрочитанных сообщений
-    useEffect(() => {
+    // Функция для загрузки непрочитанных сообщений
+    const loadUnreadCount = () => {
         if (user) {
             chatAPI.getUnreadCount()
                 .then(data => setUnreadCount(data.unreadCount))
                 .catch(err => console.error('Error loading unread count:', err));
         }
+    };
+
+    // Загрузка количества непрочитанных сообщений
+    useEffect(() => {
+        loadUnreadCount();
+    }, [user]);
+
+    // Периодическое обновление счетчика непрочитанных сообщений
+    useEffect(() => {
+        if (!user) return;
+
+        // Обновляем каждые 30 секунд
+        const interval = setInterval(() => {
+            loadUnreadCount();
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, [user]);
+
+    // WebSocket подключение для обновления в реальном времени
+    useEffect(() => {
+        if (!user) return;
+
+        const token = localStorage.getItem('accessToken') || '';
+        if (token && !socketService.isConnected()) {
+            socketService.connect(token);
+        }
+
+        // Подписываемся на уведомления о непрочитанных сообщениях
+        socketService.onNotificationUnread(() => {
+            console.log('📬 Получено уведомление о новом сообщении');
+            loadUnreadCount();
+        });
+
+        // Подписываемся на событие прочтения сообщений
+        socketService.onMessagesRead(() => {
+            console.log('✅ Сообщения прочитаны, обновляем счетчик');
+            loadUnreadCount();
+        });
+
+        return () => {
+            socketService.off('notification-unread');
+            socketService.off('messages-read');
+        };
     }, [user]);
 
     const isActive = (path: string) => {
