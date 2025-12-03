@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface SkillsRadarProps {
   isActive: boolean
@@ -6,6 +6,34 @@ interface SkillsRadarProps {
 
 const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [animationKey, setAnimationKey] = useState(0)
+  const [isVisible, setIsVisible] = useState(false)
+
+  // Отслеживание видимости компонента при скролле
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true)
+          setAnimationKey(prev => prev + 1)
+        }
+      },
+      {
+        threshold: 0.3, // Запускаем анимацию когда видно 30% элемента
+      }
+    )
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current)
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current)
+      }
+    }
+  }, [isVisible])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -25,78 +53,74 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
     resizeCanvas()
     window.addEventListener('resize', resizeCanvas)
 
-    // Навыки для радара (6 осей)
+    // 12 навыков по кругу
     const skills = [
-      { name: 'Frontend', value: 0.85, targetValue: 0.85 },
-      { name: 'Backend', value: 0.7, targetValue: 0.7 },
-      { name: 'Database', value: 0.65, targetValue: 0.65 },
-      { name: 'DevOps', value: 0.75, targetValue: 0.75 },
-      { name: 'Testing', value: 0.8, targetValue: 0.8 },
-      { name: 'Algorithms', value: 0.6, targetValue: 0.6 },
+      { name: 'DEV', value: 0.85 },
+      { name: 'DB', value: 0.7 },
+      { name: 'CLOUD', value: 0.65 },
+      { name: 'OPS', value: 0.75 },
+      { name: 'QA', value: 0.8 },
+      { name: 'NET', value: 0.6 },
+      { name: 'SEC', value: 0.7 },
+      { name: 'AI', value: 0.55 },
+      { name: 'DATA', value: 0.75 },
+      { name: 'PM', value: 0.65 },
+      { name: 'UX', value: 0.8 },
+      { name: 'MOB', value: 0.9 },
     ]
 
     let animationId: number
     let animationProgress = 0
-    let skillProgress = 0
+    let segmentProgress = 0
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      if (!isActive) {
-        // Плавное затухание
-        animationProgress = Math.max(0, animationProgress - 0.02)
-        skillProgress = Math.max(0, skillProgress - 0.03)
-        if (animationProgress <= 0) {
-          // Сброс
-          skillProgress = 0
-          return
-        }
-      } else {
-        // Плавное нарастание
-        animationProgress = Math.min(1, animationProgress + 0.015)
+      // Всегда показываем анимацию (убираем проверку isActive для затухания)
+      // Плавное нарастание
+      animationProgress = Math.min(1, animationProgress + 0.008)
 
-        // Прогресс заполнения навыков (начинается после появления сетки)
-        if (animationProgress > 0.3) {
-          skillProgress = Math.min(1, skillProgress + 0.012)
-        }
+      // Прогресс появления сегментов (начинается после появления сетки)
+      if (animationProgress > 0.3) {
+        segmentProgress = Math.min(1, segmentProgress + 0.006)
       }
 
       const centerX = canvas.width / 2
       const centerY = canvas.height / 2
-      const maxRadius = Math.min(canvas.width, canvas.height) * 0.35
+      const maxRadius = Math.min(canvas.width, canvas.height) * 0.45
       const numSkills = skills.length
       const angleStep = (Math.PI * 2) / numSkills
 
-      // Рисуем концентрические круги (уровни навыков)
+      // Темный фон круга
       ctx.save()
-      ctx.globalAlpha = animationProgress
+      ctx.globalAlpha = animationProgress * 0.8
+      ctx.fillStyle = 'rgba(20, 25, 35, 0.9)'
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
 
-      const levels = 5
+      // Рисуем концентрические круги
+      ctx.save()
+      ctx.globalAlpha = animationProgress * 0.4
+
+      const levels = 4
       for (let level = 1; level <= levels; level++) {
         const radius = (maxRadius / levels) * level
 
+        ctx.strokeStyle = 'rgba(100, 120, 140, 0.3)'
+        ctx.lineWidth = 1
         ctx.beginPath()
-        for (let i = 0; i <= numSkills; i++) {
-          const angle = i * angleStep - Math.PI / 2
-          const x = centerX + Math.cos(angle) * radius
-          const y = centerY + Math.sin(angle) * radius
-
-          if (i === 0) {
-            ctx.moveTo(x, y)
-          } else {
-            ctx.lineTo(x, y)
-          }
-        }
-        ctx.closePath()
-
-        // Разная прозрачность для разных уровней
-        ctx.strokeStyle = `rgba(6, 182, 212, ${0.15 + level * 0.05})`
-        ctx.lineWidth = level === levels ? 2 : 1
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
         ctx.stroke()
       }
 
-      // Рисуем оси (линии от центра к краям)
-      ctx.strokeStyle = 'rgba(6, 182, 212, 0.3)'
+      ctx.restore()
+
+      // Рисуем радиальные линии (оси)
+      ctx.save()
+      ctx.globalAlpha = animationProgress * 0.3
+      ctx.strokeStyle = 'rgba(100, 120, 140, 0.3)'
       ctx.lineWidth = 1
 
       for (let i = 0; i < numSkills; i++) {
@@ -110,127 +134,124 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
         ctx.stroke()
       }
 
-      // Центральная точка
-      ctx.fillStyle = 'rgba(6, 182, 212, 0.8)'
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, 3, 0, Math.PI * 2)
-      ctx.fill()
-
       ctx.restore()
 
-      // Рисуем заполненную область навыков
-      if (skillProgress > 0) {
+      // Рисуем 3D сегменты (лепестки)
+      if (segmentProgress > 0) {
         ctx.save()
-        ctx.globalAlpha = animationProgress * 0.3
-
-        ctx.beginPath()
-        for (let i = 0; i <= numSkills; i++) {
-          const index = i % numSkills
-          const skill = skills[index]
-          const angle = index * angleStep - Math.PI / 2
-          const currentValue = skill.targetValue * skillProgress
-          const radius = maxRadius * currentValue
-
-          const x = centerX + Math.cos(angle) * radius
-          const y = centerY + Math.sin(angle) * radius
-
-          if (i === 0) {
-            ctx.moveTo(x, y)
-          } else {
-            ctx.lineTo(x, y)
-          }
-        }
-        ctx.closePath()
-
-        // Градиентная заливка
-        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius)
-        gradient.addColorStop(0, 'rgba(6, 182, 212, 0.6)')
-        gradient.addColorStop(1, 'rgba(6, 182, 212, 0.2)')
-        ctx.fillStyle = gradient
-        ctx.fill()
-
-        // Обводка области
-        ctx.strokeStyle = 'rgba(6, 182, 212, 0.9)'
-        ctx.lineWidth = 2
-        ctx.stroke()
-
-        ctx.restore()
-
-        // Рисуем точки на вершинах
-        ctx.save()
-        ctx.globalAlpha = animationProgress
 
         for (let i = 0; i < numSkills; i++) {
           const skill = skills[i]
           const angle = i * angleStep - Math.PI / 2
-          const currentValue = skill.targetValue * skillProgress
-          const radius = maxRadius * currentValue
+          const nextAngle = ((i + 1) % numSkills) * angleStep - Math.PI / 2
 
-          const x = centerX + Math.cos(angle) * radius
-          const y = centerY + Math.sin(angle) * radius
+          // Высота сегмента зависит от значения навыка и прогресса анимации
+          const segmentHeight = skill.value * segmentProgress
+          const innerRadius = maxRadius * 0.3
+          const outerRadius = maxRadius * 0.85
 
-          // Свечение вокруг точки
-          const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, 10)
-          glowGradient.addColorStop(0, 'rgba(6, 182, 212, 0.8)')
-          glowGradient.addColorStop(1, 'rgba(6, 182, 212, 0)')
+          // Создаем градиент от бирюзового к зеленому
+          const gradient = ctx.createLinearGradient(
+            centerX + Math.cos(angle) * innerRadius,
+            centerY + Math.sin(angle) * innerRadius,
+            centerX + Math.cos(angle) * outerRadius,
+            centerY + Math.sin(angle) * outerRadius
+          )
 
-          ctx.fillStyle = glowGradient
+          // Градиент зависит от высоты сегмента
+          const hue1 = 180 + segmentHeight * 20 // От бирюзового
+          const hue2 = 160 + segmentHeight * 30 // К зеленому
+          gradient.addColorStop(0, `hsla(${hue1}, 70%, 50%, ${0.6 * animationProgress})`)
+          gradient.addColorStop(1, `hsla(${hue2}, 60%, 45%, ${0.8 * animationProgress})`)
+
+          // Основной сегмент (верхняя часть)
+          ctx.globalAlpha = animationProgress
+          ctx.fillStyle = gradient
           ctx.beginPath()
-          ctx.arc(x, y, 10, 0, Math.PI * 2)
+          ctx.arc(centerX, centerY, innerRadius, angle, nextAngle)
+          ctx.arc(
+            centerX,
+            centerY,
+            innerRadius + (outerRadius - innerRadius) * segmentHeight,
+            nextAngle,
+            angle,
+            true
+          )
+          ctx.closePath()
           ctx.fill()
 
-          // Основная точка
-          ctx.fillStyle = 'rgba(6, 182, 212, 1)'
-          ctx.beginPath()
-          ctx.arc(x, y, 4, 0, Math.PI * 2)
-          ctx.fill()
-
-          // Белая обводка
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
+          // Обводка сегмента для 3D эффекта
+          ctx.strokeStyle = `hsla(${hue1}, 70%, 60%, ${0.6 * animationProgress})`
           ctx.lineWidth = 1.5
           ctx.stroke()
+
+          // Темная тень для глубины
+          ctx.globalAlpha = animationProgress * 0.3
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
+          ctx.beginPath()
+          ctx.arc(centerX, centerY, innerRadius, angle, nextAngle)
+          ctx.arc(
+            centerX,
+            centerY,
+            innerRadius + (outerRadius - innerRadius) * segmentHeight * 0.95,
+            nextAngle,
+            angle,
+            true
+          )
+          ctx.closePath()
+          ctx.fill()
         }
 
         ctx.restore()
       }
 
+      // Центральный круг с числом
+      ctx.save()
+      ctx.globalAlpha = animationProgress
+
+      // Темный внутренний круг
+      ctx.fillStyle = 'rgba(30, 35, 45, 0.95)'
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, maxRadius * 0.25, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Обводка центрального круга
+      ctx.strokeStyle = 'rgba(6, 182, 212, 0.5)'
+      ctx.lineWidth = 2
+      ctx.stroke()
+
+      // Вычисляем среднее значение навыков
+      if (segmentProgress > 0) {
+        const avgValue =
+          skills.reduce((sum, skill) => sum + skill.value, 0) / skills.length
+        const displayValue = (avgValue * segmentProgress * 5).toFixed(1)
+
+        ctx.fillStyle = 'rgba(6, 182, 212, 1)'
+        ctx.font = 'bold 32px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(displayValue, centerX, centerY)
+      }
+
+      ctx.restore()
+
       // Рисуем подписи навыков
       ctx.save()
       ctx.globalAlpha = animationProgress
       ctx.fillStyle = 'rgba(6, 182, 212, 0.9)'
-      ctx.font = '12px sans-serif'
+      ctx.font = 'bold 11px sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
 
       for (let i = 0; i < numSkills; i++) {
         const skill = skills[i]
         const angle = i * angleStep - Math.PI / 2
-        const labelRadius = maxRadius + 25
+        const labelRadius = maxRadius + 30
 
-        let x = centerX + Math.cos(angle) * labelRadius
+        const x = centerX + Math.cos(angle) * labelRadius
         const y = centerY + Math.sin(angle) * labelRadius
 
-        // Корректировка положения текста для лучшей читаемости
-        if (Math.abs(angle) < Math.PI / 4 || Math.abs(angle) > (3 * Math.PI) / 4) {
-          // Левая и правая стороны
-          ctx.textAlign = angle > -Math.PI / 2 && angle < Math.PI / 2 ? 'left' : 'right'
-          x += angle > -Math.PI / 2 && angle < Math.PI / 2 ? 5 : -5
-        } else {
-          // Верх и низ
-          ctx.textAlign = 'center'
-        }
-
         ctx.fillText(skill.name, x, y)
-
-        // Процент (показывается только когда есть прогресс)
-        if (skillProgress > 0) {
-          const percentage = Math.round(skill.targetValue * skillProgress * 100)
-          ctx.font = '10px sans-serif'
-          ctx.fillStyle = 'rgba(6, 182, 212, 0.7)'
-          ctx.fillText(`${percentage}%`, x, y + 14)
-          ctx.font = '12px sans-serif'
-          ctx.fillStyle = 'rgba(6, 182, 212, 0.9)'
-        }
       }
 
       ctx.restore()
@@ -244,14 +265,16 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
       cancelAnimationFrame(animationId)
       window.removeEventListener('resize', resizeCanvas)
     }
-  }, [isActive])
+  }, [animationKey])
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ opacity: 0.6 }}
-    />
+    <div ref={containerRef} className="absolute inset-0">
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        style={{ opacity: 0.9 }}
+      />
+    </div>
   )
 }
 
