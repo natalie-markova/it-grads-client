@@ -1,6 +1,7 @@
 import { Link, useOutletContext } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { ArrowRight, Users, MessageCircle, TrendingUp, GraduationCap, Building2, MapPin, Search, Star, Target, Sparkles, CheckCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import Section from '../../../components/ui/Section'
 import Card from '../../../components/ui/Card'
 import MatrixRain from '../../../components/ui/MatrixRain'
@@ -18,6 +19,7 @@ import { $api } from '../../../utils/axios.instance'
 
 const Home = () => {
   const { user } = useOutletContext<OutletContext>()
+  const { t, i18n } = useTranslation()
   const [totalUsers, setTotalUsers] = useState(0)
   const [onlineUsers, setOnlineUsers] = useState(0)
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
@@ -80,26 +82,26 @@ const Home = () => {
   const graduateFeatures = [
     {
       icon: <MessageCircle className="h-6 w-6" />,
-      title: 'Подготовка к собеседованиям с ИИ',
-      description: 'AI-симулятор с адаптивными вопросами, аудио-интервью и практические квизы.',
+      title: t('home.graduateFeatures.interview.title'),
+      description: t('home.graduateFeatures.interview.description'),
       link: '/interview',
     },
     {
       icon: <Target className="h-6 w-6" />,
-      title: 'Умный поиск работы',
-      description: 'AI подбирает вакансии под профиль с анализом соответствия в процентах.',
+      title: t('home.graduateFeatures.search.title'),
+      description: t('home.graduateFeatures.search.description'),
       link: '/jobs',
     },
     {
       icon: <TrendingUp className="h-6 w-6" />,
-      title: 'Карьерные треки',
-      description: 'Интерактивные roadmap по специальностям с интеграцией вакансий.',
+      title: t('home.graduateFeatures.career.title'),
+      description: t('home.graduateFeatures.career.description'),
       link: '/roadmap',
     },
     {
       icon: <Star className="h-6 w-6" />,
-      title: 'Прозрачность работодателей',
-      description: 'Анонимные отзывы о компаниях и рейтинги работодателей.',
+      title: t('home.graduateFeatures.transparency.title'),
+      description: t('home.graduateFeatures.transparency.description'),
       link: '/companies',
     },
   ]
@@ -108,26 +110,26 @@ const Home = () => {
   const employerFeatures = [
     {
       icon: <MapPin className="h-6 w-6" />,
-      title: 'Географическая карта кандидатов',
-      description: 'Уникальная карта с кандидатами по городам России и статистика.',
+      title: t('home.employerFeatures.map.title'),
+      description: t('home.employerFeatures.map.description'),
       link: '/candidates/map',
     },
     {
       icon: <Search className="h-6 w-6" />,
-      title: 'Умный поиск талантов',
-      description: 'Расширенные фильтры с AND/OR логикой по навыкам и зарплатам.',
+      title: t('home.employerFeatures.search.title'),
+      description: t('home.employerFeatures.search.description'),
       link: '/candidates',
     },
     {
       icon: <GraduationCap className="h-6 w-6" />,
-      title: 'Проверенные кандидаты',
-      description: 'Радар навыков, GitHub-портфолио с автоанализом проектов.',
+      title: t('home.employerFeatures.verified.title'),
+      description: t('home.employerFeatures.verified.description'),
       link: '/candidates',
     },
     {
       icon: <Building2 className="h-6 w-6" />,
-      title: 'Репутация компании',
-      description: 'Система отзывов с возможностью отвечать и строить HR-бренд.',
+      title: t('home.employerFeatures.reputation.title'),
+      description: t('home.employerFeatures.reputation.description'),
       link: '/profile/employer',
     },
   ]
@@ -146,21 +148,20 @@ const Home = () => {
           <div className="text-center max-w-4xl mx-auto scroll-scale">
             {/* Main Headline */}
             <h1 className="text-[40px] md:text-[56px] lg:text-[64px] font-bold leading-tight mb-6 text-white">
-              Найдите работу мечты с{' '}
+              {t('home.heroTitle1')}{' '}
               <span className="relative inline-block">
-                <span className="relative z-10">искусственным</span>
+                <span className="relative z-10">{t('home.heroTitle2')}</span>
                 <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-cyan/30 -rotate-1"></span>
               </span>{' '}
               <span className="relative inline-block">
-                <span className="relative z-10">интеллектом</span>
+                <span className="relative z-10">{t('home.heroTitle3')}</span>
                 <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-blue/30 rotate-1"></span>
               </span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-lg md:text-xl text-gray-300 mb-10 leading-relaxed max-w-3xl mx-auto">
-              IT-Grads объединяет выпускников IT-школ и работодателей.
-              AI-симулятор собеседований, умный подбор вакансий и прозрачные рейтинги компаний.
+              {t('home.heroSubtitle')}
             </p>
 
             {/* Stats for logged users */}
@@ -174,7 +175,7 @@ const Home = () => {
                     <div className="text-2xl font-bold text-accent-cyan">
                       <AnimatedCounter value={totalUsers} />
                     </div>
-                    <div className="text-sm text-gray-400">Пользователей</div>
+                    <div className="text-sm text-gray-400">{t('common.users')}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -185,7 +186,7 @@ const Home = () => {
                     <div className="text-2xl font-bold text-green-400">
                       <AnimatedCounter value={onlineUsers} />
                     </div>
-                    <div className="text-sm text-gray-400">Онлайн сейчас</div>
+                    <div className="text-sm text-gray-400">{t('common.onlineNow')}</div>
                   </div>
                 </div>
               </div>
@@ -198,14 +199,14 @@ const Home = () => {
                   to="/registration"
                   className="group relative px-8 py-4 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 inline-flex items-center shadow-lg shadow-accent-cyan/25 hover:shadow-accent-cyan/40"
                 >
-                  Начать бесплатно
+                  {t('home.startFree')}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
                   to="/jobs"
                   className="px-8 py-4 bg-dark-surface hover:bg-dark-card border border-dark-card hover:border-accent-cyan/50 text-white font-semibold rounded-xl transition-all duration-300 inline-flex items-center"
                 >
-                  Смотреть вакансии
+                  {t('home.viewVacancies')}
                 </Link>
               </div>
             )}
@@ -214,15 +215,15 @@ const Home = () => {
             <div className="mt-12 flex flex-wrap justify-center gap-6 items-center text-gray-400 text-sm">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-accent-cyan" />
-                <span>Бесплатная регистрация</span>
+                <span>{t('home.freeRegistration')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-accent-cyan" />
-                <span>AI-технологии</span>
+                <span>{t('home.aiTechnologies')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-accent-cyan" />
-                <span>Проверенные компании</span>
+                <span>{t('home.verifiedCompanies')}</span>
               </div>
             </div>
           </div>
@@ -235,10 +236,10 @@ const Home = () => {
           {/* Section Header */}
           <div className="text-center mb-16 scroll-animate-item">
             <h2 className="text-[36px] md:text-[44px] font-bold text-white mb-4">
-              Начните карьеру <span className="text-accent-cyan">уверенно</span>
+              {t('home.graduatesTitle')} <span className="text-accent-cyan">{t('home.graduatesTitleHighlight')}</span>
             </h2>
             <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              Умные инструменты для поиска работы, подготовки к собеседованиям и развития навыков
+              {t('home.graduatesSubtitle')}
             </p>
           </div>
 
@@ -275,7 +276,7 @@ const Home = () => {
                         {feature.description}
                       </p>
                       <div className="mt-4 flex items-center text-accent-cyan font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                        Узнать больше
+                        {t('common.learnMore')}
                         <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
@@ -288,7 +289,7 @@ const Home = () => {
           {!user && (
             <div className="text-center mt-12 scroll-animate-item">
               <Link to="/registration" className="group inline-flex items-center px-8 py-4 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-accent-cyan/25 hover:shadow-accent-cyan/40">
-                Создать профиль выпускника
+                {t('home.createGraduateProfile')}
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -302,10 +303,10 @@ const Home = () => {
           {/* Section Header */}
           <div className="text-center mb-16 scroll-animate-item">
             <h2 className="text-[36px] md:text-[44px] font-bold text-white mb-4">
-              Находите таланты <span className="text-accent-blue">быстро</span>
+              {t('home.employersTitle')} <span className="text-accent-blue">{t('home.employersTitleHighlight')}</span>
             </h2>
             <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              Умные инструменты для поиска кандидатов, управления вакансиями и построения HR-бренда
+              {t('home.employersSubtitle')}
             </p>
           </div>
 
@@ -342,7 +343,7 @@ const Home = () => {
                         {feature.description}
                       </p>
                       <div className="mt-4 flex items-center text-accent-blue font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                        Узнать больше
+                        {t('common.learnMore')}
                         <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
@@ -355,7 +356,7 @@ const Home = () => {
           {!user && (
             <div className="text-center mt-12 scroll-animate-item">
               <Link to="/registration" className="group inline-flex items-center px-8 py-4 bg-accent-blue hover:bg-accent-blue/90 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-accent-blue/25 hover:shadow-accent-blue/40">
-                Зарегистрировать компанию
+                {t('home.registerCompany')}
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -370,18 +371,18 @@ const Home = () => {
             {/* Content */}
             <div className="scroll-fade-left">
               <h2 className="text-[32px] md:text-[40px] font-bold text-white mb-4">
-                Интерактивный <span className="text-accent-cyan">радар навыков</span>
+                {t('home.skillsRadarTitle')} <span className="text-accent-cyan">{t('home.skillsRadarTitleHighlight')}</span>
               </h2>
               <p className="text-lg text-gray-300 mb-6 leading-relaxed">
-                Визуализируйте свои умения как никогда раньше. Наша интерактивная карта показывает связи между навыками и автоматически анализирует ваши GitHub проекты.
+                {t('home.skillsRadarDesc')}
               </p>
 
               <div className="space-y-4 mb-8">
                 {[
-                  'Актуальные вакансии по навыкам',
-                  'Автоматический анализ GitHub',
-                  'Рекомендации по развитию',
-                  'Связи между технологиями'
+                  t('home.skillsRadarFeature1'),
+                  t('home.skillsRadarFeature2'),
+                  t('home.skillsRadarFeature3'),
+                  t('home.skillsRadarFeature4')
                 ].map((item, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent-cyan/20 border border-accent-cyan flex items-center justify-center">
@@ -393,7 +394,7 @@ const Home = () => {
               </div>
 
               <Link to="/skills" className="group inline-flex items-center px-6 py-3 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300">
-                Создать свой радар
+                {t('home.createYourRadar')}
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -426,16 +427,16 @@ const Home = () => {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-cyan/10 border border-accent-cyan/30 rounded-full text-accent-cyan text-sm font-medium mb-6">
               <Sparkles className="h-4 w-4" />
-              Присоединяйтесь сейчас
+              {t('home.joinNow')}
             </div>
             <h2 className="text-[32px] md:text-[40px] font-bold mb-6 text-white">
-              Готовы начать путь к успеху?
+              {t('home.readyToStart')}
             </h2>
             <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">
-              Присоединяйтесь к тысячам IT-специалистов, которые уже нашли работу мечты с IT-Grads
+              {t('home.joinThousands')}
             </p>
             <Link to="/registration" className="group inline-flex items-center px-10 py-5 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 shadow-xl shadow-accent-cyan/25 hover:shadow-accent-cyan/40 text-lg">
-              Создать аккаунт бесплатно
+              {t('home.createAccountFree')}
               <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>

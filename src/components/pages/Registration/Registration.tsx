@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { UserPlus, Mail, Lock, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { $api, setAccessToken } from "../../../utils/axios.instance";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { OutletContext } from "../../../types";
@@ -9,6 +10,7 @@ import toast from "react-hot-toast";
 function Registration() {
     const { setUser } = useOutletContext<OutletContext>();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [role, setRole] = useState<'graduate' | 'employer'>('graduate');
     const [passwordError, setPasswordError] = useState<string>('');
     const [emailError, setEmailError] = useState<string>('');
@@ -229,11 +231,11 @@ function Registration() {
                             <UserPlus className="h-8 w-8 text-dark-bg" />
                         </div>
                     </div>
-                    <h2 className="text-3xl font-bold text-white">Создать аккаунт</h2>
+                    <h2 className="text-3xl font-bold text-white">{t('auth.register')}</h2>
                     <p className="mt-2 text-sm text-gray-300">
-                        Уже есть аккаунт?{' '}
+                        {t('auth.hasAccount')}{' '}
                         <Link to="/login" className="font-medium text-accent-cyan hover:text-accent-blue">
-                            Войдите
+                            {t('auth.loginButton')}
                         </Link>
                     </p>
                 </div>
@@ -242,7 +244,7 @@ function Registration() {
                     <form onSubmit={submitHandler} className="space-y-6">
                         <div>
                             <label htmlFor="login" className="block text-sm font-medium text-gray-300 mb-2">
-                                Логин
+                                {t('auth.username')}
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -254,14 +256,14 @@ function Registration() {
                                     name="login"
                                     required
                                     className="input-field pl-10"
-                                    placeholder="Ваш логин"
+                                    placeholder={t('auth.username')}
                                 />
                             </div>
                         </div>
 
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                                Email
+                                {t('auth.email')}
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -290,7 +292,7 @@ function Registration() {
 
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                                Пароль
+                                {t('auth.password')}
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -325,41 +327,41 @@ function Registration() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Роль
+                                {t('auth.chooseRole')}
                             </label>
                             <div className="flex gap-4">
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <input 
-                                        type="radio" 
-                                        name="role" 
+                                    <input
+                                        type="radio"
+                                        name="role"
                                         value="graduate"
                                         checked={role === 'graduate'}
                                         onChange={(e) => setRole(e.target.value as 'graduate' | 'employer')}
                                         className="h-4 w-4 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-surface"
                                         required
                                     />
-                                    <span className="text-gray-300">Выпускник</span>
+                                    <span className="text-gray-300">{t('auth.graduate')}</span>
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <input 
-                                        type="radio" 
-                                        name="role" 
+                                    <input
+                                        type="radio"
+                                        name="role"
                                         value="employer"
                                         checked={role === 'employer'}
                                         onChange={(e) => setRole(e.target.value as 'graduate' | 'employer')}
                                         className="h-4 w-4 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-surface"
                                         required
                                     />
-                                    <span className="text-gray-300">Работодатель</span>
+                                    <span className="text-gray-300">{t('auth.employer')}</span>
                                 </label>
                             </div>
                         </div>
 
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             className="btn-primary w-full"
                         >
-                            Создать аккаунт
+                            {t('auth.registerButton')}
                         </button>
                     </form>
                 </div>

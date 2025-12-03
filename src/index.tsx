@@ -7,6 +7,7 @@ import Home from './components/pages/Home/Home';
 import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
 import App from "./App";
 import './index.css';
+import './i18n';
 import InterviewSetupPage from './components/pages/Interview/InterviewSetupPage';
 import InterviewPage from './components/pages/Interview/InterviewPage';
 import InterviewResultsPage from './components/pages/Interview/InterviewResultsPage';

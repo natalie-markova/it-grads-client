@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Mail, Phone } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { User } from '../types'
 
@@ -9,6 +10,7 @@ interface FooterProps {
 
 const Footer = ({ user }: FooterProps) => {
   const userType = user?.role || null
+  const { t } = useTranslation()
   const handlePhoneClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault()
     toast.success('Открывается приложение для звонка...')
@@ -26,30 +28,29 @@ const Footer = ({ user }: FooterProps) => {
           <div>
             <h3 className="text-white text-lg font-bold mb-4">IT-Grads</h3>
             <p className="text-sm leading-relaxed text-gray-400">
-              Платформа для выпускников IT-школ и молодых специалистов. 
-              Найдите работу мечты и пройдите собеседования с уверенностью.
+              {t('home.heroSubtitle')}
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Быстрые ссылки</h3>
+            <h3 className="text-white text-lg font-semibold mb-4">{t('footer.about')}</h3>
             <ul className="space-y-2 text-sm">
               {userType === 'employer' ? (
                 <>
                   <li>
                     <Link to="/home" className="hover:text-accent-cyan transition-colors text-gray-400">
-                      Главная
+                      Home
                     </Link>
                   </li>
                   <li>
                     <Link to="/interview" className="hover:text-accent-cyan transition-colors text-gray-400">
-                      Собеседования
+                      {t('navbar.interviews')}
                     </Link>
                   </li>
                   <li>
                     <Link to="/graduates" className="hover:text-accent-cyan transition-colors text-gray-400">
-                      Выпускники
+                      {t('auth.graduate')}
                     </Link>
                   </li>
                 </>
@@ -57,22 +58,22 @@ const Footer = ({ user }: FooterProps) => {
                 <>
                   <li>
                     <Link to="/home" className="hover:text-accent-cyan transition-colors text-gray-400">
-                      Главная
+                      Home
                     </Link>
                   </li>
                   <li>
                     <Link to="/skills" className="hover:text-accent-cyan transition-colors text-gray-400">
-                      Радар навыков
+                      {t('navbar.skillsRadar')}
                     </Link>
                   </li>
                   <li>
                     <Link to="/interview" className="hover:text-accent-cyan transition-colors text-gray-400">
-                      Собеседования
+                      {t('navbar.interviews')}
                     </Link>
                   </li>
                   <li>
                     <Link to="/jobs" className="hover:text-accent-cyan transition-colors text-gray-400">
-                      Вакансии
+                      {t('navbar.vacancies')}
                     </Link>
                   </li>
                 </>
@@ -82,11 +83,11 @@ const Footer = ({ user }: FooterProps) => {
 
           {/* Resources */}
           <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Ресурсы</h3>
+            <h3 className="text-white text-lg font-semibold mb-4">{t('footer.terms')}</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/help" className="hover:text-accent-cyan transition-colors text-gray-400">
-                  Помощь
+                  Help
                 </Link>
               </li>
               <li>
@@ -99,7 +100,7 @@ const Footer = ({ user }: FooterProps) => {
 
           {/* Contact */}
           <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Контакты</h3>
+            <h3 className="text-white text-lg font-semibold mb-4">{t('footer.contacts')}</h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-center space-x-2 text-gray-400">
                 <Mail className="h-4 w-4 text-accent-cyan" />
@@ -122,7 +123,7 @@ const Footer = ({ user }: FooterProps) => {
         </div>
 
         <div className="border-t border-dark-card mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; 2025 IT-Grads. Все права защищены.</p>
+          <p>{t('footer.copyright')}</p>
         </div>
       </div>
     </footer>

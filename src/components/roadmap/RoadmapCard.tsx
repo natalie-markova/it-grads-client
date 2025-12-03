@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Clock, TrendingUp, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface RoadmapCardProps {
   roadmap: {
@@ -17,10 +18,12 @@ interface RoadmapCardProps {
 }
 
 const RoadmapCard = ({ roadmap }: RoadmapCardProps) => {
+  const { t } = useTranslation();
+
   const difficultyLabels = {
-    beginner: 'Начальный',
-    intermediate: 'Средний',
-    advanced: 'Продвинутый'
+    beginner: t('roadmap.beginner'),
+    intermediate: t('roadmap.intermediate'),
+    advanced: t('roadmap.advanced')
   };
 
   const difficultyColors = {
@@ -67,7 +70,7 @@ const RoadmapCard = ({ roadmap }: RoadmapCardProps) => {
           {roadmap.estimatedMonths && (
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
-              <span>{roadmap.estimatedMonths} мес</span>
+              <span>{roadmap.estimatedMonths} {t('roadmap.months')}</span>
             </div>
           )}
           {roadmap.popularityScore !== undefined && roadmap.popularityScore > 0 && (

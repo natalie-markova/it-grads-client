@@ -4,6 +4,7 @@ import Card from './ui/Card'
 import { User } from '../types'
 import toast from 'react-hot-toast'
 import { $api } from '../utils/axios.instance'
+import { useTranslation } from 'react-i18next'
 
 interface Skill {
   category: string
@@ -25,68 +26,86 @@ const colors = [
 const SKILL_CATEGORIES = [
   {
     name: 'Программирование',
+    key: 'programming',
     short: 'DEV',
     skills: ['Python', 'Java', 'JavaScript', 'TypeScript', 'C++', 'C#', 'Go', 'React', 'Angular', 'Vue.js', 'Node.js', 'Django', 'Spring', 'SQL'],
   },
   {
     name: 'Базы данных',
+    key: 'databases',
     short: 'DB',
     skills: ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Oracle', 'SQL Server'],
   },
   {
     name: 'Облачные технологии',
+    key: 'cloud',
     short: 'CLOUD',
     skills: ['AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'Terraform'],
   },
   {
     name: 'DevOps',
+    key: 'devops',
     short: 'OPS',
     skills: ['CI/CD', 'Jenkins', 'GitLab CI', 'GitHub Actions', 'Ansible'],
   },
   {
     name: 'Тестирование',
+    key: 'testing',
     short: 'QA',
     skills: ['Unit Testing', 'Selenium', 'Cypress', 'Postman', 'JUnit'],
   },
   {
     name: 'Сети и админ',
+    key: 'network',
     short: 'NET',
     skills: ['Linux', 'TCP/IP', 'DNS', 'VPN', 'Windows Server'],
   },
   {
     name: 'Безопасность',
+    key: 'security',
     short: 'SEC',
     skills: ['Penetration Testing', 'OWASP', 'Криптография', 'Firewall'],
   },
   {
     name: 'ML & AI',
+    key: 'ai',
     short: 'AI',
     skills: ['TensorFlow', 'PyTorch', 'NLP', 'Computer Vision', 'scikit-learn'],
   },
   {
     name: 'Data Science',
+    key: 'data',
     short: 'DATA',
     skills: ['Pandas', 'NumPy', 'Tableau', 'Power BI', 'Matplotlib'],
   },
   {
     name: 'Управление',
+    key: 'management',
     short: 'PM',
     skills: ['Agile', 'Scrum', 'Jira', 'Kanban'],
   },
   {
     name: 'UI/UX',
+    key: 'uiux',
     short: 'UX',
     skills: ['Figma', 'Sketch', 'Adobe XD'],
   },
   {
     name: 'Мобильная разработка',
+    key: 'mobileDev',
     short: 'MOB',
     skills: ['React Native', 'Flutter', 'Swift', 'Kotlin'],
   },
 ]
 
 const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) => {
+  const { t } = useTranslation()
   const [skills, setSkills] = useState<Record<string, Record<string, number>>>({})
+
+  // Function to get translated category name
+  const getCategoryName = (category: typeof SKILL_CATEGORIES[0]) => {
+    return t(`skills.categories.${category.key}`, category.name)
+  }
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -306,7 +325,7 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
 
   const handleSave = async () => {
     if (!actualUserId) {
-      toast.error('Необходимо войти в систему')
+      toast.error(t('skills.authRequired'))
       return
     }
 
@@ -331,12 +350,12 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
         radarImage
       })
 
-      toast.success('Навыки сохранены!')
+      toast.success(t('skills.skillsSaved'))
       setIsEditing(false)
       if (onSave) onSave(skillsArray)
     } catch (error) {
       console.error('Error saving skills:', error)
-      toast.error('Ошибка при сохранении')
+      toast.error(t('skills.errorSaving'))
     } finally {
       setIsSaving(false)
     }
@@ -350,12 +369,12 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
   }
 
   const getSkillLevelText = (level: number) => {
-    if (level === 0) return 'Не указан'
-    if (level === 1) return 'Начинающий'
-    if (level === 2) return 'Базовый'
-    if (level === 3) return 'Средний'
-    if (level === 4) return 'Продвинутый'
-    return 'Эксперт'
+    if (level === 0) return t('skills.notSpecified')
+    if (level === 1) return t('skills.beginner')
+    if (level === 2) return t('skills.basic')
+    if (level === 3) return t('skills.intermediate')
+    if (level === 4) return t('skills.advanced')
+    return t('skills.expert')
   }
 
   return (
@@ -365,28 +384,28 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
         <Card className="text-center py-4">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Target className="h-5 w-5 text-accent-cyan" />
-            <span className="text-gray-400 text-sm">Средний уровень</span>
+            <span className="text-gray-400 text-sm">{t('skills.averageLevel')}</span>
           </div>
           <div className="text-3xl font-bold text-white">{getTotalAverage().toFixed(1)}</div>
-          <div className="text-xs text-gray-500">из 5.0</div>
+          <div className="text-xs text-gray-500">{t('skills.outOf')} 5.0</div>
         </Card>
         <Card className="text-center py-4">
           <div className="flex items-center justify-center gap-2 mb-2">
             <BarChart3 className="h-5 w-5 text-green-400" />
-            <span className="text-gray-400 text-sm">Заполнено</span>
+            <span className="text-gray-400 text-sm">{t('skills.filled')}</span>
           </div>
           <div className="text-3xl font-bold text-white">{getFilledSkillsCount()}</div>
-          <div className="text-xs text-gray-500">из {getTotalSkillsCount()} навыков</div>
+          <div className="text-xs text-gray-500">{t('skills.outOf')} {getTotalSkillsCount()} {t('skills.ofSkills')}</div>
         </Card>
         <Card className="text-center py-4">
           <div className="flex items-center justify-center gap-2 mb-2">
             <TrendingUp className="h-5 w-5 text-yellow-400" />
-            <span className="text-gray-400 text-sm">Прогресс</span>
+            <span className="text-gray-400 text-sm">{t('skills.progress')}</span>
           </div>
           <div className="text-3xl font-bold text-white">
             {Math.round((getFilledSkillsCount() / getTotalSkillsCount()) * 100)}%
           </div>
-          <div className="text-xs text-gray-500">заполнения</div>
+          <div className="text-xs text-gray-500">{t('skills.completion')}</div>
         </Card>
       </div>
 
@@ -395,7 +414,7 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
         {/* Radar Chart */}
         <Card>
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-white">Карта навыков</h3>
+            <h3 className="text-lg font-semibold text-white">{t('skills.skillsMap')}</h3>
           </div>
           <div className="flex justify-center">
             <canvas ref={canvasRef} className="max-w-full" />
@@ -417,7 +436,7 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
         {/* Skills List */}
         <Card className="max-h-[600px] overflow-y-auto custom-scrollbar">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-white">Детализация навыков</h3>
+            <h3 className="text-lg font-semibold text-white">{t('skills.skillsDetail')}</h3>
             {isEditing ? (
               <div className="flex gap-2">
                 <button
@@ -425,13 +444,13 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
                   disabled={isSaving}
                   className="px-4 py-2 bg-accent-cyan text-dark-bg rounded-lg text-sm font-medium hover:bg-accent-cyan/90 disabled:opacity-50"
                 >
-                  {isSaving ? 'Сохранение...' : 'Сохранить'}
+                  {isSaving ? t('skills.saving') : t('skills.save')}
                 </button>
                 <button
                   onClick={() => setIsEditing(false)}
                   className="px-4 py-2 bg-dark-surface text-gray-300 rounded-lg text-sm hover:bg-dark-card"
                 >
-                  Отмена
+                  {t('common.cancel')}
                 </button>
               </div>
             ) : (
@@ -439,7 +458,7 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
                 onClick={() => setIsEditing(true)}
                 className="px-4 py-2 bg-dark-surface text-gray-300 rounded-lg text-sm hover:bg-dark-card"
               >
-                Редактировать
+                {t('skills.edit')}
               </button>
             )}
           </div>
@@ -459,7 +478,7 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
                         className="w-4 h-4 rounded-full"
                         style={{ backgroundColor: colors[catIndex] }}
                       />
-                      <span className="text-white font-medium">{category.name}</span>
+                      <span className="text-white font-medium">{getCategoryName(category)}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2">
@@ -532,7 +551,7 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
 
       {/* Top Skills Summary */}
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Топ навыки</h3>
+        <h3 className="text-lg font-semibold text-white mb-4">{t('skills.topSkills')}</h3>
         <div className="flex flex-wrap gap-2">
           {Object.entries(skills)
             .flatMap(([category, categorySkills]) =>
@@ -560,7 +579,7 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
               Object.entries(categorySkills).filter(([, level]) => level >= 4)
             ).length === 0 && (
             <p className="text-gray-500 text-sm">
-              Добавьте навыки с уровнем 4+ чтобы увидеть топ навыки
+              {t('skills.addSkillsHint')}
             </p>
           )}
         </div>

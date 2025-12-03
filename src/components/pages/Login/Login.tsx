@@ -1,6 +1,7 @@
 import { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { LogIn, Mail, Lock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { $api, setAccessToken } from "../../../utils/axios.instance";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { OutletContext } from "../../../types";
@@ -9,6 +10,7 @@ import toast from "react-hot-toast";
 function Login() {
     const { setUser } = useOutletContext<OutletContext>();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     
     function submitHandler(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -41,11 +43,11 @@ function Login() {
                             <LogIn className="h-8 w-8 text-dark-bg" />
                         </div>
                     </div>
-                    <h2 className="text-3xl font-bold text-white">Вход в аккаунт</h2>
+                    <h2 className="text-3xl font-bold text-white">{t('auth.login')}</h2>
                     <p className="mt-2 text-sm text-gray-300">
-                        Или{' '}
+                        {t('auth.noAccount')}{' '}
                         <Link to="/registration" className="font-medium text-accent-cyan hover:text-accent-blue">
-                            создайте новый аккаунт
+                            {t('auth.registerButton')}
                         </Link>
                     </p>
                 </div>
@@ -54,7 +56,7 @@ function Login() {
                     <form onSubmit={submitHandler} className="space-y-6">
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                                Email
+                                {t('auth.email')}
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -73,7 +75,7 @@ function Login() {
 
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                                Пароль
+                                {t('auth.password')}
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -90,11 +92,11 @@ function Login() {
                             </div>
                         </div>
 
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             className="btn-primary w-full"
                         >
-                            Войти
+                            {t('auth.loginButton')}
                         </button>
                     </form>
                 </div>

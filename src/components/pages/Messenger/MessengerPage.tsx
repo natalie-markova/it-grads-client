@@ -8,8 +8,10 @@ import MessageItem from './MessageItem';
 import toast from 'react-hot-toast';
 import { socketService } from '../../../utils/socket.service';
 import Card from '../../ui/Card';
+import { useTranslation } from 'react-i18next';
 
 const MessengerPage = () => {
+  const { t } = useTranslation();
   const { chatId } = useParams<{ chatId: string }>();
   const { user } = useOutletContext<OutletContext>();
   const navigate = useNavigate();
@@ -196,7 +198,7 @@ const MessengerPage = () => {
       {/* Список чатов */}
       <div className={`w-full md:w-80 lg:w-96 border-r border-dark-card flex flex-col ${chatId ? 'hidden md:flex' : 'flex'}`}>
         <div className="h-[73px] px-4 border-b border-dark-card flex items-center">
-          <h1 className="text-2xl font-bold text-white">Сообщения</h1>
+          <h1 className="text-2xl font-bold text-white">{t('messenger.title')}</h1>
         </div>
         
         <div className="flex-1 overflow-y-auto">
@@ -207,9 +209,9 @@ const MessengerPage = () => {
           ) : chats.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
               <UserIcon className="h-16 w-16 text-gray-600 mb-4" />
-              <p className="text-gray-400 mb-2">У вас пока нет чатов</p>
+              <p className="text-gray-400 mb-2">{t('messenger.noChats')}</p>
               <p className="text-sm text-gray-500">
-                Начните общение с работодателями или соискателями
+                {t('messenger.startChatting')}
               </p>
             </div>
           ) : (
@@ -257,7 +259,7 @@ const MessengerPage = () => {
                 </h2>
                 {otherUser.role && (
                   <p className="text-sm text-gray-400">
-                    {otherUser.role === 'employer' ? 'Работодатель' : 'Соискатель'}
+                    {otherUser.role === 'employer' ? t('messenger.employer') : t('messenger.jobSeeker')}
                   </p>
                 )}
               </div>
@@ -267,7 +269,7 @@ const MessengerPage = () => {
             <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 bg-dark-surface">
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-400">Начните разговор</p>
+                  <p className="text-gray-400">{t('messenger.startConversation')}</p>
                 </div>
               ) : (
                 <>
@@ -291,7 +293,7 @@ const MessengerPage = () => {
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Напишите сообщение..."
+                  placeholder={t('messenger.typeMessage')}
                   className="flex-1 px-4 py-2 bg-dark-card border border-dark-surface rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan"
                   disabled={sending}
                 />
@@ -313,7 +315,7 @@ const MessengerPage = () => {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <UserIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">Выберите чат для начала общения</p>
+              <p className="text-gray-400">{t('messenger.selectChat')}</p>
             </div>
           </div>
         )}
@@ -326,29 +328,29 @@ const MessengerPage = () => {
           onClick={() => setDeleteConfirmChatId(null)}
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
-          <Card 
+          <Card
             className="max-w-md w-full"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             <div className="p-6">
               <h3 className="text-xl font-semibold text-white mb-4">
-                Подтверждение удаления
+                {t('messenger.deleteConfirm')}
               </h3>
               <p className="text-gray-300 mb-6">
-                Вы уверены, что хотите удалить этот чат? Это действие нельзя отменить.
+                {t('messenger.deleteConfirmText')}
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={confirmDeleteChat}
                   className="btn-primary flex-1"
                 >
-                  Удалить
+                  {t('messenger.delete')}
                 </button>
                 <button
                   onClick={() => setDeleteConfirmChatId(null)}
                   className="btn-secondary flex-1"
                 >
-                  Отмена
+                  {t('common.cancel')}
                 </button>
               </div>
             </div>

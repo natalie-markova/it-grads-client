@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import JobsList, { type Job } from '../../../components/JobsList'
 import Section from '../../ui/Section'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
@@ -10,6 +11,7 @@ import toast from 'react-hot-toast'
 const Jobs = () => {
   useScrollAnimation()
   const { user } = useOutletContext<OutletContext>()
+  const { t } = useTranslation()
   const [jobs, setJobs] = useState<Job[]>([])
   const [showRecommended, setShowRecommended] = useState(false)
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set())
@@ -157,7 +159,7 @@ const Jobs = () => {
 
   return (
     <div className="bg-dark-bg min-h-screen py-8">
-      <Section title="Вакансии" subtitle="Найдите работу мечты среди тысяч актуальных вакансий" className="bg-dark-bg py-0 scroll-animate-item">
+      <Section title={t('vacancies.title')} subtitle={t('vacancies.subtitle')} className="bg-dark-bg py-0 scroll-animate-item">
         {user && (
           <div className="mb-6 flex gap-4 items-center">
             <button
@@ -168,7 +170,7 @@ const Jobs = () => {
                   : 'bg-dark-surface text-gray-300 hover:bg-dark-card'
               }`}
             >
-              Все вакансии
+              {t('vacancies.allVacancies')}
             </button>
             <button
               onClick={() => setShowRecommended(true)}
@@ -178,7 +180,7 @@ const Jobs = () => {
                   : 'bg-dark-surface text-gray-300 hover:bg-dark-card'
               }`}
             >
-              Рекомендованные для вас
+              {t('vacancies.recommended')}
             </button>
           </div>
         )}
