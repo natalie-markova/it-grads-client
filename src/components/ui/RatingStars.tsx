@@ -48,7 +48,7 @@ const RatingStars = ({ isActive }: RatingStarsProps) => {
       const starSpacing = starSize + 15
       const totalWidth = starSpacing * 5 - 15
       const startX = (canvas.width - totalWidth) / 2
-      const startY = canvas.height / 2
+      const startY = canvas.height * 0.75 // Смещаем звезды ближе к нижнему краю
 
       // Рисуем 5 звезд
       const rating = 4.5
