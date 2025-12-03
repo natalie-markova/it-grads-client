@@ -196,7 +196,7 @@ const Home = () => {
                   to="/registration"
                   className="group relative px-8 py-4 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 inline-flex items-center shadow-lg shadow-accent-cyan/25 hover:shadow-accent-cyan/40"
                 >
-                  {t('home.startFree')}
+                  Начать
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
