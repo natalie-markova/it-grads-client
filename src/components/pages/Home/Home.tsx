@@ -148,17 +148,38 @@ const Home = () => {
           <div className="text-center max-w-4xl mx-auto scroll-scale">
             {/* Main Headline */}
             <h1 className="text-[40px] md:text-[56px] lg:text-[64px] font-bold leading-tight mb-6 text-white">
-              {t('home.heroTitle1')}{' '}
-              <span className="relative inline-block">
-                <span className="relative z-10">IT-Grads</span>
-                <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-cyan/30 -rotate-1"></span>
-              </span>{' '}
+              {user?.role === 'employer' ? (
+                <>
+                  Найдите талантливых{' '}
+                  <span className="relative inline-block">
+                    <span className="relative z-10">IT-специалистов</span>
+                    <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-blue/30 -rotate-1"></span>
+                  </span>
+                </>
+              ) : (
+                <>
+                  {t('home.heroTitle1')}{' '}
+                  <span className="relative inline-block">
+                    <span className="relative z-10">IT-Grads</span>
+                    <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-cyan/30 -rotate-1"></span>
+                  </span>{' '}
+                </>
+              )}
             </h1>
 
             {/* Subtitle */}
             <p className="text-lg md:text-xl text-gray-300 mb-10 leading-relaxed max-w-3xl mx-auto">
-              IT-Grads объединяет выпускников IT-школ и работодателей.<br/>
-              AI-симулятор собеседований, умный подбор вакансий и прозрачные рейтинги компаний.
+              {user?.role === 'employer' ? (
+                <>
+                  Платформа для поиска выпускников IT-школ.<br/>
+                  Верифицированные кандидаты, интерактивная карта и умные фильтры поиска.
+                </>
+              ) : (
+                <>
+                  IT-Grads объединяет выпускников IT-школ и работодателей.<br/>
+                  AI-симулятор собеседований, умный подбор вакансий и прозрачные рейтинги компаний.
+                </>
+              )}
             </p>
 
             {/* Stats for logged users */}
@@ -228,17 +249,18 @@ const Home = () => {
       </section>
 
       {/* Для студентов - Cards Grid */}
-      <Section className="bg-dark-surface">
-        <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
-          <div className="text-center mb-16 scroll-animate-item">
-            <h2 className="text-[36px] md:text-[44px] font-bold text-white mb-4">
-              {t('home.graduatesTitle')} <span className="text-accent-cyan">{t('home.graduatesTitleHighlight')}</span>
-            </h2>
-            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              {t('home.graduatesSubtitle')}
-            </p>
-          </div>
+      {user?.role !== 'employer' && (
+        <Section className="bg-dark-surface">
+          <div className="max-w-7xl mx-auto">
+            {/* Section Header */}
+            <div className="text-center mb-16 scroll-animate-item">
+              <h2 className="text-[36px] md:text-[44px] font-bold text-white mb-4">
+                {t('home.graduatesTitle')} <span className="text-accent-cyan">{t('home.graduatesTitleHighlight')}</span>
+              </h2>
+              <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+                {t('home.graduatesSubtitle')}
+              </p>
+            </div>
 
           {/* Feature Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -251,7 +273,7 @@ const Home = () => {
                 onMouseEnter={() => setHoveredCard(index)}
                 onMouseLeave={() => setHoveredCard(null)}
               >
-                <Card className="h-full p-8 bg-dark-bg hover:bg-dark-card border-dark-card hover:border-accent-cyan/50 transition-all duration-300 relative overflow-hidden">
+                <Card className="h-full p-8 bg-dark-card/50 hover:bg-dark-card border-2 border-dark-card hover:border-accent-cyan/50 transition-all duration-300 relative overflow-hidden backdrop-blur-sm">
                   {/* Matrix Rain Animation для первой карточки (index === 0) */}
                   {index === 0 && <MatrixRain isActive={hoveredCard === 0} />}
 
@@ -283,19 +305,20 @@ const Home = () => {
             ))}
           </div>
 
-          {!user && (
-            <div className="text-center mt-12 scroll-animate-item">
-              <Link to="/registration" className="group inline-flex items-center px-8 py-4 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-accent-cyan/25 hover:shadow-accent-cyan/40">
-                {t('home.createGraduateProfile')}
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          )}
-        </div>
-      </Section>
+            {!user && (
+              <div className="text-center mt-12 scroll-animate-item">
+                <Link to="/registration" className="group inline-flex items-center px-8 py-4 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-accent-cyan/25 hover:shadow-accent-cyan/40">
+                  {t('home.createGraduateProfile')}
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+            )}
+          </div>
+        </Section>
+      )}
 
       {/* Для работодателей - Cards Grid */}
-      <Section className="bg-dark-bg">
+      <Section className={user?.role === 'employer' ? "bg-dark-surface" : "bg-dark-bg"}>
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-16 scroll-animate-item">
@@ -318,7 +341,7 @@ const Home = () => {
                 onMouseEnter={() => setHoveredEmployerCard(index)}
                 onMouseLeave={() => setHoveredEmployerCard(null)}
               >
-                <Card className="h-full p-8 bg-dark-surface hover:bg-dark-card border-dark-card hover:border-accent-blue/50 transition-all duration-300 relative overflow-hidden">
+                <Card className="h-full p-8 bg-dark-card/50 hover:bg-dark-card border-2 border-dark-card hover:border-accent-blue/50 transition-all duration-300 relative overflow-hidden backdrop-blur-sm">
                   {/* Radar Scan Animation для первой карточки (index === 0) */}
                   {index === 0 && <RadarScan isActive={hoveredEmployerCard === 0} />}
 
@@ -362,55 +385,57 @@ const Home = () => {
       </Section>
 
       {/* Радар навыков - Showcase */}
-      <Section className="bg-dark-surface">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Content */}
-            <div className="scroll-fade-left">
-              <h2 className="text-[32px] md:text-[40px] font-bold text-white mb-4">
-                {t('home.skillsRadarTitle')} <span className="text-accent-cyan">{t('home.skillsRadarTitleHighlight')}</span>
-              </h2>
-              <p className="text-lg text-gray-300 mb-6 leading-relaxed">
-                {t('home.skillsRadarDesc')}
-              </p>
+      {user?.role !== 'employer' && (
+        <Section className="bg-dark-surface">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              {/* Content */}
+              <div className="scroll-fade-left">
+                <h2 className="text-[32px] md:text-[40px] font-bold text-white mb-4">
+                  {t('home.skillsRadarTitle')} <span className="text-accent-cyan">{t('home.skillsRadarTitleHighlight')}</span>
+                </h2>
+                <p className="text-lg text-gray-300 mb-6 leading-relaxed">
+                  {t('home.skillsRadarDesc')}
+                </p>
 
-              <div className="space-y-4 mb-8">
-                {[
-                  t('home.skillsRadarFeature1'),
-                  t('home.skillsRadarFeature2'),
-                  t('home.skillsRadarFeature3'),
-                  t('home.skillsRadarFeature4')
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent-cyan/20 border border-accent-cyan flex items-center justify-center">
-                      <CheckCircle className="h-4 w-4 text-accent-cyan" />
+                <div className="space-y-4 mb-8">
+                  {[
+                    t('home.skillsRadarFeature1'),
+                    t('home.skillsRadarFeature2'),
+                    t('home.skillsRadarFeature3'),
+                    t('home.skillsRadarFeature4')
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent-cyan/20 border border-accent-cyan flex items-center justify-center">
+                        <CheckCircle className="h-4 w-4 text-accent-cyan" />
+                      </div>
+                      <span className="text-gray-300">{item}</span>
                     </div>
-                    <span className="text-gray-300">{item}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
+
+                <Link to="/skills" className="group inline-flex items-center px-6 py-3 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300">
+                  {t('home.createYourRadar')}
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
               </div>
 
-              <Link to="/skills" className="group inline-flex items-center px-6 py-3 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300">
-                {t('home.createYourRadar')}
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              {/* Visual */}
+              <Link to="/skills" className="block scroll-fade-right">
+                <div className="relative rounded-2xl bg-gradient-to-br from-dark-bg to-dark-card p-12 border border-dark-card hover:border-accent-cyan/50 transition-all duration-500 overflow-hidden group">
+                  {/* Glowing effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-accent-cyan/5 to-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                  {/* Skills Radar Animation */}
+                  <div className="relative h-80">
+                    <SkillsRadar isActive={true} />
+                  </div>
+                </div>
               </Link>
             </div>
-
-            {/* Visual */}
-            <Link to="/skills" className="block scroll-fade-right">
-              <div className="relative rounded-2xl bg-gradient-to-br from-dark-bg to-dark-card p-12 border border-dark-card hover:border-accent-cyan/50 transition-all duration-500 overflow-hidden group">
-                {/* Glowing effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-accent-cyan/5 to-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-                {/* Skills Radar Animation */}
-                <div className="relative h-80">
-                  <SkillsRadar isActive={true} />
-                </div>
-              </div>
-            </Link>
           </div>
-        </div>
-      </Section>
+        </Section>
+      )}
 
       {/* Final CTA */}
       {!user && (
