@@ -150,18 +150,15 @@ const Home = () => {
             <h1 className="text-[40px] md:text-[56px] lg:text-[64px] font-bold leading-tight mb-6 text-white">
               {t('home.heroTitle1')}{' '}
               <span className="relative inline-block">
-                <span className="relative z-10">{t('home.heroTitle2')}</span>
+                <span className="relative z-10">IT-Grads</span>
                 <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-cyan/30 -rotate-1"></span>
               </span>{' '}
-              <span className="relative inline-block">
-                <span className="relative z-10">{t('home.heroTitle3')}</span>
-                <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-blue/30 rotate-1"></span>
-              </span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-lg md:text-xl text-gray-300 mb-10 leading-relaxed max-w-3xl mx-auto">
-              {t('home.heroSubtitle')}
+              IT-Grads объединяет выпускников IT-школ и работодателей.<br/>
+              AI-симулятор собеседований, умный подбор вакансий и прозрачные рейтинги компаний.
             </p>
 
             {/* Stats for logged users */}
@@ -425,10 +422,6 @@ const Home = () => {
           </div>
 
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-cyan/10 border border-accent-cyan/30 rounded-full text-accent-cyan text-sm font-medium mb-6">
-              <Sparkles className="h-4 w-4" />
-              {t('home.joinNow')}
-            </div>
             <h2 className="text-[32px] md:text-[40px] font-bold mb-6 text-white">
               {t('home.readyToStart')}
             </h2>
@@ -436,7 +429,7 @@ const Home = () => {
               {t('home.joinThousands')}
             </p>
             <Link to="/registration" className="group inline-flex items-center px-10 py-5 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 shadow-xl shadow-accent-cyan/25 hover:shadow-accent-cyan/40 text-lg">
-              {t('home.createAccountFree')}
+              Создать аккаунт 
               <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
