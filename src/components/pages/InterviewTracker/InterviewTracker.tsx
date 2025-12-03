@@ -98,48 +98,8 @@ const InterviewTracker = () => {
       setInterviews(response.data)
     } catch (error) {
       console.error('Error loading interviews:', error)
-      // Загрузим демо-данные для отображения
-      setInterviews([
-        {
-          id: 1,
-          company: 'Яндекс',
-          position: 'Frontend Developer',
-          date: new Date().toISOString().split('T')[0],
-          time: '14:00',
-          type: 'online',
-          status: 'scheduled',
-          meetingLink: 'https://meet.google.com/abc-defg-hij',
-          contactPerson: 'Мария Петрова',
-          notes: 'Подготовить портфолио, изучить React 18',
-          reminder: true,
-        },
-        {
-          id: 2,
-          company: 'Сбер',
-          position: 'Full Stack Developer',
-          date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          time: '11:00',
-          type: 'offline',
-          status: 'scheduled',
-          location: 'ул. Вавилова, 19, Москва',
-          contactPerson: 'Иван Смирнов',
-          contactPhone: '+7 (999) 123-45-67',
-          notes: 'Взять паспорт для пропуска',
-          reminder: true,
-        },
-        {
-          id: 3,
-          company: 'VK',
-          position: 'React Developer',
-          date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          time: '16:00',
-          type: 'online',
-          status: 'completed',
-          result: 'passed',
-          feedback: 'Хорошее знание React и TypeScript. Пригласят на финальное собеседование.',
-          reminder: false,
-        },
-      ])
+      toast.error('Ошибка при загрузке собеседований')
+      setInterviews([])
     }
   }
 
@@ -156,26 +116,10 @@ const InterviewTracker = () => {
       }
       loadInterviews()
       closeModal()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving interview:', error)
-      // Локальное добавление для демо
-      if (editingInterview) {
-        setInterviews(prev => prev.map(i =>
-          i.id === editingInterview.id
-            ? { ...i, ...formData, status: i.status }
-            : i
-        ))
-        toast.success('Собеседование обновлено')
-      } else {
-        const newInterview: Interview = {
-          id: Date.now(),
-          ...formData,
-          status: 'scheduled',
-        }
-        setInterviews(prev => [...prev, newInterview])
-        toast.success('Собеседование добавлено')
-      }
-      closeModal()
+      const errorMessage = error.response?.data?.message || 'Ошибка при сохранении собеседования'
+      toast.error(errorMessage)
     }
   }
 
@@ -186,10 +130,10 @@ const InterviewTracker = () => {
       await $api.delete(`/interview-tracker/${id}`)
       toast.success('Собеседование удалено')
       loadInterviews()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting interview:', error)
-      setInterviews(prev => prev.filter(i => i.id !== id))
-      toast.success('Собеседование удалено')
+      const errorMessage = error.response?.data?.message || 'Ошибка при удалении собеседования'
+      toast.error(errorMessage)
     }
   }
 
@@ -197,20 +141,24 @@ const InterviewTracker = () => {
     try {
       await $api.patch(`/interview-tracker/${id}/status`, { status })
       loadInterviews()
-    } catch (error) {
-      setInterviews(prev => prev.map(i => i.id === id ? { ...i, status } : i))
+      toast.success('Статус обновлён')
+    } catch (error: any) {
+      console.error('Error updating status:', error)
+      const errorMessage = error.response?.data?.message || 'Ошибка при обновлении статуса'
+      toast.error(errorMessage)
     }
-    toast.success('Статус обновлён')
   }
 
   const handleResultChange = async (id: number, result: Interview['result']) => {
     try {
       await $api.patch(`/interview-tracker/${id}/result`, { result })
       loadInterviews()
-    } catch (error) {
-      setInterviews(prev => prev.map(i => i.id === id ? { ...i, result } : i))
+      toast.success('Результат сохранён')
+    } catch (error: any) {
+      console.error('Error updating result:', error)
+      const errorMessage = error.response?.data?.message || 'Ошибка при обновлении результата'
+      toast.error(errorMessage)
     }
-    toast.success('Результат сохранён')
   }
 
   const openModal = (interview?: Interview) => {
@@ -403,11 +351,11 @@ const InterviewTracker = () => {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
           {/* Calendar / List View */}
           <div className="lg:col-span-2">
             {viewMode === 'calendar' ? (
-              <Card>
+              <Card className="h-full">
                 {/* Calendar Header */}
                 <div className="flex justify-between items-center mb-6">
                   <button
@@ -503,73 +451,77 @@ const InterviewTracker = () => {
           </div>
 
           {/* Sidebar - Upcoming Interviews */}
-          <div className="space-y-6">
-            <Card>
+          <div className="space-y-6 flex flex-col" style={{ height: '100%' }}>
+            <Card className="flex-1 flex flex-col min-h-0">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Bell className="h-5 w-5 text-accent-cyan" />
                 Ближайшие собеседования
               </h3>
-              {upcomingInterviews.length === 0 ? (
-                <p className="text-gray-400 text-sm">Нет запланированных собеседований</p>
-              ) : (
-                <div className="space-y-3">
-                  {upcomingInterviews.slice(0, 5).map(interview => {
-                    const TypeIcon = INTERVIEW_TYPES[interview.type].icon
-                    const daysUntil = Math.ceil(
-                      (new Date(interview.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-                    )
-                    return (
-                      <div
-                        key={interview.id}
-                        onClick={() => openModal(interview)}
-                        className="p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-medium text-white">{interview.company}</div>
-                            <div className="text-sm text-gray-400">{interview.position}</div>
+              <div className="flex-1 overflow-y-auto">
+                {upcomingInterviews.length === 0 ? (
+                  <p className="text-gray-400 text-sm">Нет запланированных собеседований</p>
+                ) : (
+                  <div className="space-y-3">
+                    {upcomingInterviews.slice(0, 5).map(interview => {
+                      const TypeIcon = INTERVIEW_TYPES[interview.type].icon
+                      const daysUntil = Math.ceil(
+                        (new Date(interview.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                      )
+                      return (
+                        <div
+                          key={interview.id}
+                          onClick={() => openModal(interview)}
+                          className="p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium text-white">{interview.company}</div>
+                              <div className="text-sm text-gray-400">{interview.position}</div>
+                            </div>
+                            <TypeIcon className={`h-5 w-5 ${INTERVIEW_TYPES[interview.type].color}`} />
                           </div>
-                          <TypeIcon className={`h-5 w-5 ${INTERVIEW_TYPES[interview.type].color}`} />
+                          <div className="flex items-center gap-2 mt-2 text-sm">
+                            <Clock className="h-4 w-4 text-gray-400" />
+                            <span className="text-gray-300">{interview.time}</span>
+                            <span className={`ml-auto px-2 py-0.5 rounded text-xs ${
+                              daysUntil === 0 ? 'bg-red-500/20 text-red-400' :
+                              daysUntil === 1 ? 'bg-yellow-500/20 text-yellow-400' :
+                              'bg-blue-500/20 text-blue-400'
+                            }`}>
+                              {daysUntil === 0 ? 'Сегодня' : daysUntil === 1 ? 'Завтра' : `Через ${daysUntil} дн.`}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-2 text-sm">
-                          <Clock className="h-4 w-4 text-gray-400" />
-                          <span className="text-gray-300">{interview.time}</span>
-                          <span className={`ml-auto px-2 py-0.5 rounded text-xs ${
-                            daysUntil === 0 ? 'bg-red-500/20 text-red-400' :
-                            daysUntil === 1 ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-blue-500/20 text-blue-400'
-                          }`}>
-                            {daysUntil === 0 ? 'Сегодня' : daysUntil === 1 ? 'Завтра' : `Через ${daysUntil} дн.`}
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </Card>
 
             {/* Quick Tips */}
-            <Card>
+            <Card className="flex-1 flex flex-col min-h-0">
               <h3 className="text-lg font-semibold text-white mb-4">Советы</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  Подготовьте вопросы к компании заранее
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  Изучите проекты и технологии компании
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  Проверьте связь за 15 минут до онлайн-собеседования
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  Записывайте обратную связь после каждого интервью
-                </li>
-              </ul>
+              <div className="flex-1 overflow-y-auto">
+                <ul className="space-y-2 text-sm text-gray-400">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
+                    Подготовьте вопросы к компании заранее
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
+                    Изучите проекты и технологии компании
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
+                    Проверьте связь за 15 минут до онлайн-собеседования
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
+                    Записывайте обратную связь после каждого интервью
+                  </li>
+                </ul>
+              </div>
             </Card>
           </div>
         </div>

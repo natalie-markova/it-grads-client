@@ -264,7 +264,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
     switch (currentStep) {
       case 0: // Тип занятости и формат работы
         return (
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 pl-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Тип занятости</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -315,7 +315,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
       case 1: // Опыт работы
         return (
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 pl-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Опыт работы</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -346,7 +346,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
       case 2: // Регион/Город и знание языка
         return (
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 pl-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Регион/Город</h3>
               <input
@@ -388,7 +388,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
       case 3: // Диапазон зарплаты
         return (
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 pl-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Диапазон зарплаты</h3>
               <input
@@ -419,7 +419,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
       case 4: // Отрасль бизнеса работодателя
         return (
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 pl-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Отрасль бизнеса работодателя</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -450,7 +450,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
       case 5: // Языки программирования
         return (
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 pl-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Языки программирования</h3>
               
@@ -480,7 +480,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
       case 6: // Технологическое направление
         return (
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 pl-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Технологическое направление</h3>
               
@@ -510,7 +510,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
 
       case 7: // Дополнительные навыки
         return (
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 pl-2">
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Дополнительные навыки</h3>
               
@@ -704,7 +704,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pl-2">
           {renderStepContent()}
         </div>
 

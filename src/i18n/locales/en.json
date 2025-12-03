@@ -78,7 +78,6 @@
     "skillsRadarTitleHighlight": "skills radar",
     "skillsRadarDesc": "Visualize your skills like never before. Our interactive map shows connections between skills and automatically analyzes your GitHub projects.",
     "skillsRadarFeature1": "Relevant vacancies by skills",
-    "skillsRadarFeature2": "Automatic GitHub analysis",
     "skillsRadarFeature3": "Development recommendations",
     "skillsRadarFeature4": "Technology connections",
     "createYourRadar": "Create your radar",
@@ -554,7 +553,7 @@
     "contacts": "Contacts",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
-    "copyright": "© 2024 IT-Grads. All rights reserved."
+    "copyright": "© 2025 IT-Grads. All rights reserved."
   },
   "errors": {
     "required": "Required field",

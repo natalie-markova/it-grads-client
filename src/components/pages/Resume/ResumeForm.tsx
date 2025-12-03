@@ -67,13 +67,19 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
     e.preventDefault();
 
     try {
-      const skillsArray = formData.skills.split(',').map(s => s.trim()).filter(s => s);
+      const skillsArray = formData.skills ? formData.skills.split(',').map(s => s.trim()).filter(s => s) : [];
 
       const payload = {
-        ...formData,
-        skillsArray,
+        title: formData.title.trim() || null,
+        description: formData.description.trim() || null,
         skills: skillsArray.length > 0 ? JSON.stringify(skillsArray) : null,
+        skillsArray: skillsArray.length > 0 ? skillsArray : [],
+        experience: formData.experience.trim() || null,
+        education: formData.education.trim() || null,
+        portfolio: formData.portfolio.trim() || null,
         desiredSalary: formData.desiredSalary ? parseInt(formData.desiredSalary) : null,
+        location: formData.location.trim() || null,
+        level: formData.level || 'junior',
       };
 
       if (isEditing && id) {
@@ -164,7 +170,7 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
               type="number"
               value={formData.desiredSalary}
               onChange={(e) => setFormData({ ...formData, desiredSalary: e.target.value })}
-              className="input-field w-full"
+              className="input-field w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="100000"
             />
           </div>

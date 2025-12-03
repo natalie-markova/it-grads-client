@@ -14,7 +14,7 @@ import CheckMarks from '../../../components/ui/CheckMarks'
 import FilterFunnel from '../../../components/ui/FilterFunnel'
 import SkillsRadar from '../../../components/ui/SkillsRadar'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
-import { OutletContext } from '../../../types'
+import { type OutletContext } from '../../../types'
 import { $api } from '../../../utils/axios.instance'
 
 const Home = () => {
@@ -187,24 +187,24 @@ const Home = () => {
               <div className="flex flex-col sm:flex-row gap-8 justify-center items-center mb-10">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-accent-cyan/20 rounded-xl">
-                    <Users className="h-6 w-6 text-accent-cyan" />
+                    <Users className="h-6 w-6 text-accent-cyan animate-slow-pulse" />
                   </div>
                   <div className="text-left">
-                    <div className="text-2xl font-bold text-accent-cyan">
+                    <div className="text-2xl font-bold text-accent-cyan animate-slow-pulse">
                       <AnimatedCounter value={totalUsers} />
                     </div>
-                    <div className="text-sm text-gray-400">{t('common.users')}</div>
+                    <div className="text-sm text-gray-400 animate-slow-pulse">{t('common.users')}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-green-500/20 rounded-xl">
-                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                    <div className="w-3 h-3 bg-green-400 rounded-full animate-slow-pulse"></div>
                   </div>
                   <div className="text-left">
-                    <div className="text-2xl font-bold text-green-400">
+                    <div className="text-2xl font-bold text-green-400 animate-slow-pulse">
                       <AnimatedCounter value={onlineUsers} />
                     </div>
-                    <div className="text-sm text-gray-400">{t('common.onlineNow')}</div>
+                    <div className="text-sm text-gray-400 animate-slow-pulse">{t('common.onlineNow')}</div>
                   </div>
                 </div>
               </div>
@@ -401,7 +401,6 @@ const Home = () => {
                 <div className="space-y-4 mb-8">
                   {[
                     t('home.skillsRadarFeature1'),
-                    t('home.skillsRadarFeature2'),
                     t('home.skillsRadarFeature3'),
                     t('home.skillsRadarFeature4')
                   ].map((item, index) => (

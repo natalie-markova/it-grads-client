@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
-import { UserPlus, Mail, Lock, User } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { $api, setAccessToken } from "../../../utils/axios.instance";
 import { useNavigate, useOutletContext } from "react-router-dom";
@@ -14,6 +14,11 @@ function Registration() {
     const [role, setRole] = useState<'graduate' | 'employer'>('graduate');
     const [passwordError, setPasswordError] = useState<string>('');
     const [emailError, setEmailError] = useState<string>('');
+    const [confirmPasswordError, setConfirmPasswordError] = useState<string>('');
+    const [showPassword, setShowPassword] = useState<boolean>(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+    const [passwordTouched, setPasswordTouched] = useState<boolean>(false);
+    const [passwordValue, setPasswordValue] = useState<string>('');
     
     function validateEmail(email: string): boolean {
         // Убираем пробелы в начале и конце
@@ -21,7 +26,7 @@ function Registration() {
         
         // Проверка на пустой email
         if (!trimmedEmail) {
-            setEmailError('Email не может быть пустым');
+            setEmailError('');
             return false;
         }
         
@@ -49,7 +54,7 @@ function Registration() {
         
         // Проверка локальной части (до @)
         if (!localPart || localPart.length === 0) {
-            setEmailError('Введите адрес до символа @ (например: имя@домен.com)');
+            setEmailError('Введите адрес домена почтовой платформы (например, gmail)');
             return false;
         }
         
@@ -67,13 +72,13 @@ function Registration() {
         
         // Проверка доменной части (после @)
         if (!domainPart || domainPart.length === 0) {
-            setEmailError('Введите домен после символа @ (например: имя@домен.com)');
+            setEmailError('Введите адрес домена почтовой платформы (например, gmail)');
             return false;
         }
         
         // Проверка на точку в доменной части
         if (!domainPart.includes('.')) {
-            setEmailError('Домен должен содержать точку (например: домен.com)');
+            setEmailError('Введите . и доменную зону (например, .com)');
             return false;
         }
         
@@ -138,16 +143,31 @@ function Registration() {
         setPasswordError('');
         return true;
     }
+
+    const isPasswordValid = (password: string): boolean => {
+        return password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password);
+    };
+    
+    function validatePasswordMatch(password: string, confirmPassword: string): boolean {
+        if (confirmPassword && password !== confirmPassword) {
+            setConfirmPasswordError('Пароли не совпадают');
+            return false;
+        }
+        setConfirmPasswordError('');
+        return true;
+    }
     
     function submitHandler(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
+        const confirmPassword = formData.get('confirmPassword') as string;
         
         // Сбрасываем предыдущие ошибки
         setEmailError('');
         setPasswordError('');
+        setConfirmPasswordError('');
         
         // Валидация email
         if (!validateEmail(email)) {
@@ -156,6 +176,11 @@ function Registration() {
         
         // Валидация пароля
         if (!validatePassword(password)) {
+            return;
+        }
+        
+        // Валидация совпадения паролей
+        if (!validatePasswordMatch(password, confirmPassword)) {
             return;
         }
         
@@ -299,30 +324,93 @@ function Registration() {
                                     <Lock className="h-5 w-5 text-gray-500" />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     id="password"
                                     name="password"
                                     required
-                                    className={`input-field pl-10 ${passwordError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                                    className={`input-field pl-10 pr-10 ${passwordError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                                     placeholder="••••••••"
+                                    onFocus={() => setPasswordTouched(true)}
                                     onChange={(e) => {
-                                        if (e.target.value) {
-                                            validatePassword(e.target.value);
+                                        const password = e.target.value;
+                                        setPasswordValue(password);
+                                        setPasswordTouched(true);
+                                        if (password) {
+                                            validatePassword(password);
+                                            // Проверяем совпадение с подтверждением, если оно уже введено
+                                            const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement)?.value || '';
+                                            if (confirmPassword) {
+                                                validatePasswordMatch(password, confirmPassword);
+                                            }
                                         } else {
                                             setPasswordError('');
                                         }
                                     }}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" />
+                                    )}
+                                </button>
                             </div>
-                            <div className="mt-2">
-                                <p className="text-sm text-red-500 mb-2">
-                                    Для обеспечения безопасности, ваш пароль должен соответствовать следующим требованиям:
-                                </p>
-                                <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
-                                    <li>не менее 8 символов;</li>
-                                    <li>включает минимум 1 заглавную и 1 строчную букву (A-Z, a-z):</li>
-                                </ul>
+                            {passwordTouched && !isPasswordValid(passwordValue) && (
+                                <div className="mt-2">
+                                    <p className="text-sm text-red-500 mb-2">
+                                        Для обеспечения безопасности, ваш пароль должен соответствовать следующим требованиям:
+                                    </p>
+                                    <ul className="text-sm text-red-500 space-y-1 list-disc list-inside">
+                                        <li>не менее 8 символов;</li>
+                                        <li>включает минимум 1 заглавную и 1 строчную букву (A-Z, a-z):</li>
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                                Подтверждение пароля
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-gray-500" />
+                                </div>
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    required
+                                    className={`input-field pl-10 pr-10 ${confirmPasswordError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                                    placeholder="••••••••"
+                                    onChange={(e) => {
+                                        const password = (document.getElementById('password') as HTMLInputElement)?.value || '';
+                                        if (e.target.value) {
+                                            validatePasswordMatch(password, e.target.value);
+                                        } else {
+                                            setConfirmPasswordError('');
+                                        }
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                >
+                                    {showConfirmPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" />
+                                    )}
+                                </button>
                             </div>
+                            {confirmPasswordError && (
+                                <p className="mt-1 text-sm text-red-500">{confirmPasswordError}</p>
+                            )}
                         </div>
 
                         <div>
