@@ -1,9 +1,17 @@
 import { Link, useOutletContext } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ArrowRight, Users, Briefcase, Code, MessageCircle, TrendingUp } from 'lucide-react'
+import { ArrowRight, Users, MessageCircle, TrendingUp, GraduationCap, Building2, MapPin, Search, Star, Target, Sparkles, CheckCircle } from 'lucide-react'
 import Section from '../../../components/ui/Section'
-import FeatureCard from '../../../components/ui/FeatureCard'
 import Card from '../../../components/ui/Card'
+import MatrixRain from '../../../components/ui/MatrixRain'
+import CareerGraph from '../../../components/ui/CareerGraph'
+import AIScanner from '../../../components/ui/AIScanner'
+import RatingStars from '../../../components/ui/RatingStars'
+import RadarScan from '../../../components/ui/RadarScan'
+import TowerBuilding from '../../../components/ui/TowerBuilding'
+import CheckMarks from '../../../components/ui/CheckMarks'
+import FilterFunnel from '../../../components/ui/FilterFunnel'
+import SkillsRadar from '../../../components/ui/SkillsRadar'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
 import { OutletContext } from '../../../types'
 import { $api } from '../../../utils/axios.instance'
@@ -12,23 +20,21 @@ const Home = () => {
   const { user } = useOutletContext<OutletContext>()
   const [totalUsers, setTotalUsers] = useState(0)
   const [onlineUsers, setOnlineUsers] = useState(0)
-  
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null)
+  const [hoveredEmployerCard, setHoveredEmployerCard] = useState<number | null>(null)
+
   useScrollAnimation()
 
   // Загрузка статистики пользователей
   useEffect(() => {
     const loadUserStats = async () => {
       try {
-        // Получаем количество пользователей из API
         const response = await $api.get('/user/count')
         const count = response.data.count || 0
-        // Умножаем на 10
         setTotalUsers(count * 10)
-        // Для онлайн пользователей используем случайное число от 10% до 30% от общего
         setOnlineUsers(Math.floor((count * 10) * (0.1 + Math.random() * 0.2)))
       } catch (error) {
         console.error('Error loading user stats:', error)
-        // Fallback значения
         setTotalUsers(1000)
         setOnlineUsers(150)
       }
@@ -36,7 +42,6 @@ const Home = () => {
 
     if (user) {
       loadUserStats()
-      // Обновляем каждые 30 секунд
       const interval = setInterval(loadUserStats, 30000)
       return () => clearInterval(interval)
     }
@@ -53,7 +58,7 @@ const Home = () => {
       const animate = (currentTime: number) => {
         if (!startTime) startTime = currentTime
         const progress = Math.min((currentTime - startTime) / duration, 1)
-        
+
         const currentValue = Math.floor(progress * value)
         setDisplayValue(currentValue)
 
@@ -70,187 +75,338 @@ const Home = () => {
 
     return <span>{displayValue.toLocaleString('ru-RU')}</span>
   }
-  const topFeatures = [
+
+  // Преимущества для студентов
+  const graduateFeatures = [
     {
-      icon: <Code className="h-8 w-8" />,
-      title: 'Радар навыков',
-      description: 'Визуализируйте свои умения и демонстрируйте портфолио.',
-      link: '/skills',
-    },
-    {
-      icon: <MessageCircle className="h-8 w-8" />,
-      title: 'Подготовка к Собеседованию',
-      description: 'Симулятор для отработки навыков прохождения интервью.',
+      icon: <MessageCircle className="h-6 w-6" />,
+      title: 'Подготовка к собеседованиям с ИИ',
+      description: 'AI-симулятор с адаптивными вопросами, аудио-интервью и практические квизы.',
       link: '/interview',
     },
     {
-      icon: <Briefcase className="h-8 w-8" />,
-      title: 'Вакансии',
-      description: 'Найдите работу мечты среди тысяч актуальных вакансий.',
+      icon: <Target className="h-6 w-6" />,
+      title: 'Умный поиск работы',
+      description: 'AI подбирает вакансии под профиль с анализом соответствия в процентах.',
       link: '/jobs',
+    },
+    {
+      icon: <TrendingUp className="h-6 w-6" />,
+      title: 'Карьерные треки',
+      description: 'Интерактивные roadmap по специальностям с интеграцией вакансий.',
+      link: '/roadmap',
+    },
+    {
+      icon: <Star className="h-6 w-6" />,
+      title: 'Прозрачность работодателей',
+      description: 'Анонимные отзывы о компаниях и рейтинги работодателей.',
+      link: '/companies',
+    },
+  ]
+
+  // Преимущества для работодателей
+  const employerFeatures = [
+    {
+      icon: <MapPin className="h-6 w-6" />,
+      title: 'Географическая карта кандидатов',
+      description: 'Уникальная карта с кандидатами по городам России и статистика.',
+      link: '/candidates/map',
+    },
+    {
+      icon: <Search className="h-6 w-6" />,
+      title: 'Умный поиск талантов',
+      description: 'Расширенные фильтры с AND/OR логикой по навыкам и зарплатам.',
+      link: '/candidates',
+    },
+    {
+      icon: <GraduationCap className="h-6 w-6" />,
+      title: 'Проверенные кандидаты',
+      description: 'Радар навыков, GitHub-портфолио с автоанализом проектов.',
+      link: '/candidates',
+    },
+    {
+      icon: <Building2 className="h-6 w-6" />,
+      title: 'Репутация компании',
+      description: 'Система отзывов с возможностью отвечать и строить HR-бренд.',
+      link: '/profile/employer',
     },
   ]
 
   return (
-    <div className="bg-dark-bg">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center scroll-scale">
-            <h1 className="text-[32px] md:text-[36px] font-bold mb-6 text-white">
-              IT-Grads: Ваш Путь к Успеху в IT
+    <div className="bg-dark-bg overflow-hidden">
+      {/* Massive Hero Section */}
+      <section className="relative min-h-[85vh] flex items-center bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg py-20 md:py-32">
+        {/* Декоративные элементы */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 right-10 w-72 h-72 bg-accent-cyan/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 left-10 w-96 h-96 bg-accent-blue/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center max-w-4xl mx-auto scroll-scale">
+            {/* Main Headline */}
+            <h1 className="text-[40px] md:text-[56px] lg:text-[64px] font-bold leading-tight mb-6 text-white">
+              Найдите работу мечты с{' '}
+              <span className="relative inline-block">
+                <span className="relative z-10">искусственным</span>
+                <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-cyan/30 -rotate-1"></span>
+              </span>{' '}
+              <span className="relative inline-block">
+                <span className="relative z-10">интеллектом</span>
+                <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-blue/30 rotate-1"></span>
+              </span>
             </h1>
-            <p className="text-base text-[#b0b0b0] mb-8 max-w-3xl mx-auto">
-              Мы создаем платформу, которая поможет выпускникам IT-школ и молодым специалистам 
-              найти работу мечты и пройти собеседования с уверенностью.
+
+            {/* Subtitle */}
+            <p className="text-lg md:text-xl text-gray-300 mb-10 leading-relaxed max-w-3xl mx-auto">
+              IT-Grads объединяет выпускников IT-школ и работодателей.
+              AI-симулятор собеседований, умный подбор вакансий и прозрачные рейтинги компаний.
             </p>
+
+            {/* Stats for logged users */}
             {user && (
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-8">
-                <div className="flex items-center gap-2 text-accent-cyan animate-pulse">
-                  <Users className="h-5 w-5" />
-                  <span className="text-gray-300">Всего пользователей:</span>
-                  <span className="text-accent-cyan font-bold text-lg">
-                    <AnimatedCounter value={totalUsers} />
-                  </span>
+              <div className="flex flex-col sm:flex-row gap-8 justify-center items-center mb-10">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-accent-cyan/20 rounded-xl">
+                    <Users className="h-6 w-6 text-accent-cyan" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-2xl font-bold text-accent-cyan">
+                      <AnimatedCounter value={totalUsers} />
+                    </div>
+                    <div className="text-sm text-gray-400">Пользователей</div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-green-400 animate-pulse">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-gray-300">Пользователей онлайн:</span>
-                  <span className="text-green-400 font-bold text-lg">
-                    <AnimatedCounter value={onlineUsers} />
-                  </span>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-green-500/20 rounded-xl">
+                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <div className="text-left">
+                    <div className="text-2xl font-bold text-green-400">
+                      <AnimatedCounter value={onlineUsers} />
+                    </div>
+                    <div className="text-sm text-gray-400">Онлайн сейчас</div>
+                  </div>
                 </div>
               </div>
             )}
+
+            {/* CTAs */}
             {!user && (
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/registration" className="btn-primary inline-flex items-center justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link
+                  to="/registration"
+                  className="group relative px-8 py-4 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 inline-flex items-center shadow-lg shadow-accent-cyan/25 hover:shadow-accent-cyan/40"
+                >
                   Начать бесплатно
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link
+                  to="/jobs"
+                  className="px-8 py-4 bg-dark-surface hover:bg-dark-card border border-dark-card hover:border-accent-cyan/50 text-white font-semibold rounded-xl transition-all duration-300 inline-flex items-center"
+                >
+                  Смотреть вакансии
                 </Link>
               </div>
             )}
+
+            {/* Trust badges */}
+            <div className="mt-12 flex flex-wrap justify-center gap-6 items-center text-gray-400 text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-accent-cyan" />
+                <span>Бесплатная регистрация</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-accent-cyan" />
+                <span>AI-технологии</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-accent-cyan" />
+                <span>Проверенные компании</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Top Features */}
-      <Section className="bg-dark-bg">
-        <div className="flex justify-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl">
-            {topFeatures.map((feature, index) => (
-              <Link key={index} to={feature.link} className="block h-full">
-                <FeatureCard
-                  icon={feature.icon}
-                  title={feature.title}
-                  description={feature.description}
-                  className="h-full scroll-animate-item"
-                  style={{ transitionDelay: `${index * 0.1}s` }}
-                />
+      {/* Для студентов - Cards Grid */}
+      <Section className="bg-dark-surface">
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
+          <div className="text-center mb-16 scroll-animate-item">
+            <h2 className="text-[36px] md:text-[44px] font-bold text-white mb-4">
+              Начните карьеру <span className="text-accent-cyan">уверенно</span>
+            </h2>
+            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+              Умные инструменты для поиска работы, подготовки к собеседованиям и развития навыков
+            </p>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {graduateFeatures.map((feature, index) => (
+              <Link
+                key={index}
+                to={feature.link}
+                className="group scroll-animate-item"
+                style={{ transitionDelay: `${index * 0.1}s` }}
+                onMouseEnter={() => setHoveredCard(index)}
+                onMouseLeave={() => setHoveredCard(null)}
+              >
+                <Card className="h-full p-8 bg-dark-bg hover:bg-dark-card border-dark-card hover:border-accent-cyan/50 transition-all duration-300 relative overflow-hidden">
+                  {/* Matrix Rain Animation для первой карточки (index === 0) */}
+                  {index === 0 && <MatrixRain isActive={hoveredCard === 0} />}
+
+                  {/* AI Scanner Animation для второй карточки (index === 1) */}
+                  {index === 1 && <AIScanner isActive={hoveredCard === 1} />}
+
+                  {/* Career Graph Animation для третьей карточки (index === 2) */}
+                  {index === 2 && <CareerGraph isActive={hoveredCard === 2} />}
+
+                  {/* Rating Stars Animation для четвертой карточки (index === 3) */}
+                  {index === 3 && <RatingStars isActive={hoveredCard === 3} />}
+
+                  <div className="flex items-start gap-6 relative z-10">
+                    <div className="flex-grow">
+                      <h3 className="text-2xl font-semibold text-white group-hover:text-accent-cyan transition-colors mb-3">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-400 leading-relaxed">
+                        {feature.description}
+                      </p>
+                      <div className="mt-4 flex items-center text-accent-cyan font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                        Узнать больше
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                </Card>
               </Link>
             ))}
           </div>
+
+          {!user && (
+            <div className="text-center mt-12 scroll-animate-item">
+              <Link to="/registration" className="group inline-flex items-center px-8 py-4 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-accent-cyan/25 hover:shadow-accent-cyan/40">
+                Создать профиль выпускника
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          )}
         </div>
       </Section>
 
-      {/* Skills and Projects Section */}
-      <Section 
-        title="Фокус на навыках и проектах"
-        className="bg-dark-surface scroll-animate-item"
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          {/* Left Column */}
-          <Link to="/skills" className="block scroll-fade-left">
-            <div>
-              <h3 className="text-[20px] md:text-[22px] font-semibold text-white mb-4">
-                Интерактивная карта навыков
-              </h3>
-              <p className="text-[#b0b0b0] text-base mb-4 leading-relaxed">
-                Забудьте о скучных списках! Наша интерактивная карта показывает связи между вашими умениями. 
-                Кликните на навык, чтобы увидеть:
-              </p>
-              <ul className="space-y-2 text-[#b0b0b0] text-base mb-6">
-                <li className="flex items-start">
-                  <span className="text-accent-cyan mr-2">•</span>
-                  <span>Актуальные вакансии</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-accent-cyan mr-2">•</span>
-                  <span>Релевантные проекты</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-accent-cyan mr-2">•</span>
-                  <span>Рекомендуемые курсы</span>
-                </li>
-              </ul>
-              <div className="bg-dark-surface rounded-xl p-8 border border-dark-card hover:border-accent-cyan transition-all ">
-                <div className="relative w-full h-64 bg-gradient-to-br from-accent-cyan/20 via-accent-blue/20 to-dark-card rounded-lg flex items-center justify-center overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-32 h-32 bg-accent-cyan/30 rounded-full shadow-glow-cyan animate-pulse"></div>
-                  </div>
-                  <div className="absolute inset-0">
-                    {[...Array(12)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute w-2 h-2 bg-accent-cyan rounded-full shadow-glow-cyan"
-                        style={{
-                          left: `${Math.random() * 100}%`,
-                          top: `${Math.random() * 100}%`,
-                          animationDelay: `${i * 0.2}s`,
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                  <div className="relative z-10 text-center">
-                    <div className="text-4xl mb-2">🎯</div>
-                    <div className="text-white font-semibold">Интерактивная карта</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Link>
-
-          {/* Right Column */}
-          <div className="scroll-fade-right">
-            <h3 className="text-[20px] md:text-[22px] font-semibold text-white mb-4">
-              Автоматический анализ проектов
-            </h3>
-            <p className="text-[#b0b0b0] text-base mb-4 leading-relaxed">
-              Интеграция с GitHub API для автоматического анализа ваших проектов. 
-              Мы определяем:
+      {/* Для работодателей - Cards Grid */}
+      <Section className="bg-dark-bg">
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
+          <div className="text-center mb-16 scroll-animate-item">
+            <h2 className="text-[36px] md:text-[44px] font-bold text-white mb-4">
+              Находите таланты <span className="text-accent-blue">быстро</span>
+            </h2>
+            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+              Умные инструменты для поиска кандидатов, управления вакансиями и построения HR-бренда
             </p>
-            <ul className="space-y-2 text-[#b0b0b0] text-base mb-6">
-              <li className="flex items-start">
-                <span className="text-accent-cyan mr-2">•</span>
-                <span>Используемые технологии</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-accent-cyan mr-2">•</span>
-                <span>Архитектурные решения</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-accent-cyan mr-2">•</span>
-                <span>Качество кода (статический анализ)</span>
-              </li>
-            </ul>
-            <Link to="/skills" className="block">
-              <div className="bg-dark-surface rounded-xl p-8 border border-dark-card hover:border-accent-cyan transition-all ">
-                <div className="relative w-full h-64 bg-gradient-to-br from-dark-card via-accent-blue/10 to-dark-surface rounded-lg flex items-center justify-center overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-24 h-24 bg-accent-blue/20 rounded-lg shadow-glow-cyan rotate-45"></div>
+          </div>
+
+          {/* Feature Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {employerFeatures.map((feature, index) => (
+              <Link
+                key={index}
+                to={feature.link}
+                className="group scroll-animate-item"
+                style={{ transitionDelay: `${index * 0.1}s` }}
+                onMouseEnter={() => setHoveredEmployerCard(index)}
+                onMouseLeave={() => setHoveredEmployerCard(null)}
+              >
+                <Card className="h-full p-8 bg-dark-surface hover:bg-dark-card border-dark-card hover:border-accent-blue/50 transition-all duration-300 relative overflow-hidden">
+                  {/* Radar Scan Animation для первой карточки (index === 0) */}
+                  {index === 0 && <RadarScan isActive={hoveredEmployerCard === 0} />}
+
+                  {/* Filter Funnel Animation для второй карточки (index === 1) */}
+                  {index === 1 && <FilterFunnel isActive={hoveredEmployerCard === 1} />}
+
+                  {/* CheckMarks Animation для третьей карточки (index === 2) */}
+                  {index === 2 && <CheckMarks isActive={hoveredEmployerCard === 2} />}
+
+                  {/* Tower Building Animation для четвертой карточки (index === 3) */}
+                  {index === 3 && <TowerBuilding isActive={hoveredEmployerCard === 3} />}
+
+                  <div className="flex items-start gap-6 relative z-10">
+                    <div className="flex-grow">
+                      <h3 className="text-2xl font-semibold text-white group-hover:text-accent-blue transition-colors mb-3">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-400 leading-relaxed">
+                        {feature.description}
+                      </p>
+                      <div className="mt-4 flex items-center text-accent-blue font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                        Узнать больше
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="absolute inset-0 grid grid-cols-3 gap-2 p-4">
-                    {[...Array(9)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="bg-accent-cyan/20 rounded border border-accent-cyan/30"
-                      ></div>
-                    ))}
+                </Card>
+              </Link>
+            ))}
+          </div>
+
+          {!user && (
+            <div className="text-center mt-12 scroll-animate-item">
+              <Link to="/registration" className="group inline-flex items-center px-8 py-4 bg-accent-blue hover:bg-accent-blue/90 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-accent-blue/25 hover:shadow-accent-blue/40">
+                Зарегистрировать компанию
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          )}
+        </div>
+      </Section>
+
+      {/* Радар навыков - Showcase */}
+      <Section className="bg-dark-surface">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Content */}
+            <div className="scroll-fade-left">
+              <h2 className="text-[32px] md:text-[40px] font-bold text-white mb-4">
+                Интерактивный <span className="text-accent-cyan">радар навыков</span>
+              </h2>
+              <p className="text-lg text-gray-300 mb-6 leading-relaxed">
+                Визуализируйте свои умения как никогда раньше. Наша интерактивная карта показывает связи между навыками и автоматически анализирует ваши GitHub проекты.
+              </p>
+
+              <div className="space-y-4 mb-8">
+                {[
+                  'Актуальные вакансии по навыкам',
+                  'Автоматический анализ GitHub',
+                  'Рекомендации по развитию',
+                  'Связи между технологиями'
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent-cyan/20 border border-accent-cyan flex items-center justify-center">
+                      <CheckCircle className="h-4 w-4 text-accent-cyan" />
+                    </div>
+                    <span className="text-gray-300">{item}</span>
                   </div>
-                  <div className="relative z-10 text-center">
-                    <div className="text-4xl mb-2">⚙️</div>
-                    <div className="text-white font-semibold">Анализ проектов</div>
-                  </div>
+                ))}
+              </div>
+
+              <Link to="/skills" className="group inline-flex items-center px-6 py-3 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300">
+                Создать свой радар
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            {/* Visual */}
+            <Link to="/skills" className="block scroll-fade-right">
+              <div className="relative rounded-2xl bg-gradient-to-br from-dark-bg to-dark-card p-12 border border-dark-card hover:border-accent-cyan/50 transition-all duration-500 overflow-hidden group">
+                {/* Glowing effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-accent-cyan/5 to-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                {/* Skills Radar Animation */}
+                <div className="relative h-80">
+                  <SkillsRadar isActive={true} />
                 </div>
               </div>
             </Link>
@@ -258,166 +414,33 @@ const Home = () => {
         </div>
       </Section>
 
-      {/* Ratings and Simulation Section */}
-      <Section 
-        title="Рейтинги и симуляция"
-        className="bg-dark-bg scroll-animate-item"
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          {/* Left Column */}
-          <Link to="/companies" className="block scroll-fade-left">
-            <div>
-              <h3 className="text-[20px] md:text-[22px] font-semibold text-white mb-4">
-                Рейтинг и отзывы работодателей
-              </h3>
-              <p className="text-[#b0b0b0] text-base mb-4 leading-relaxed">
-                Прозрачная среда для анонимных отзывов о компаниях. 
-                Создаем честную экосистему, где:
-              </p>
-              <ul className="space-y-2 text-[#b0b0b0] text-base mb-6">
-                <li className="flex items-start">
-                  <span className="text-accent-cyan mr-2">•</span>
-                  <span>Честные оценки от сообщества</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-accent-cyan mr-2">•</span>
-                  <span>Повышение имиджа компаний через обратную связь</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-accent-cyan mr-2">•</span>
-                  <span>Возможность для компаний отвечать на отзывы</span>
-                </li>
-              </ul>
-              <div className="bg-dark-card rounded-xl p-8 border border-dark-surface hover:border-accent-cyan transition-all ">
-                <div className="relative w-full h-64 bg-gradient-to-br from-accent-gold/20 via-accent-cyan/20 to-dark-card rounded-lg flex items-center justify-center overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-32 h-32 bg-accent-gold/30 rounded-full shadow-glow-gold animate-pulse"></div>
-                  </div>
-                  <div className="absolute inset-0">
-                    {[...Array(12)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute w-2 h-2 bg-accent-gold rounded-full shadow-glow-gold"
-                        style={{
-                          left: `${Math.random() * 100}%`,
-                          top: `${Math.random() * 100}%`,
-                          animationDelay: `${i * 0.2}s`,
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                  <div className="relative z-10 text-center">
-                    <div className="text-4xl mb-2">⭐</div>
-                    <div className="text-white font-semibold">Рейтинги</div>
-                  </div>
-                </div>
-              </div>
+      {/* Final CTA */}
+      {!user && (
+        <section className="relative py-24 bg-gradient-to-br from-accent-cyan/10 via-accent-blue/10 to-dark-bg border-y border-accent-cyan/20 scroll-scale overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-accent-cyan/5 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-blue/5 rounded-full blur-3xl"></div>
+          </div>
+
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-cyan/10 border border-accent-cyan/30 rounded-full text-accent-cyan text-sm font-medium mb-6">
+              <Sparkles className="h-4 w-4" />
+              Присоединяйтесь сейчас
             </div>
-          </Link>
-
-          {/* Right Column */}
-          <Link to="/interview" className="block scroll-fade-right">
-            <div>
-              <h3 className="text-[20px] md:text-[22px] font-semibold text-white mb-4">
-                Симулятор собеседования
-              </h3>
-              <p className="text-[#b0b0b0] text-base mb-4 leading-relaxed">
-                Интерактивный тренажер для подготовки к реальным собеседованиям. 
-                Практикуйтесь с:
-              </p>
-              <ul className="space-y-2 text-[#b0b0b0] text-base mb-6">
-                <li className="flex items-start">
-                  <span className="text-accent-cyan mr-2">•</span>
-                  <span>Генерация вопросов под вашу роль и технологии</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-accent-cyan mr-2">•</span>
-                  <span>Мгновенная обратная связь</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-accent-cyan mr-2">•</span>
-                  <span>Советы от опытных специалистов для улучшения ответов</span>
-                </li>
-              </ul>
-              <div className="bg-dark-card rounded-xl p-8 border border-dark-surface hover:border-accent-cyan transition-all ">
-                <div className="relative w-full h-64 bg-gradient-to-br from-dark-surface via-accent-cyan/10 to-dark-card rounded-lg flex items-center justify-center overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-32 h-32 bg-accent-cyan/20 rounded-full border-4 border-accent-cyan border-dashed animate-spin-slow"></div>
-                  </div>
-                  <div className="absolute inset-0 grid grid-cols-3 gap-4 p-6">
-                    {[...Array(6)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="bg-accent-cyan/20 rounded-lg border border-accent-cyan/30 flex items-center justify-center"
-                      >
-                        <div className="text-2xl">❓</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="relative z-10 text-center">
-                    <div className="text-4xl mb-2">💬</div>
-                    <div className="text-white font-semibold">Симулятор</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Link>
-        </div>
-      </Section>
-
-      {/* AI Section
-      <Section 
-        title="Искусственный интеллект и автоматизация"
-        className="bg-dark-bg scroll-animate-item"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Link to="/ai" className="block">
-            <FeatureCard
-              icon={<Brain className="h-8 w-8" />}
-              title="Персональный карьерный консультант"
-              description="ИИ-чат-бот помогает определить сильные стороны, выбрать направление и найти идеальную работу."
-              className="scroll-animate-item"
-              style={{ transitionDelay: '0s' }}
-            />
-          </Link>
-          <Link to="/ai" className="block">
-            <FeatureCard
-              icon={<Briefcase className="h-8 w-8" />}
-              title="Автоматическое создание резюме"
-              description="Генерация резюме в различных форматах на основе профиля и проектов, с возможностью кастомизации под вакансию."
-              className="scroll-animate-item"
-              style={{ transitionDelay: '0.1s' }}
-            />
-          </Link>
-          <Link to="/ai" className="block">
-            <FeatureCard
-              icon={<TrendingUp className="h-8 w-8" />}
-              title="Анализ вакансии на соответствие"
-              description="ИИ анализирует текст вакансии, сравнивая требуемые навыки с вашими, и оценивает соответствие в процентах."
-              className="scroll-animate-item"
-              style={{ transitionDelay: '0.2s' }}
-            />
-          </Link>
-        </div>
-      </Section> */}
-
-      { !user 
-        ? <section className="py-20 bg-gradient-to-r from-accent-cyan/20 to-accent-blue/20 border-y border-accent-cyan/30 scroll-scale">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-[24px] md:text-[28px] font-bold mb-4 text-white">
-            Готовы начать?
-          </h2>
-          <p className="text-base text-[#b0b0b0] mb-8">
-            Присоединяйтесь к тысячам IT-специалистов, которые уже используют IT-Grads
-          </p>
-          <Link to="/registration" className="btn-primary inline-flex items-center">
-            Создать аккаунт
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Link>
-        </div>
-      </section>
-        : <div></div>
-      }
+            <h2 className="text-[32px] md:text-[40px] font-bold mb-6 text-white">
+              Готовы начать путь к успеху?
+            </h2>
+            <p className="text-lg text-gray-300 mb-10 max-w-2xl mx-auto">
+              Присоединяйтесь к тысячам IT-специалистов, которые уже нашли работу мечты с IT-Grads
+            </p>
+            <Link to="/registration" className="group inline-flex items-center px-10 py-5 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 shadow-xl shadow-accent-cyan/25 hover:shadow-accent-cyan/40 text-lg">
+              Создать аккаунт бесплатно
+              <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   )
 }
