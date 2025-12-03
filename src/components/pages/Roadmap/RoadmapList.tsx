@@ -3,6 +3,7 @@ import { Map, Filter, Search } from 'lucide-react';
 import { $api } from '../../../utils/axios.instance';
 import RoadmapCard from '../../roadmap/RoadmapCard';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface Roadmap {
   id: number;
@@ -18,6 +19,7 @@ interface Roadmap {
 }
 
 const RoadmapList = () => {
+  const { t } = useTranslation();
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [filteredRoadmaps, setFilteredRoadmaps] = useState<Roadmap[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,18 +28,18 @@ const RoadmapList = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
 
   const categories = [
-    { value: 'all', label: 'Все категории' },
-    { value: 'role', label: 'Специальности' },
-    { value: 'language', label: 'Языки программирования' },
-    { value: 'framework', label: 'Фреймворки' },
-    { value: 'skill', label: 'Навыки' }
+    { value: 'all', labelKey: 'roadmap.allCategories' },
+    { value: 'role', labelKey: 'roadmap.specializations' },
+    { value: 'language', labelKey: 'roadmap.programmingLanguages' },
+    { value: 'framework', labelKey: 'roadmap.frameworks' },
+    { value: 'skill', labelKey: 'roadmap.skillsCategory' }
   ];
 
   const difficulties = [
-    { value: 'all', label: 'Все уровни' },
-    { value: 'beginner', label: 'Начальный' },
-    { value: 'intermediate', label: 'Средний' },
-    { value: 'advanced', label: 'Продвинутый' }
+    { value: 'all', labelKey: 'roadmap.allLevels' },
+    { value: 'beginner', labelKey: 'roadmap.beginner' },
+    { value: 'intermediate', labelKey: 'roadmap.intermediate' },
+    { value: 'advanced', labelKey: 'roadmap.advanced' }
   ];
 
   useEffect(() => {
@@ -55,7 +57,7 @@ const RoadmapList = () => {
       setRoadmaps(response.data);
     } catch (error) {
       console.error('Error fetching roadmaps:', error);
-      toast.error('Ошибка при загрузке карт специальностей');
+      toast.error(t('roadmap.errorLoading'));
     } finally {
       setLoading(false);
     }
@@ -93,11 +95,10 @@ const RoadmapList = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 mb-4">
             <Map className="w-12 h-12" />
-            <h1 className="text-4xl font-bold">Карта специальностей</h1>
+            <h1 className="text-4xl font-bold">{t('roadmap.title')}</h1>
           </div>
           <p className="text-lg opacity-90 max-w-3xl">
-            Изучите карьерные пути и технологии. Найдите свой путь в IT и начните обучение с
-            пошаговыми roadmap для каждой специальности.
+            {t('roadmap.headerDesc')}
           </p>
         </div>
       </div>
@@ -107,7 +108,7 @@ const RoadmapList = () => {
         <div className="bg-dark-card rounded-xl p-6 mb-8 border border-dark-surface">
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-5 h-5 text-accent-cyan" />
-            <h2 className="text-lg font-semibold text-white">Фильтры</h2>
+            <h2 className="text-lg font-semibold text-white">{t('roadmap.filters')}</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -118,7 +119,7 @@ const RoadmapList = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Поиск..."
+                placeholder={t('roadmap.searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-cyan"
               />
             </div>
@@ -131,7 +132,7 @@ const RoadmapList = () => {
             >
               {categories.map((cat) => (
                 <option key={cat.value} value={cat.value}>
-                  {cat.label}
+                  {t(cat.labelKey)}
                 </option>
               ))}
             </select>
@@ -144,7 +145,7 @@ const RoadmapList = () => {
             >
               {difficulties.map((diff) => (
                 <option key={diff.value} value={diff.value}>
-                  {diff.label}
+                  {t(diff.labelKey)}
                 </option>
               ))}
             </select>
@@ -154,7 +155,7 @@ const RoadmapList = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-gray-400">
-            Найдено специальностей: <span className="text-white font-semibold">{filteredRoadmaps.length}</span>
+            {t('roadmap.found')}: <span className="text-white font-semibold">{filteredRoadmaps.length}</span>
           </p>
         </div>
 
@@ -162,7 +163,7 @@ const RoadmapList = () => {
         {loading && (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-cyan"></div>
-            <p className="text-gray-400 mt-4">Загрузка...</p>
+            <p className="text-gray-400 mt-4">{t('common.loading')}</p>
           </div>
         )}
 
@@ -170,8 +171,8 @@ const RoadmapList = () => {
         {!loading && filteredRoadmaps.length === 0 && (
           <div className="text-center py-12 bg-dark-card rounded-xl border border-dark-surface">
             <Map className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">Ничего не найдено</h3>
-            <p className="text-gray-400">Попробуйте изменить параметры фильтрации</p>
+            <h3 className="text-xl font-semibold text-white mb-2">{t('roadmap.nothingFound')}</h3>
+            <p className="text-gray-400">{t('roadmap.tryChangeFilters')}</p>
           </div>
         )}
 

@@ -1,4 +1,5 @@
 import { User, Radar, FileText, Heart, Send } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface GraduateProfileNavProps {
   activeTab: string
@@ -6,12 +7,14 @@ interface GraduateProfileNavProps {
 }
 
 const GraduateProfileNav = ({ activeTab, onTabChange }: GraduateProfileNavProps) => {
+  const { t } = useTranslation()
+
   const tabs = [
-    { id: 'profile', label: 'Профиль', icon: User },
-    { id: 'radar', label: 'Радар навыков', icon: Radar },
-    { id: 'resumes', label: 'Мои резюме', icon: FileText },
-    { id: 'favorites', label: 'Избранные вакансии', icon: Heart },
-    { id: 'applications', label: 'Мои отклики', icon: Send },
+    { id: 'profile', labelKey: 'profile.title', icon: User },
+    { id: 'radar', labelKey: 'profile.skillsRadar', icon: Radar },
+    { id: 'resumes', labelKey: 'profile.myResumes', icon: FileText },
+    { id: 'favorites', labelKey: 'profile.favorites', icon: Heart },
+    { id: 'applications', labelKey: 'profile.myResponses', icon: Send },
   ]
 
   return (
@@ -31,7 +34,7 @@ const GraduateProfileNav = ({ activeTab, onTabChange }: GraduateProfileNavProps)
               }`}
             >
               <Icon className="h-5 w-5" />
-              <span>{tab.label}</span>
+              <span>{t(tab.labelKey)}</span>
             </button>
           )
         })}
@@ -41,4 +44,3 @@ const GraduateProfileNav = ({ activeTab, onTabChange }: GraduateProfileNavProps)
 }
 
 export default GraduateProfileNav
-

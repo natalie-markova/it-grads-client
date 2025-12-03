@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Menu, X, LogIn, UserCircle, LogOut, MessageSquare } from 'lucide-react'
+import { Menu, X, LogIn, UserCircle, LogOut, MessageSquare, Globe, ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { $api } from "../../../utils/axios.instance";
 import { chatAPI } from '../../../utils/chat.api';
 import { socketService } from '../../../utils/socket.service';
@@ -11,12 +12,38 @@ interface NavbarProps {
     setUser: (user: User | null) => void;
 }
 
+const languages = [
+    { code: 'ru', name: 'Русский', short: 'RU' },
+    { code: 'en', name: 'English', short: 'EN' },
+];
+
 const Navbar = ({ user, setUser }: NavbarProps) => {
     const [isOpen, setIsOpen] = useState(false)
+    const [isLangOpen, setIsLangOpen] = useState(false)
+    const langDropdownRef = useRef<HTMLDivElement>(null)
     const location = useLocation()
     const navigate = useNavigate()
+    const { t, i18n } = useTranslation()
     const userType = user?.role || null
     const [unreadCount, setUnreadCount] = useState(0);
+
+    const changeLanguage = (langCode: string) => {
+        i18n.changeLanguage(langCode);
+        setIsLangOpen(false);
+    };
+
+    const currentLang = languages.find(lang => lang.code === i18n.language) || languages[0];
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
+                setIsLangOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Функция для загрузки непрочитанных сообщений
     const loadUnreadCount = () => {
@@ -79,20 +106,20 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
   }
 
     const baseNavLinks = [
-        { path: '/skills', label: 'Радар навыков' },
-        { path: '/interview', label: 'Собеседования' },
-        { path: '/jobs', label: 'Вакансии' },
+        { path: '/skills', label: t('navbar.skillsRadar') },
+        { path: '/interview', label: t('navbar.interviews') },
+        { path: '/jobs', label: t('navbar.vacancies') },
     ]
 
     const graduateNavLinks = [
         ...baseNavLinks,
-        { path: '/roadmap', label: 'Карта специальностей' },
+        { path: '/roadmap', label: t('navbar.roadmap') },
     ]
 
     const employerNavLinks = [
-        { path: '/candidates', label: 'Кандидаты' },
-        { path: '/candidates/map', label: 'Карта соискателей' },
-        { path: '/jobs', label: 'Вакансии' },
+        { path: '/candidates', label: t('navbar.candidates') },
+        { path: '/candidates/map', label: t('navbar.candidatesMap') },
+        { path: '/jobs', label: t('navbar.vacancies') },
     ]
 
     const navLinks = userType === 'graduate' ? graduateNavLinks : (userType === 'employer' ? employerNavLinks : baseNavLinks)
@@ -165,15 +192,42 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                                     className="text-gray-300 hover:text-accent-cyan px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
                                 >
                                     <UserCircle className="h-4 w-4" />
-                                    <span>Профиль</span>
+                                    <span>{t('navbar.profile')}</span>
                                 </Link>
                                 <button
                                     onClick={logoutHandler}
                                     className="text-gray-300 hover:text-accent-cyan px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
                                 >
                                     <LogOut className="h-4 w-4" />
-                                    <span>Выйти</span>
+                                    <span>{t('navbar.logout')}</span>
                                 </button>
+                                <div className="relative" ref={langDropdownRef}>
+                                    <button
+                                        onClick={() => setIsLangOpen(!isLangOpen)}
+                                        className="text-gray-300 hover:text-accent-cyan px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-1 border border-dark-card hover:border-accent-cyan"
+                                    >
+                                        <Globe className="h-4 w-4" />
+                                        <span>{currentLang.short}</span>
+                                        <ChevronDown className={`h-3 w-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {isLangOpen && (
+                                        <div className="absolute right-0 mt-2 w-40 bg-dark-surface border border-dark-card rounded-lg shadow-lg overflow-hidden z-50">
+                                            {languages.map((lang) => (
+                                                <button
+                                                    key={lang.code}
+                                                    onClick={() => changeLanguage(lang.code)}
+                                                    className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 transition-colors ${
+                                                        i18n.language === lang.code
+                                                            ? 'bg-accent-cyan/20 text-accent-cyan'
+                                                            : 'text-gray-300 hover:bg-dark-card hover:text-white'
+                                                    }`}
+                                                >
+                                                    <span>{lang.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </>
                         ) : (
                             <>
@@ -182,14 +236,41 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                                     className="text-gray-300 hover:text-accent-cyan px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
                                 >
                                     <LogIn className="h-4 w-4" />
-                                    <span>Войти</span>
+                                    <span>{t('navbar.login')}</span>
                                 </Link>
                                 <Link
                                     to="/registration"
                                     className="btn-primary text-sm"
                                 >
-                                    Регистрация
+                                    {t('navbar.register')}
                                 </Link>
+                                <div className="relative" ref={langDropdownRef}>
+                                    <button
+                                        onClick={() => setIsLangOpen(!isLangOpen)}
+                                        className="text-gray-300 hover:text-accent-cyan px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-1 border border-dark-card hover:border-accent-cyan"
+                                    >
+                                        <Globe className="h-4 w-4" />
+                                        <span>{currentLang.short}</span>
+                                        <ChevronDown className={`h-3 w-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {isLangOpen && (
+                                        <div className="absolute right-0 mt-2 w-40 bg-dark-surface border border-dark-card rounded-lg shadow-lg overflow-hidden z-50">
+                                            {languages.map((lang) => (
+                                                <button
+                                                    key={lang.code}
+                                                    onClick={() => changeLanguage(lang.code)}
+                                                    className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 transition-colors ${
+                                                        i18n.language === lang.code
+                                                            ? 'bg-accent-cyan/20 text-accent-cyan'
+                                                            : 'text-gray-300 hover:bg-dark-card hover:text-white'
+                                                    }`}
+                                                >
+                                                    <span>{lang.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </>
                         )}
                     </div>
@@ -233,7 +314,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                                         className="relative flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-accent-cyan hover:bg-dark-card"
                                     >
                                         <MessageSquare className="h-5 w-5" />
-                                        <span>Сообщения</span>
+                                        <span>{t('navbar.messages')}</span>
                                         {unreadCount > 0 && (
                                             <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
                                                 {unreadCount > 9 ? '9+' : unreadCount}
@@ -245,7 +326,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                                         onClick={() => setIsOpen(false)}
                                         className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-accent-cyan hover:bg-dark-card"
                                     >
-                                        Профиль
+                                        {t('navbar.profile')}
                                     </Link>
                                     <button
                                         onClick={() => {
@@ -254,8 +335,32 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                                         }}
                                         className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-accent-cyan hover:bg-dark-card"
                                     >
-                                        Выйти
+                                        {t('navbar.logout')}
                                     </button>
+                                    <div className="px-3 py-2">
+                                        <p className="text-xs text-gray-500 mb-2 flex items-center">
+                                            <Globe className="h-4 w-4 mr-1" />
+                                            {t('navbar.language')}
+                                        </p>
+                                        <div className="flex space-x-2">
+                                            {languages.map((lang) => (
+                                                <button
+                                                    key={lang.code}
+                                                    onClick={() => {
+                                                        changeLanguage(lang.code);
+                                                        setIsOpen(false);
+                                                    }}
+                                                    className={`flex-1 px-3 py-2 rounded-md text-sm flex items-center justify-center transition-colors ${
+                                                        i18n.language === lang.code
+                                                            ? 'bg-accent-cyan text-dark-bg'
+                                                            : 'bg-dark-card text-gray-300 hover:bg-dark-surface'
+                                                    }`}
+                                                >
+                                                    <span>{lang.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </>
                             ) : (
                                 <>
@@ -264,15 +369,39 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                                         onClick={() => setIsOpen(false)}
                                         className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-accent-cyan hover:bg-dark-card"
                                     >
-                                        Войти
+                                        {t('navbar.login')}
                                     </Link>
                                     <Link
                                         to="/registration"
                                         onClick={() => setIsOpen(false)}
                                         className="block px-3 py-2 rounded-md text-base font-medium bg-accent-cyan text-dark-bg text-center"
                                     >
-                                        Регистрация
+                                        {t('navbar.register')}
                                     </Link>
+                                    <div className="px-3 py-2">
+                                        <p className="text-xs text-gray-500 mb-2 flex items-center">
+                                            <Globe className="h-4 w-4 mr-1" />
+                                            {t('navbar.language')}
+                                        </p>
+                                        <div className="flex space-x-2">
+                                            {languages.map((lang) => (
+                                                <button
+                                                    key={lang.code}
+                                                    onClick={() => {
+                                                        changeLanguage(lang.code);
+                                                        setIsOpen(false);
+                                                    }}
+                                                    className={`flex-1 px-3 py-2 rounded-md text-sm flex items-center justify-center transition-colors ${
+                                                        i18n.language === lang.code
+                                                            ? 'bg-accent-cyan text-dark-bg'
+                                                            : 'bg-dark-card text-gray-300 hover:bg-dark-surface'
+                                                    }`}
+                                                >
+                                                    <span>{lang.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </>
                             )}
                         </div>

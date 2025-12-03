@@ -165,37 +165,66 @@ const AudioInterview = () => {
     };
   }, [isListening]);
 
-  // Синтез речи через Yandex SpeechKit
+  // Fallback на браузерный синтез речи (Web Speech API)
+  const speakWithBrowserTTS = useCallback((text: string) => {
+    const synth = window.speechSynthesis;
+    if (!synth) {
+      console.error('Browser TTS not supported');
+      setIsSpeaking(false);
+      return;
+    }
+
+    // Отменяем предыдущее озвучивание
+    synth.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ru-RU';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    // Пытаемся найти русский голос
+    const voices = synth.getVoices();
+    const russianVoice = voices.find(v => v.lang.startsWith('ru'));
+    if (russianVoice) {
+      utterance.voice = russianVoice;
+    }
+
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    synth.speak(utterance);
+  }, []);
+
+  // Синтез речи через Yandex SpeechKit с fallback на браузерный TTS
   const speak = useCallback(async (text: string) => {
     if (!audioEnabled) return;
+    setIsSpeaking(true);
 
     try {
-      setIsSpeaking(true);
+      // Пробуем Yandex SpeechKit
+      const response = await $api.post('/interviews/tts', { text });
 
-      const response = await $api.post('/interviews/tts', {
-        text,
-        gender: currentVoice?.gender,
-        voiceId: currentVoice?.id
-      });
+      if (response.data.audio && audioRef.current) {
+        // Сохраняем информацию о голосе
+        if (response.data.voice) {
+          setCurrentVoice(response.data.voice);
+        }
 
-      // Сохраняем информацию о голосе для использования в течение сессии
-      if (response.data.voice && !currentVoice) {
-        setCurrentVoice(response.data.voice);
-      }
-
-      // Декодируем base64 аудио и воспроизводим
-      const audioData = `data:${response.data.format};base64,${response.data.audio}`;
-
-      if (audioRef.current) {
+        // Декодируем base64 аудио и воспроизводим
+        const audioData = `data:${response.data.format};base64,${response.data.audio}`;
         audioRef.current.src = audioData;
-        await audioRef.current.play();
+        audioRef.current.play().catch(() => {
+          // Если не удалось воспроизвести, используем браузерный TTS
+          speakWithBrowserTTS(text);
+        });
+      } else {
+        speakWithBrowserTTS(text);
       }
     } catch (error) {
-      console.error('Yandex TTS error:', error);
-      setIsSpeaking(false);
-      toast.error('Ошибка синтеза речи');
+      console.error('Yandex TTS error, falling back to browser TTS:', error);
+      speakWithBrowserTTS(text);
     }
-  }, [audioEnabled, currentVoice]);
+  }, [audioEnabled, speakWithBrowserTTS]);
 
   const startListening = () => {
     if (!recognitionRef.current) {

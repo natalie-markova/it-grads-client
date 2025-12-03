@@ -16,6 +16,7 @@ import {
 import { $api } from '../../../utils/axios.instance';
 import toast from 'react-hot-toast';
 import type { OutletContext } from '../../../types';
+import { useTranslation } from 'react-i18next';
 
 interface LearningStep {
   title: string;
@@ -56,6 +57,7 @@ interface ProgressData {
 }
 
 const RoadmapDetail = () => {
+  const { t, i18n } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
@@ -87,7 +89,7 @@ const RoadmapDetail = () => {
       setRoadmap(response.data);
     } catch (error) {
       console.error('Error fetching roadmap:', error);
-      toast.error('Ошибка при загрузке карты специальности');
+      toast.error(t('roadmap.errorLoading'));
       navigate('/roadmap');
     } finally {
       setLoading(false);
@@ -120,7 +122,7 @@ const RoadmapDetail = () => {
 
   const saveProgress = async () => {
     if (!slug || !isAuthenticated) {
-      toast.error('Войдите в аккаунт, чтобы сохранить прогресс');
+      toast.error(t('roadmap.loginToSave'));
       return;
     }
 
@@ -131,10 +133,10 @@ const RoadmapDetail = () => {
       });
       setSavedProgress(response.data.progress);
       setHasUnsavedChanges(false);
-      toast.success('Прогресс сохранён!');
+      toast.success(t('roadmap.progressSaved'));
     } catch (error) {
       console.error('Error saving progress:', error);
-      toast.error('Ошибка при сохранении прогресса');
+      toast.error(t('roadmap.errorSaving'));
     } finally {
       setSaving(false);
     }
@@ -143,23 +145,24 @@ const RoadmapDetail = () => {
   const resetProgress = async () => {
     if (!slug || !isAuthenticated) return;
 
-    if (!confirm('Вы уверены, что хотите сбросить весь прогресс?')) return;
+    if (!confirm(t('roadmap.resetConfirm'))) return;
 
     try {
       await $api.delete(`/roadmaps/${slug}/progress`);
       setCompletedSteps(new Set());
       setSavedProgress(null);
       setHasUnsavedChanges(false);
-      toast.success('Прогресс сброшен');
+      toast.success(t('roadmap.progressReset'));
     } catch (error) {
       console.error('Error resetting progress:', error);
-      toast.error('Ошибка при сбросе прогресса');
+      toast.error(t('roadmap.errorResetting'));
     }
   };
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null;
-    return new Date(dateString).toLocaleDateString('ru-RU', {
+    const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
+    return new Date(dateString).toLocaleDateString(locale, {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
@@ -167,17 +170,17 @@ const RoadmapDetail = () => {
   };
 
   const difficultyLabels = {
-    beginner: 'Начальный',
-    intermediate: 'Средний',
-    advanced: 'Продвинутый'
+    beginner: t('roadmap.beginner'),
+    intermediate: t('roadmap.intermediate'),
+    advanced: t('roadmap.advanced')
   };
 
   const resourceTypeLabels = {
-    article: 'Статья',
-    video: 'Видео',
-    course: 'Курс',
-    book: 'Книга',
-    documentation: 'Документация'
+    article: t('roadmap.article'),
+    video: t('roadmap.video'),
+    course: t('roadmap.course'),
+    book: t('roadmap.book'),
+    documentation: t('roadmap.documentation')
   };
 
   if (loading) {
@@ -185,7 +188,7 @@ const RoadmapDetail = () => {
       <div className="min-h-screen bg-dark-bg flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-cyan"></div>
-          <p className="text-gray-400 mt-4">Загрузка...</p>
+          <p className="text-gray-400 mt-4">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -213,7 +216,7 @@ const RoadmapDetail = () => {
             className="flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            Назад к списку
+            {t('roadmap.backToList')}
           </button>
 
           <div className="flex items-start gap-6">
@@ -234,7 +237,7 @@ const RoadmapDetail = () => {
                 {isCompleted && (
                   <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-500/20 text-green-400 border border-green-500/30 flex items-center gap-1">
                     <Trophy className="w-3 h-3" />
-                    Завершено
+                    {t('roadmap.completed')}
                   </span>
                 )}
               </div>
@@ -245,13 +248,13 @@ const RoadmapDetail = () => {
                 {roadmap.estimatedMonths && (
                   <div className="flex items-center gap-2">
                     <Clock className="w-5 h-5" />
-                    <span>Примерно {roadmap.estimatedMonths} месяцев</span>
+                    <span>{t('roadmap.approximately')} {roadmap.estimatedMonths} {t('roadmap.months')}</span>
                   </div>
                 )}
                 {roadmap.popularityScore !== undefined && roadmap.popularityScore > 0 && (
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-5 h-5" />
-                    <span>Популярность: {roadmap.popularityScore}</span>
+                    <span>{t('roadmap.popularity')}: {roadmap.popularityScore}</span>
                   </div>
                 )}
               </div>
@@ -269,7 +272,7 @@ const RoadmapDetail = () => {
               <div className="bg-dark-card rounded-xl p-6 border border-dark-surface">
                 <div className="flex items-center gap-2 mb-4">
                   <AlertCircle className="w-6 h-6 text-yellow-400" />
-                  <h2 className="text-2xl font-bold text-white">Предварительные требования</h2>
+                  <h2 className="text-2xl font-bold text-white">{t('roadmap.prerequisites')}</h2>
                 </div>
                 <ul className="space-y-2">
                   {roadmap.prerequisites.map((prereq, index) => (
@@ -287,10 +290,10 @@ const RoadmapDetail = () => {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-6 h-6 text-accent-cyan" />
-                  <h2 className="text-2xl font-bold text-white">Путь обучения</h2>
+                  <h2 className="text-2xl font-bold text-white">{t('roadmap.learningPath')}</h2>
                 </div>
                 <div className="text-sm text-gray-400">
-                  {completedSteps.size} / {roadmap.learningPath.length} завершено
+                  {completedSteps.size} / {roadmap.learningPath.length} {t('roadmap.completedSteps')}
                 </div>
               </div>
 
@@ -305,9 +308,9 @@ const RoadmapDetail = () => {
                   />
                 </div>
                 <div className="flex justify-between items-center mt-2">
-                  <p className="text-sm text-gray-400">{Math.round(progress)}% завершено</p>
+                  <p className="text-sm text-gray-400">{Math.round(progress)}% {t('roadmap.completedSteps')}</p>
                   {hasUnsavedChanges && (
-                    <p className="text-sm text-yellow-400">Есть несохранённые изменения</p>
+                    <p className="text-sm text-yellow-400">{t('roadmap.unsavedChanges')}</p>
                   )}
                 </div>
               </div>
@@ -325,7 +328,7 @@ const RoadmapDetail = () => {
                     }`}
                   >
                     <Save className="w-4 h-4" />
-                    {saving ? 'Сохранение...' : 'Сохранить прогресс'}
+                    {saving ? t('roadmap.saving') : t('roadmap.saveProgress')}
                   </button>
                   {completedSteps.size > 0 && (
                     <button
@@ -333,7 +336,7 @@ const RoadmapDetail = () => {
                       className="flex items-center gap-2 px-4 py-2 bg-dark-surface text-gray-400 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                       <RotateCcw className="w-4 h-4" />
-                      Сбросить
+                      {t('roadmap.reset')}
                     </button>
                   )}
                 </div>
@@ -342,7 +345,7 @@ const RoadmapDetail = () => {
               {!isAuthenticated && (
                 <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                   <p className="text-yellow-400 text-sm">
-                    Войдите в аккаунт, чтобы сохранять прогресс обучения
+                    {t('roadmap.loginToSave')}
                   </p>
                 </div>
               )}
@@ -380,7 +383,7 @@ const RoadmapDetail = () => {
 
                         {step.topics && step.topics.length > 0 && (
                           <div className="mb-3">
-                            <p className="text-sm font-medium text-gray-300 mb-2">Темы:</p>
+                            <p className="text-sm font-medium text-gray-300 mb-2">{t('roadmap.topics')}:</p>
                             <div className="flex flex-wrap gap-2">
                               {step.topics.map((topic, topicIndex) => (
                                 <span
@@ -408,14 +411,14 @@ const RoadmapDetail = () => {
               <div className="bg-dark-card rounded-xl p-6 border border-dark-surface">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-accent-cyan" />
-                  Ваш прогресс
+                  {t('roadmap.yourProgress')}
                 </h3>
                 <div className="space-y-4">
                   {savedProgress.startedAt && (
                     <div className="flex items-center gap-3">
                       <Calendar className="w-5 h-5 text-gray-400" />
                       <div>
-                        <p className="text-sm text-gray-400">Начато</p>
+                        <p className="text-sm text-gray-400">{t('roadmap.started')}</p>
                         <p className="text-white">{formatDate(savedProgress.startedAt)}</p>
                       </div>
                     </div>
@@ -424,7 +427,7 @@ const RoadmapDetail = () => {
                     <div className="flex items-center gap-3">
                       <Clock className="w-5 h-5 text-gray-400" />
                       <div>
-                        <p className="text-sm text-gray-400">Последняя активность</p>
+                        <p className="text-sm text-gray-400">{t('roadmap.lastActivity')}</p>
                         <p className="text-white">{formatDate(savedProgress.lastActivityAt)}</p>
                       </div>
                     </div>
@@ -433,14 +436,14 @@ const RoadmapDetail = () => {
                     <div className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/30">
                       <Trophy className="w-5 h-5 text-green-400" />
                       <div>
-                        <p className="text-sm text-green-400">Завершено</p>
+                        <p className="text-sm text-green-400">{t('roadmap.completed')}</p>
                         <p className="text-white">{formatDate(savedProgress.completedAt)}</p>
                       </div>
                     </div>
                   )}
                   <div className="pt-3 border-t border-dark-surface">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Прогресс</span>
+                      <span className="text-gray-400">{t('roadmap.progress')}</span>
                       <span className="text-white font-bold">{savedProgress.progress}%</span>
                     </div>
                     <div className="w-full bg-dark-surface rounded-full h-2 mt-2">
@@ -459,7 +462,7 @@ const RoadmapDetail = () => {
             {/* Resources */}
             {roadmap.resources && roadmap.resources.length > 0 && (
               <div className="bg-dark-card rounded-xl p-6 border border-dark-surface">
-                <h3 className="text-xl font-bold text-white mb-4">Полезные ресурсы</h3>
+                <h3 className="text-xl font-bold text-white mb-4">{t('roadmap.usefulResources')}</h3>
                 <div className="space-y-3">
                   {roadmap.resources.map((resource, index) => (
                     <a
@@ -487,7 +490,7 @@ const RoadmapDetail = () => {
             {/* Related Roadmaps */}
             {roadmap.relatedRoadmaps && roadmap.relatedRoadmaps.length > 0 && (
               <div className="bg-dark-card rounded-xl p-6 border border-dark-surface">
-                <h3 className="text-xl font-bold text-white mb-4">Похожие специальности</h3>
+                <h3 className="text-xl font-bold text-white mb-4">{t('roadmap.relatedRoadmaps')}</h3>
                 <div className="space-y-2">
                   {roadmap.relatedRoadmaps.map((related, index) => (
                     <Link

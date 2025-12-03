@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import ResumeForm from '../Resume/ResumeForm'
 import { $api } from '../../../utils/axios.instance'
 import GraduateProfileNav from './GraduateProfileNav'
+import { useTranslation } from 'react-i18next'
 
 // Функция для формирования полного URL изображения
 const getImageUrl = (url: string | undefined | null): string => {
@@ -98,6 +99,7 @@ interface ProfileEditFormProps {
 }
 
 const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) => {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState<Profile>(profile)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
@@ -203,7 +205,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Фото профиля</label>
+        <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.profilePhoto')}</label>
         <div className="space-y-3">
           {photoPreview && (
             <div className="w-32 h-32 rounded-lg overflow-hidden border border-dark-card">
@@ -219,7 +221,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
                 className="hidden"
               />
               <span className="inline-block px-4 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors text-sm">
-                {photoFile ? 'Файл выбран' : 'Выбрать файл'}
+                {photoFile ? t('profile.fileSelected') : t('profile.selectFile')}
               </span>
             </label>
             {photoFile && (
@@ -229,11 +231,11 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
                 disabled={isUploading}
                 className="px-4 py-2 bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg font-medium rounded-lg transition-colors text-sm disabled:opacity-50"
               >
-                {isUploading ? 'Загрузка...' : 'Загрузить'}
+                {isUploading ? t('profile.uploading') : t('profile.upload')}
               </button>
             )}
           </div>
-          <p className="text-xs text-gray-400">Или введите URL фото</p>
+          <p className="text-xs text-gray-400">{t('profile.orEnterUrl')}</p>
           <input
             type="text"
             value={formData.photo}
@@ -249,7 +251,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Фамилия</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.lastName')}</label>
           <input
             type="text"
             value={formData.lastName}
@@ -259,7 +261,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Имя</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.firstName')}</label>
           <input
             type="text"
             value={formData.firstName}
@@ -269,7 +271,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Отчество</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.middleName')}</label>
           <input
             type="text"
             value={formData.middleName}
@@ -280,18 +282,18 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Дата рождения</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.birthDate')}</label>
           <input
             type="text"
             value={formData.birthDate}
             onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
             className="input-field"
-            placeholder="Например: 01.01.2000"
+            placeholder="01.01.2000"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Город</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.city')}</label>
           <input
             type="text"
             value={formData.city}
@@ -302,7 +304,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Образование</label>
+        <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.education')}</label>
         <input
           type="text"
           value={formData.education}
@@ -312,7 +314,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Опыт работы</label>
+        <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.experience')}</label>
         <input
           type="text"
           value={formData.experience}
@@ -322,7 +324,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">О себе</label>
+        <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.about')}</label>
         <textarea
           value={formData.about}
           onChange={(e) => setFormData({ ...formData, about: e.target.value })}
@@ -333,7 +335,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">{t('auth.email')}</label>
           <input
             type="email"
             value={formData.email || ''}
@@ -342,7 +344,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Телефон</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.phone')}</label>
           <input
             type="text"
             value={formData.phone || ''}
@@ -372,7 +374,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
           />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-300 mb-2">Портфолио</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.portfolio')}</label>
           <input
             type="url"
             value={formData.portfolio || ''}
@@ -384,10 +386,10 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
       </div>
       <div className="flex gap-2">
         <button type="submit" className="btn-primary">
-          Сохранить
+          {t('common.save')}
         </button>
         <button type="button" onClick={onCancel} className="btn-secondary">
-          Отмена
+          {t('common.cancel')}
         </button>
       </div>
     </form>
@@ -395,6 +397,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
 }
 
 const GraduateProfile = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { user } = useOutletContext<OutletContext>()
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -835,7 +838,7 @@ const GraduateProfile = () => {
               {/* Header Card with Photo and Basic Info */}
               <Card className="mb-6">
               <div className="flex justify-between items-start mb-6">
-                  <h2 className="text-3xl font-bold text-white">Мой профиль</h2>
+                  <h2 className="text-3xl font-bold text-white">{t('profile.myProfile')}</h2>
                 <div className="flex space-x-2">
                   <button
                     onClick={() => {
@@ -846,14 +849,14 @@ const GraduateProfile = () => {
                       }, 100)
                     }}
                     className="p-2 text-accent-cyan hover:bg-dark-surface rounded-lg transition-colors"
-                      title="Редактировать профиль"
+                      title={t('profile.editProfile')}
                   >
                     <Edit className="h-5 w-5" />
                   </button>
                   <button
                     onClick={handleDeleteProfile}
                     className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
-                      title="Удалить профиль"
+                      title={t('profile.deleteProfile')}
                   >
                     <Trash2 className="h-5 w-5" />
                   </button>
@@ -963,14 +966,14 @@ const GraduateProfile = () => {
                             </a>
                           )}
                           {profile.portfolio && (
-                            <a 
-                              href={profile.portfolio} 
-                              target="_blank" 
+                            <a
+                              href={profile.portfolio}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="flex items-center gap-2 text-gray-300 hover:text-accent-cyan transition-colors"
                             >
                               <Globe className="h-5 w-5" />
-                              <span className="text-sm">Портфолио</span>
+                              <span className="text-sm">{t('profile.portfolio')}</span>
                             </a>
                           )}
                       </div>
@@ -985,7 +988,7 @@ const GraduateProfile = () => {
                 <Card className="mb-6 scroll-animate-item">
                   <div className="flex items-center gap-3 mb-4">
                     <Briefcase className="h-6 w-6 text-accent-cyan" />
-                    <h3 className="text-xl font-semibold text-white">О себе</h3>
+                    <h3 className="text-xl font-semibold text-white">{t('profile.about')}</h3>
                       </div>
                   <p className="text-gray-300 leading-relaxed text-base">{profile.about}</p>
                 </Card>
@@ -996,7 +999,7 @@ const GraduateProfile = () => {
                 <Card className="mb-6 scroll-animate-item">
                   <div className="flex items-center gap-3 mb-4">
                     <Code className="h-6 w-6 text-accent-cyan" />
-                    <h3 className="text-xl font-semibold text-white">Навыки</h3>
+                    <h3 className="text-xl font-semibold text-white">{t('profile.skills')}</h3>
                       </div>
                   <div className="flex flex-wrap gap-3">
                     {profile.skills.map((skill, index) => (
@@ -1016,7 +1019,7 @@ const GraduateProfile = () => {
                 <Card className="mb-6 scroll-animate-item">
                   <div className="flex items-center gap-3 mb-4">
                     <GraduationCap className="h-6 w-6 text-accent-cyan" />
-                    <h3 className="text-xl font-semibold text-white">Образование</h3>
+                    <h3 className="text-xl font-semibold text-white">{t('profile.education')}</h3>
                       </div>
                   <p className="text-gray-300 leading-relaxed">{profile.education}</p>
                 </Card>
@@ -1027,7 +1030,7 @@ const GraduateProfile = () => {
                 <Card className="mb-6 scroll-animate-item">
                   <div className="flex items-center gap-3 mb-4">
                     <Award className="h-6 w-6 text-accent-cyan" />
-                    <h3 className="text-xl font-semibold text-white">Опыт работы</h3>
+                    <h3 className="text-xl font-semibold text-white">{t('profile.experience')}</h3>
                   </div>
                   <div className="text-gray-300 leading-relaxed whitespace-pre-line">{profile.experience}</div>
                 </Card>
@@ -1038,7 +1041,7 @@ const GraduateProfile = () => {
                 <Card className="mb-6 scroll-animate-item">
                   <div className="flex items-center gap-3 mb-6">
                     <Code className="h-6 w-6 text-accent-cyan" />
-                    <h3 className="text-xl font-semibold text-white">Проекты</h3>
+                    <h3 className="text-xl font-semibold text-white">{t('profile.projects')}</h3>
                 </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {profile.projects.map((project) => (
@@ -1067,7 +1070,7 @@ const GraduateProfile = () => {
                               className="flex items-center gap-2 text-accent-cyan hover:text-accent-gold transition-colors text-sm"
                             >
                               <Globe className="h-4 w-4" />
-                              <span>Демо</span>
+                              <span>{t('profile.demo')}</span>
                             </a>
                           )}
                           {project.githubLink && (
@@ -1090,18 +1093,18 @@ const GraduateProfile = () => {
             </>
           ) : (
             <Card>
-              <p className="text-gray-300 mb-4">Профиль не заполнен</p>
-              <button 
+              <p className="text-gray-300 mb-4">{t('profile.profileNotFilled')}</p>
+              <button
                 onClick={() => {
                   setIsEditingProfile(true)
                   // Прокручиваем к верху страницы при открытии редактирования
                   setTimeout(() => {
                     window.scrollTo({ top: 0, behavior: 'smooth' })
                   }, 100)
-                }} 
+                }}
                 className="btn-primary"
               >
-                Создать профиль
+                {t('profile.createProfile')}
               </button>
             </Card>
           )}
@@ -1110,13 +1113,13 @@ const GraduateProfile = () => {
 
         {/* Skills Radar Section */}
         {activeTab === 'radar' && (
-          <Section key="radar" title="Радар навыков" className="bg-dark-bg py-0 scroll-animate-item">
+          <Section key="radar" title={t('profile.skillsRadar')} className="bg-dark-bg py-0 scroll-animate-item">
             {resumes.length > 0 && resumes[0].radarImage ? (
               <Card>
                 <div className="flex flex-col gap-4">
                   <div className="flex justify-between items-start">
                     <p className="text-gray-300">
-                      Визуализация ваших навыков, созданная на основе интерактивного радара
+                      {t('skills.subtitle')}
                     </p>
                     <button
                       onClick={async () => {
@@ -1148,7 +1151,7 @@ const GraduateProfile = () => {
             ) : (
               <Card>
                 <p className="text-gray-300 text-center py-8">
-                  У вас пока нет радара навыков. Создайте резюме и сгенерируйте радар навыков!
+                  {t('profile.noRadar')}
                 </p>
               </Card>
             )}
@@ -1157,7 +1160,7 @@ const GraduateProfile = () => {
 
         {/* Resumes Section */}
         {activeTab === 'resumes' && (
-          <Section key="resumes" title="Мои резюме" className="bg-dark-bg py-0 scroll-animate-item">
+          <Section key="resumes" title={t('profile.myResumes')} className="bg-dark-bg py-0 scroll-animate-item">
           {isCreatingResume ? (
             <ResumeForm
               onClose={() => setIsCreatingResume(false)}
@@ -1173,7 +1176,7 @@ const GraduateProfile = () => {
                   onClick={() => setIsCreatingResume(true)}
                   className="btn-primary"
                 >
-                  Создать резюме
+                  {t('profile.createResume')}
                 </button>
               </div>
               {resumes.length > 0 ? (
@@ -1212,7 +1215,7 @@ const GraduateProfile = () => {
                         <div>
                           <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                             <Award className="h-5 w-5 text-accent-cyan" />
-                            Опыт работы
+                            {t('profile.experience')}
                           </h4>
                           <p className="text-gray-300 whitespace-pre-wrap">{resume.experience}</p>
                         </div>
@@ -1222,7 +1225,7 @@ const GraduateProfile = () => {
                         <div>
                           <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                             <GraduationCap className="h-5 w-5 text-accent-cyan" />
-                            Образование
+                            {t('profile.education')}
                           </h4>
                           <p className="text-gray-300 whitespace-pre-wrap">{resume.education}</p>
                         </div>
@@ -1232,7 +1235,7 @@ const GraduateProfile = () => {
                         <div>
                           <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                             <Globe className="h-5 w-5 text-accent-cyan" />
-                            Портфолио
+                            {t('profile.portfolio')}
                           </h4>
                           <a
                             href={resume.portfolio}
@@ -1249,7 +1252,7 @@ const GraduateProfile = () => {
                         <div>
                           <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                             <Code className="h-5 w-5 text-accent-cyan" />
-                            Навыки
+                            {t('profile.skills')}
                           </h4>
                           <div className="flex flex-wrap gap-2">
                             {resume.skillsArray.map((skill, idx) => (
@@ -1286,7 +1289,7 @@ const GraduateProfile = () => {
             </div>
           ) : (
             <Card>
-              <p className="text-gray-300">У вас пока нет резюме. Создайте своё первое резюме!</p>
+              <p className="text-gray-300">{t('profile.noResumes')}</p>
             </Card>
           )}
             </>
@@ -1296,7 +1299,7 @@ const GraduateProfile = () => {
 
         {/* Favorites Section */}
         {activeTab === 'favorites' && (
-          <Section key="favorites" title="Избранные вакансии" className="bg-dark-bg py-0 scroll-animate-item">
+          <Section key="favorites" title={t('profile.favorites')} className="bg-dark-bg py-0 scroll-animate-item">
           {favorites.length > 0 ? (
             <div className="space-y-4">
               {favorites.map((fav, index) => (
@@ -1305,7 +1308,7 @@ const GraduateProfile = () => {
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-white mb-2">{fav.title}</h3>
                       <p className="text-gray-300 mb-1">
-                        Компания: {fav.companyName || fav.employer?.companyName || fav.employer?.username || 'Неизвестная компания'}
+                        {t('profile.company')}: {fav.companyName || fav.employer?.companyName || fav.employer?.username || t('common.noResults')}
                       </p>
                       {fav.location && (
                         <p className="text-gray-400 text-sm mb-1">📍 {fav.location}</p>
@@ -1317,7 +1320,7 @@ const GraduateProfile = () => {
                         <p className="text-gray-300 text-sm mt-2 whitespace-pre-wrap">{fav.description}</p>
                       )}
                       <p className="text-gray-400 text-xs mt-2">
-                        Добавлено: {new Date(fav.createdAt || Date.now()).toLocaleDateString('ru-RU', {
+                        {t('profile.addedOn')}: {new Date(fav.createdAt || Date.now()).toLocaleDateString('ru-RU', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
@@ -1329,7 +1332,7 @@ const GraduateProfile = () => {
                         onClick={() => navigate(`/vacancy/${fav.id}`)}
                         className="btn-secondary text-sm whitespace-nowrap"
                       >
-                        Подробнее
+                        {t('profile.details')}
                       </button>
                       <button
                         onClick={() => handleRemoveFavorite(fav.id)}
@@ -1345,7 +1348,7 @@ const GraduateProfile = () => {
             </div>
           ) : (
             <Card>
-              <p className="text-gray-300 text-center py-8">У вас пока нет избранных вакансий</p>
+              <p className="text-gray-300 text-center py-8">{t('profile.noFavorites')}</p>
             </Card>
           )}
         </Section>
@@ -1353,7 +1356,7 @@ const GraduateProfile = () => {
 
         {/* Applications Section */}
         {activeTab === 'applications' && (
-          <Section key="applications" title="Мои отклики" className="bg-dark-bg py-0 scroll-animate-item">
+          <Section key="applications" title={t('profile.myResponses')} className="bg-dark-bg py-0 scroll-animate-item">
           {applications.length > 0 ? (
             <div className="space-y-4">
               {applications.map((app, index) => (
@@ -1361,8 +1364,8 @@ const GraduateProfile = () => {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-white mb-2">{app.jobTitle}</h3>
-                      <p className="text-gray-300 mb-1">Компания: {app.company}</p>
-                      <p className="text-gray-400 text-sm mb-2">Отклик отправлен: {app.appliedDate}</p>
+                      <p className="text-gray-300 mb-1">{t('profile.company')}: {app.company}</p>
+                      <p className="text-gray-400 text-sm mb-2">{t('profile.responseSent')}: {app.appliedDate}</p>
                       {app.status && (
                         <div className="flex items-center gap-2">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -1370,9 +1373,9 @@ const GraduateProfile = () => {
                             app.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
                             'bg-yellow-500/20 text-yellow-400'
                           }`}>
-                            {app.status === 'accepted' ? 'Принят' :
-                             app.status === 'rejected' ? 'Отклонен' :
-                             'На рассмотрении'}
+                            {app.status === 'accepted' ? t('profile.accepted') :
+                             app.status === 'rejected' ? t('profile.rejected') :
+                             t('profile.pending')}
                           </span>
                         </div>
                       )}
@@ -1383,7 +1386,7 @@ const GraduateProfile = () => {
                           onClick={() => navigate(`/vacancy/${app.vacancyId}`)}
                           className="btn-secondary text-sm whitespace-nowrap"
                         >
-                          Подробнее
+                          {t('profile.details')}
                         </button>
                       )}
                       <button
@@ -1400,7 +1403,7 @@ const GraduateProfile = () => {
             </div>
           ) : (
             <Card>
-              <p className="text-gray-300">У вас пока нет откликов</p>
+              <p className="text-gray-300">{t('profile.noResponses')}</p>
             </Card>
           )}
         </Section>

@@ -3,7 +3,8 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
-import { Search, Filter, List, MapPin, Briefcase, Code, MessageSquare, ArrowLeft, Users } from 'lucide-react';
+import { Search, Filter, List, MapPin, Briefcase, MessageSquare, ArrowLeft, Users, ChevronUp, Home } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Card from '../../ui/Card';
 import Section from '../../ui/Section';
 import { chatAPI } from '../../../utils/chat.api';
@@ -43,8 +44,9 @@ const createCustomIcon = (count: number = 1) => {
   });
 };
 
-// Координаты городов России
+// Координаты городов мира
 const CITY_COORDINATES: Record<string, [number, number]> = {
+  // Россия
   'Москва': [55.7558, 37.6173],
   'Санкт-Петербург': [59.9343, 30.3351],
   'Новосибирск': [55.0084, 82.9357],
@@ -121,6 +123,83 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
   'Псков': [57.8136, 28.3496],
   'Южно-Сахалинск': [46.9641, 142.7285],
   'Петропавловск-Камчатский': [53.0452, 158.6511],
+  // СНГ
+  'Минск': [53.9045, 27.5615],
+  'Киев': [50.4501, 30.5234],
+  'Алматы': [43.2220, 76.8512],
+  'Астана': [51.1694, 71.4491],
+  'Ташкент': [41.2995, 69.2401],
+  'Баку': [40.4093, 49.8671],
+  'Тбилиси': [41.7151, 44.8271],
+  'Ереван': [40.1792, 44.4991],
+  'Кишинёв': [47.0105, 28.8638],
+  'Бишкек': [42.8746, 74.5698],
+  'Душанбе': [38.5598, 68.7740],
+  'Ашхабад': [37.9601, 58.3261],
+  // Европа
+  'Лондон': [51.5074, -0.1278],
+  'Париж': [48.8566, 2.3522],
+  'Берлин': [52.5200, 13.4050],
+  'Мадрид': [40.4168, -3.7038],
+  'Рим': [41.9028, 12.4964],
+  'Амстердам': [52.3676, 4.9041],
+  'Вена': [48.2082, 16.3738],
+  'Прага': [50.0755, 14.4378],
+  'Варшава': [52.2297, 21.0122],
+  'Будапешт': [47.4979, 19.0402],
+  'Стокгольм': [59.3293, 18.0686],
+  'Хельсинки': [60.1699, 24.9384],
+  'Осло': [59.9139, 10.7522],
+  'Копенгаген': [55.6761, 12.5683],
+  'Дублин': [53.3498, -6.2603],
+  'Лиссабон': [38.7223, -9.1393],
+  'Барселона': [41.3851, 2.1734],
+  'Милан': [45.4642, 9.1900],
+  'Мюнхен': [48.1351, 11.5820],
+  'Цюрих': [47.3769, 8.5417],
+  'Женева': [46.2044, 6.1432],
+  'Брюссель': [50.8503, 4.3517],
+  // Азия
+  'Токио': [35.6762, 139.6503],
+  'Пекин': [39.9042, 116.4074],
+  'Шанхай': [31.2304, 121.4737],
+  'Сеул': [37.5665, 126.9780],
+  'Сингапур': [1.3521, 103.8198],
+  'Гонконг': [22.3193, 114.1694],
+  'Бангкок': [13.7563, 100.5018],
+  'Дубай': [25.2048, 55.2708],
+  'Мумбаи': [19.0760, 72.8777],
+  'Дели': [28.7041, 77.1025],
+  'Бангалор': [12.9716, 77.5946],
+  'Тель-Авив': [32.0853, 34.7818],
+  'Стамбул': [41.0082, 28.9784],
+  // Северная Америка
+  'Нью-Йорк': [40.7128, -74.0060],
+  'Лос-Анджелес': [34.0522, -118.2437],
+  'Сан-Франциско': [37.7749, -122.4194],
+  'Чикаго': [41.8781, -87.6298],
+  'Торонто': [43.6532, -79.3832],
+  'Ванкувер': [49.2827, -123.1207],
+  'Сиэтл': [47.6062, -122.3321],
+  'Бостон': [42.3601, -71.0589],
+  'Вашингтон': [38.9072, -77.0369],
+  'Майами': [25.7617, -80.1918],
+  'Остин': [30.2672, -97.7431],
+  'Денвер': [39.7392, -104.9903],
+  // Южная Америка
+  'Сан-Паулу': [-23.5505, -46.6333],
+  'Буэнос-Айрес': [-34.6037, -58.3816],
+  'Сантьяго': [-33.4489, -70.6693],
+  'Богота': [4.7110, -74.0721],
+  'Лима': [-12.0464, -77.0428],
+  // Океания
+  'Сидней': [-33.8688, 151.2093],
+  'Мельбурн': [-37.8136, 144.9631],
+  'Окленд': [-36.8509, 174.7645],
+  // Африка
+  'Кейптаун': [-33.9249, 18.4241],
+  'Каир': [30.0444, 31.2357],
+  'Лагос': [6.5244, 3.3792],
 };
 
 interface Resume {
@@ -157,9 +236,34 @@ const MapController = ({ center, zoom }: { center: [number, number]; zoom: numbe
   return null;
 };
 
+// Кнопка "Домой" для карты (навести на Москву)
+const HomeButton = () => {
+  const map = useMap();
+
+  const goToMoscow = () => {
+    map.setView([55.7558, 37.6173], 10);
+  };
+
+  return (
+    <div className="leaflet-top leaflet-left" style={{ marginTop: '80px' }}>
+      <div className="leaflet-control leaflet-bar">
+        <button
+          onClick={goToMoscow}
+          className="bg-white hover:bg-gray-100 w-[30px] h-[30px] flex items-center justify-center border-0 cursor-pointer"
+          title="Москва"
+          style={{ borderRadius: '2px' }}
+        >
+          <Home className="h-4 w-4 text-gray-700" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const CandidatesMap = () => {
   const navigate = useNavigate();
   const { user } = useOutletContext<OutletContext>();
+  const { t } = useTranslation();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -322,10 +426,10 @@ const CandidatesMap = () => {
               >
                 <ArrowLeft className="h-6 w-6" />
               </button>
-              <h1 className="text-4xl font-bold text-white">Карта соискателей</h1>
+              <h1 className="text-4xl font-bold text-white">{t('candidates.mapTitle')}</h1>
             </div>
             <p className="text-gray-300 text-lg">
-              Интерактивная карта с расположением кандидатов по городам России
+              {t('candidates.mapSubtitle')}
             </p>
           </div>
 
@@ -337,7 +441,7 @@ const CandidatesMap = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Поиск по навыкам, городам, имени..."
+                    placeholder={t('candidates.search')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-dark-surface border border-dark-card rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-accent-cyan"
@@ -348,7 +452,7 @@ const CandidatesMap = () => {
                   className={`btn-secondary flex items-center gap-2 ${showFilters ? 'border-accent-cyan text-accent-cyan' : ''}`}
                 >
                   <Filter className="h-4 w-4" />
-                  Фильтры
+                  {t('common.filter')}
                   {(selectedSkills.length > 0 || selectedLevel) && (
                     <span className="bg-accent-cyan text-dark-bg text-xs px-2 py-0.5 rounded-full">
                       {selectedSkills.length + (selectedLevel ? 1 : 0)}
@@ -360,7 +464,7 @@ const CandidatesMap = () => {
                   className="btn-secondary flex items-center gap-2"
                 >
                   <List className="h-4 w-4" />
-                  Списком
+                  {t('candidates.listView')}
                 </button>
               </div>
 
@@ -370,13 +474,13 @@ const CandidatesMap = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Уровень */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Уровень</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.level')}</label>
                       <select
                         value={selectedLevel}
                         onChange={(e) => setSelectedLevel(e.target.value)}
                         className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan"
                       >
-                        <option value="">Все уровни</option>
+                        <option value="">{t('common.all')}</option>
                         <option value="junior">Junior</option>
                         <option value="middle">Middle</option>
                         <option value="senior">Senior</option>
@@ -386,7 +490,7 @@ const CandidatesMap = () => {
 
                     {/* Навыки */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Навыки</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.skills')}</label>
                       <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                         {allSkills.slice(0, 20).map(skill => (
                           <button
@@ -414,7 +518,7 @@ const CandidatesMap = () => {
                       }}
                       className="mt-4 text-accent-cyan hover:text-accent-cyan/80 text-sm"
                     >
-                      Сбросить фильтры
+                      {t('candidates.resetFilters')}
                     </button>
                   )}
                 </div>
@@ -425,12 +529,12 @@ const CandidatesMap = () => {
           {/* Основной контент: карта + статистика */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Статистика по городам */}
-            <Card className="lg:col-span-1 h-fit">
+            <Card className="lg:col-span-1 h-[600px] flex flex-col">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Users className="h-5 w-5 text-accent-cyan" />
-                Топ городов
+                {t('candidates.topCities')}
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1 overflow-y-auto">
                 {cityStats.map(([city, count]) => (
                   <button
                     key={city}
@@ -439,7 +543,7 @@ const CandidatesMap = () => {
                   >
                     <span className="text-gray-300 group-hover:text-white flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-accent-cyan" />
-                      {city}
+                      {t(`cities.${city}`, city)}
                     </span>
                     <span className="bg-accent-cyan/20 text-accent-cyan text-sm px-2 py-0.5 rounded-full">
                       {count}
@@ -449,35 +553,37 @@ const CandidatesMap = () => {
               </div>
               <div className="mt-4 pt-4 border-t border-dark-card">
                 <p className="text-sm text-gray-400">
-                  Всего кандидатов: <span className="text-white font-semibold">{filteredResumes.length}</span>
+                  {t('candidates.totalCandidates')}: <span className="text-white font-semibold">{filteredResumes.length}</span>
                 </p>
                 <p className="text-sm text-gray-400">
-                  На карте: <span className="text-white font-semibold">{markers.reduce((acc, m) => acc + m.resumes.length, 0)}</span>
+                  {t('candidates.onMap')}: <span className="text-white font-semibold">{markers.reduce((acc, m) => acc + m.resumes.length, 0)}</span>
                 </p>
               </div>
             </Card>
 
             {/* Карта */}
-            <Card className="lg:col-span-3 p-0 overflow-hidden">
+            <Card className="lg:col-span-3 p-0 overflow-hidden h-[600px] relative z-0">
               {loading ? (
-                <div className="h-[600px] flex items-center justify-center">
+                <div className="h-full flex items-center justify-center">
                   <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-cyan"></div>
                 </div>
               ) : (
                 <MapContainer
                   center={mapCenter}
                   zoom={mapZoom}
-                  style={{ height: '600px', width: '100%' }}
+                  style={{ height: '100%', width: '100%', zIndex: 0 }}
                   className="rounded-lg"
+                  worldCopyJump={true}
+                  attributionControl={false}
                 >
                   <MapController center={mapCenter} zoom={mapZoom} />
                   <TileLayer
-                    attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                   />
+                  <HomeButton />
                   <MarkerClusterGroup
                     chunkedLoading
-                    iconCreateFunction={(cluster) => {
+                    iconCreateFunction={(cluster: { getChildCount: () => number }) => {
                       const count = cluster.getChildCount();
                       return L.divIcon({
                         className: 'custom-cluster',
@@ -510,10 +616,10 @@ const CandidatesMap = () => {
                           <div className="bg-dark-surface rounded-lg p-4 min-w-[350px]">
                             <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2">
                               <MapPin className="h-5 w-5 text-accent-cyan" />
-                              {marker.city}
+                              {t(`cities.${marker.city}`, marker.city)}
                             </h3>
                             <p className="text-gray-400 text-sm mb-3">
-                              Всего кандидатов: <span className="text-accent-cyan font-semibold">{marker.resumes.length}</span>
+                              {t('candidates.totalInCity')}: <span className="text-accent-cyan font-semibold">{marker.resumes.length}</span>
                             </p>
                             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                               {marker.resumes.map((resume, index) => (
@@ -559,7 +665,7 @@ const CandidatesMap = () => {
                                       className="mt-2 text-xs text-accent-cyan hover:text-accent-cyan/80 flex items-center gap-1"
                                     >
                                       <MessageSquare className="h-3 w-3" />
-                                      Написать
+                                      {t('candidates.writeMessage')}
                                     </button>
                                   )}
                                 </div>
@@ -575,20 +681,17 @@ const CandidatesMap = () => {
             </Card>
           </div>
 
-          {/* Кнопка сброса зума */}
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => {
-                setMapCenter([55.7558, 49.0]);
-                setMapZoom(4);
-              }}
-              className="text-accent-cyan hover:text-accent-cyan/80 text-sm"
-            >
-              Показать всю Россию
-            </button>
-          </div>
         </Section>
       </div>
+
+      {/* Кнопка вернуться в начало */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="fixed bottom-6 right-6 p-3 bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg rounded-full shadow-lg transition-all z-50"
+        title="Вернуться в начало"
+      >
+        <ChevronUp className="h-6 w-6" />
+      </button>
     </div>
   );
 };

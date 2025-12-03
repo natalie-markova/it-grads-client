@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { MessageSquare, Bot, ArrowRight, Mic, Calendar } from 'lucide-react';
 import Section from '../../ui/Section';
 import Card from '../../ui/Card';
@@ -7,12 +8,13 @@ import { useScrollAnimation } from '../../../hooks/useScrollAnimation';
 const InterviewHub = () => {
   useScrollAnimation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="bg-dark-bg min-h-screen py-8">
       <Section
-        title="Подготовка к собеседованию"
-        subtitle="Выберите формат подготовки"
+        title={t('interview.title')}
+        subtitle={t('interview.chooseFormat')}
         className="bg-dark-bg py-0"
       >
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
@@ -23,31 +25,30 @@ const InterviewHub = () => {
                 <MessageSquare className="w-8 h-8 text-accent-cyan" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">
-                Практика с вопросами
+                {t('interview.practiceQuiz.title')}
               </h3>
               <p className="text-gray-300 mb-6 flex-grow">
-                Отвечайте на готовые вопросы по различным технологиям.
-                Моментальная обратная связь и объяснения.
+                {t('interview.practiceQuiz.description')}
               </p>
               <ul className="text-left text-gray-300 mb-6 space-y-2">
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Быстрая практика</span>
+                  <span>{t('interview.practiceQuiz.feature1')}</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Готовые вопросы по категориям</span>
+                  <span>{t('interview.practiceQuiz.feature2')}</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Мгновенные объяснения</span>
+                  <span>{t('interview.practiceQuiz.feature3')}</span>
                 </li>
               </ul>
               <button
                 onClick={() => navigate('/interview/practice')}
                 className="btn-primary w-full flex items-center justify-center gap-2 mt-auto"
               >
-                Начать практику
+                {t('interview.practiceQuiz.button')}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -60,31 +61,30 @@ const InterviewHub = () => {
                 <Bot className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">
-                AI интервью
+                {t('interview.aiInterview.title')}
               </h3>
               <p className="text-gray-300 mb-6 flex-grow">
-                Реалистичное собеседование с AI-интервьюером от YandexGPT.
-                Адаптивные вопросы и детальная оценка.
+                {t('interview.aiInterview.description')}
               </p>
               <ul className="text-left text-gray-300 mb-6 space-y-2">
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Реалистичное интервью</span>
+                  <span>{t('interview.aiInterview.feature1')}</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Адаптивные вопросы AI</span>
+                  <span>{t('interview.aiInterview.feature2')}</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Детальная оценка и рекомендации</span>
+                  <span>{t('interview.aiInterview.feature3')}</span>
                 </li>
               </ul>
               <button
                 onClick={() => navigate('/interview/ai/setup')}
                 className="btn-primary w-full flex items-center justify-center gap-2 bg-gradient-to-r from-accent-cyan to-accent-purple mt-auto"
               >
-                Начать AI интервью
+                {t('interview.aiInterview.button')}
                 <Bot className="w-4 h-4" />
               </button>
             </div>
@@ -97,31 +97,30 @@ const InterviewHub = () => {
                 <Mic className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">
-                Аудио-интервью
+                {t('interview.audioInterview.title')}
               </h3>
               <p className="text-gray-300 mb-6 flex-grow">
-                Практикуйтесь с голосовым вводом. Разные типы интервьюеров:
-                HR, тимлид, CEO.
+                {t('interview.audioInterview.description')}
               </p>
               <ul className="text-left text-gray-300 mb-6 space-y-2">
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Голосовой ввод</span>
+                  <span>{t('interview.audioInterview.feature1')}</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Выбор типа интервьюера</span>
+                  <span>{t('interview.audioInterview.feature2')}</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Оценка soft skills</span>
+                  <span>{t('interview.audioInterview.feature3')}</span>
                 </li>
               </ul>
               <button
                 onClick={() => navigate('/interview/audio')}
                 className="btn-primary w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 mt-auto"
               >
-                Начать аудио-интервью
+                {t('interview.audioInterview.button')}
                 <Mic className="w-4 h-4" />
               </button>
             </div>
@@ -134,30 +133,30 @@ const InterviewHub = () => {
                 <Calendar className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">
-                Трекер собеседований
+                {t('interview.tracker.title')}
               </h3>
               <p className="text-gray-300 mb-6 flex-grow">
-                Управляйте своими собеседованиями. Календарь, напоминания и заметки.
+                {t('interview.tracker.description')}
               </p>
               <ul className="text-left text-gray-300 mb-6 space-y-2">
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Календарь встреч</span>
+                  <span>{t('interview.tracker.feature1')}</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Напоминания</span>
+                  <span>{t('interview.tracker.feature2')}</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-accent-cyan mr-2">✓</span>
-                  <span>Заметки и результаты</span>
+                  <span>{t('interview.tracker.feature3')}</span>
                 </li>
               </ul>
               <button
                 onClick={() => navigate('/interview/tracker')}
                 className="btn-primary w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 mt-auto"
               >
-                Открыть трекер
+                {t('interview.tracker.button')}
                 <Calendar className="w-4 h-4" />
               </button>
             </div>
