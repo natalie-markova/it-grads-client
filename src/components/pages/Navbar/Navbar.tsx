@@ -122,6 +122,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
         { path: '/candidates', label: t('navbar.candidates') },
         { path: '/candidates/map', label: t('navbar.candidatesMap') },
         { path: '/jobs', label: t('navbar.vacancies') },
+        { path: '/interview/tracker', label: t('navbar.interviewTracker') },
     ]
 
     const navLinks = userType === 'graduate' ? graduateNavLinks : (userType === 'employer' ? employerNavLinks : baseNavLinks)

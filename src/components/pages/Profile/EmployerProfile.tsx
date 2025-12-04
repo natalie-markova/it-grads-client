@@ -724,8 +724,8 @@ const EmployerProfile = () => {
           </div>
         )}
 
-        {/* Change Password Section */}
-        <ChangePassword />
+        {/* Change Password Section - только на вкладке Профиль */}
+        {activeTab === 'profile' && <ChangePassword />}
       </div>
     </div>
   );
