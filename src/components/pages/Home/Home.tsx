@@ -136,12 +136,18 @@ const Home = () => {
 
   return (
     <div className="bg-dark-bg overflow-hidden">
-      {/* Massive Hero Section */}
+      {/* Hero Section */}
       <section className="relative min-h-[85vh] flex items-center bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg py-20 md:py-32">
         {/* Декоративные элементы */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-72 h-72 bg-accent-cyan/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-20 left-10 w-96 h-96 bg-accent-blue/10 rounded-full blur-3xl"></div>
+        </div>
+
+        {/* Орнамент справа внизу - подсказка о скролле */}
+        <div className="absolute bottom-8 right-8 flex flex-col items-center gap-2 text-gray-500/40">
+          <div className="w-[1px] h-16 bg-gradient-to-b from-transparent via-accent-cyan/30 to-accent-cyan/50"></div>
+          <div className="w-2 h-2 rounded-full bg-accent-cyan/40 animate-pulse"></div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">

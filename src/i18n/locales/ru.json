@@ -37,7 +37,8 @@
     "minutesAgo": "{{count}} мин. назад",
     "hoursAgo": "{{count}} ч. назад",
     "resetAll": "Сбросить все",
-    "activeFilters": "Активные фильтры"
+    "activeFilters": "Активные фильтры",
+    "scrollDown": "Листать"
   },
   "chat": {
     "title": "Сообщения",
