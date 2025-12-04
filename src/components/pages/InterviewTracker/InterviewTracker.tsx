@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Calendar,
   Clock,
@@ -64,6 +65,7 @@ const RESULT_COLORS = {
 const InterviewTracker = () => {
   const navigate = useNavigate()
   const { user } = useOutletContext<OutletContext>()
+  const { t, i18n } = useTranslation()
   const [interviews, setInterviews] = useState<Interview[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingInterview, setEditingInterview] = useState<Interview | null>(null)
@@ -98,48 +100,8 @@ const InterviewTracker = () => {
       setInterviews(response.data)
     } catch (error) {
       console.error('Error loading interviews:', error)
-      // Загрузим демо-данные для отображения
-      setInterviews([
-        {
-          id: 1,
-          company: 'Яндекс',
-          position: 'Frontend Developer',
-          date: new Date().toISOString().split('T')[0],
-          time: '14:00',
-          type: 'online',
-          status: 'scheduled',
-          meetingLink: 'https://meet.google.com/abc-defg-hij',
-          contactPerson: 'Мария Петрова',
-          notes: 'Подготовить портфолио, изучить React 18',
-          reminder: true,
-        },
-        {
-          id: 2,
-          company: 'Сбер',
-          position: 'Full Stack Developer',
-          date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          time: '11:00',
-          type: 'offline',
-          status: 'scheduled',
-          location: 'ул. Вавилова, 19, Москва',
-          contactPerson: 'Иван Смирнов',
-          contactPhone: '+7 (999) 123-45-67',
-          notes: 'Взять паспорт для пропуска',
-          reminder: true,
-        },
-        {
-          id: 3,
-          company: 'VK',
-          position: 'React Developer',
-          date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          time: '16:00',
-          type: 'online',
-          status: 'completed',
-          result: 'passed',
-          feedback: 'Хорошее знание React и TypeScript. Пригласят на финальное собеседование.',
-          reminder: false,
-        },
-      ])
+      // У пользователя пустой трекер по умолчанию
+      setInterviews([])
     }
   }
 
@@ -149,47 +111,29 @@ const InterviewTracker = () => {
     try {
       if (editingInterview) {
         await $api.put(`/interview-tracker/${editingInterview.id}`, formData)
-        toast.success('Собеседование обновлено')
+        toast.success(t('interview.tracker.messages.updated'))
       } else {
         await $api.post('/interview-tracker', formData)
-        toast.success('Собеседование добавлено')
+        toast.success(t('interview.tracker.messages.added'))
       }
       loadInterviews()
       closeModal()
     } catch (error) {
       console.error('Error saving interview:', error)
-      // Локальное добавление для демо
-      if (editingInterview) {
-        setInterviews(prev => prev.map(i =>
-          i.id === editingInterview.id
-            ? { ...i, ...formData, status: i.status }
-            : i
-        ))
-        toast.success('Собеседование обновлено')
-      } else {
-        const newInterview: Interview = {
-          id: Date.now(),
-          ...formData,
-          status: 'scheduled',
-        }
-        setInterviews(prev => [...prev, newInterview])
-        toast.success('Собеседование добавлено')
-      }
-      closeModal()
+      toast.error(t('interview.tracker.messages.saveError'))
     }
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Удалить это собеседование?')) return
+    if (!confirm(t('interview.tracker.messages.deleteConfirm'))) return
 
     try {
       await $api.delete(`/interview-tracker/${id}`)
-      toast.success('Собеседование удалено')
+      toast.success(t('interview.tracker.messages.deleted'))
       loadInterviews()
     } catch (error) {
       console.error('Error deleting interview:', error)
-      setInterviews(prev => prev.filter(i => i.id !== id))
-      toast.success('Собеседование удалено')
+      toast.error(t('interview.tracker.messages.deleteError'))
     }
   }
 
@@ -197,20 +141,22 @@ const InterviewTracker = () => {
     try {
       await $api.patch(`/interview-tracker/${id}/status`, { status })
       loadInterviews()
+      toast.success(t('interview.tracker.messages.statusUpdated'))
     } catch (error) {
-      setInterviews(prev => prev.map(i => i.id === id ? { ...i, status } : i))
+      console.error('Error updating status:', error)
+      toast.error(t('interview.tracker.messages.statusError'))
     }
-    toast.success('Статус обновлён')
   }
 
   const handleResultChange = async (id: number, result: Interview['result']) => {
     try {
       await $api.patch(`/interview-tracker/${id}/result`, { result })
       loadInterviews()
+      toast.success(t('interview.tracker.messages.resultSaved'))
     } catch (error) {
-      setInterviews(prev => prev.map(i => i.id === id ? { ...i, result } : i))
+      console.error('Error updating result:', error)
+      toast.error(t('interview.tracker.messages.resultError'))
     }
-    toast.success('Результат сохранён')
   }
 
   const openModal = (interview?: Interview) => {
@@ -313,14 +259,14 @@ const InterviewTracker = () => {
   if (!user) {
     return (
       <div className="bg-dark-bg min-h-screen py-8">
-        <Section title="Трекер собеседований" className="bg-dark-bg">
+        <Section title={t('interview.tracker.title')} className="bg-dark-bg">
           <Card>
             <p className="text-gray-300 text-center py-8">
-              Войдите в систему, чтобы использовать трекер собеседований
+              {t('interview.tracker.messages.loginRequired')}
             </p>
             <div className="flex justify-center">
               <button onClick={() => navigate('/login')} className="btn-primary">
-                Войти
+                {t('interview.tracker.messages.login')}
               </button>
             </div>
           </Card>
@@ -337,13 +283,13 @@ const InterviewTracker = () => {
           <div>
             <h1 className="text-3xl font-bold text-white flex items-center gap-3">
               <Calendar className="h-8 w-8 text-accent-cyan" />
-              Трекер собеседований
+              {t('interview.tracker.title')}
             </h1>
-            <p className="text-gray-400 mt-2">Управляйте своими собеседованиями в одном месте</p>
+            <p className="text-gray-400 mt-2">{t('interview.tracker.subtitle')}</p>
           </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            Добавить собеседование
+            {t('interview.tracker.addInterview')}
           </button>
         </div>
 
@@ -351,19 +297,19 @@ const InterviewTracker = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card className="text-center py-4">
             <div className="text-3xl font-bold text-white">{stats.total}</div>
-            <div className="text-gray-400 text-sm">Всего</div>
+            <div className="text-gray-400 text-sm">{t('interview.tracker.stats.total')}</div>
           </Card>
           <Card className="text-center py-4">
             <div className="text-3xl font-bold text-blue-400">{stats.scheduled}</div>
-            <div className="text-gray-400 text-sm">Запланировано</div>
+            <div className="text-gray-400 text-sm">{t('interview.tracker.stats.scheduled')}</div>
           </Card>
           <Card className="text-center py-4">
             <div className="text-3xl font-bold text-green-400">{stats.completed}</div>
-            <div className="text-gray-400 text-sm">Пройдено</div>
+            <div className="text-gray-400 text-sm">{t('interview.tracker.stats.completed')}</div>
           </Card>
           <Card className="text-center py-4">
             <div className="text-3xl font-bold text-accent-cyan">{stats.passed}</div>
-            <div className="text-gray-400 text-sm">Успешных</div>
+            <div className="text-gray-400 text-sm">{t('interview.tracker.stats.passed')}</div>
           </Card>
         </div>
 
@@ -372,23 +318,29 @@ const InterviewTracker = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setViewMode('calendar')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
+              className={`px-4 py-2 rounded-lg transition-colors relative group ${
                 viewMode === 'calendar'
                   ? 'bg-accent-cyan text-dark-bg'
                   : 'bg-dark-surface text-gray-300 hover:bg-dark-card'
               }`}
             >
               <Calendar className="h-5 w-5" />
+              <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-dark-surface text-gray-300 text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-dark-card">
+                {t('interview.tracker.calendarView')}
+              </span>
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
+              className={`px-4 py-2 rounded-lg transition-colors relative group ${
                 viewMode === 'list'
                   ? 'bg-accent-cyan text-dark-bg'
                   : 'bg-dark-surface text-gray-300 hover:bg-dark-card'
               }`}
             >
               <FileText className="h-5 w-5" />
+              <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-dark-surface text-gray-300 text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-dark-card">
+                {t('interview.tracker.listView')}
+              </span>
             </button>
           </div>
           <select
@@ -396,10 +348,10 @@ const InterviewTracker = () => {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="bg-dark-surface border border-dark-card text-white rounded-lg px-4 py-2"
           >
-            <option value="all">Все статусы</option>
-            <option value="scheduled">Запланированные</option>
-            <option value="completed">Завершённые</option>
-            <option value="cancelled">Отменённые</option>
+            <option value="all">{t('interview.tracker.allStatuses')}</option>
+            <option value="scheduled">{t('interview.tracker.scheduledStatus')}</option>
+            <option value="completed">{t('interview.tracker.completedStatus')}</option>
+            <option value="cancelled">{t('interview.tracker.cancelledStatus')}</option>
           </select>
         </div>
 
@@ -416,8 +368,8 @@ const InterviewTracker = () => {
                   >
                     <ChevronLeft className="h-5 w-5 text-gray-400" />
                   </button>
-                  <h2 className="text-xl font-semibold text-white">
-                    {selectedDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
+                  <h2 className="text-xl font-semibold text-white capitalize">
+                    {selectedDate.toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US', { month: 'long', year: 'numeric' })}
                   </h2>
                   <button
                     onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1))}
@@ -429,9 +381,9 @@ const InterviewTracker = () => {
 
                 {/* Calendar Grid */}
                 <div className="grid grid-cols-7 gap-1">
-                  {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
+                  {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => (
                     <div key={day} className="text-center text-gray-400 text-sm py-2 font-medium">
-                      {day}
+                      {t(`interview.tracker.calendar.${day}`)}
                     </div>
                   ))}
                   {getDaysInMonth(selectedDate).map((date, index) => {
@@ -470,7 +422,7 @@ const InterviewTracker = () => {
                         ))}
                         {dayInterviews.length > 2 && (
                           <div className="text-xs text-gray-400 mt-1">
-                            +{dayInterviews.length - 2} ещё
+                            +{dayInterviews.length - 2} {t('interview.tracker.more')}
                           </div>
                         )}
                       </div>
@@ -483,7 +435,7 @@ const InterviewTracker = () => {
                 {filteredInterviews.length === 0 ? (
                   <Card>
                     <p className="text-gray-400 text-center py-8">
-                      Нет собеседований для отображения
+                      {t('interview.tracker.noInterviews')}
                     </p>
                   </Card>
                 ) : (
@@ -507,10 +459,10 @@ const InterviewTracker = () => {
             <Card>
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Bell className="h-5 w-5 text-accent-cyan" />
-                Ближайшие собеседования
+                {t('interview.tracker.upcoming')}
               </h3>
               {upcomingInterviews.length === 0 ? (
-                <p className="text-gray-400 text-sm">Нет запланированных собеседований</p>
+                <p className="text-gray-400 text-sm">{t('interview.tracker.noUpcoming')}</p>
               ) : (
                 <div className="space-y-3">
                   {upcomingInterviews.slice(0, 5).map(interview => {
@@ -539,7 +491,7 @@ const InterviewTracker = () => {
                             daysUntil === 1 ? 'bg-yellow-500/20 text-yellow-400' :
                             'bg-blue-500/20 text-blue-400'
                           }`}>
-                            {daysUntil === 0 ? 'Сегодня' : daysUntil === 1 ? 'Завтра' : `Через ${daysUntil} дн.`}
+                            {daysUntil === 0 ? t('interview.tracker.today') : daysUntil === 1 ? t('interview.tracker.tomorrow') : t('interview.tracker.inDays', { count: daysUntil })}
                           </span>
                         </div>
                       </div>
@@ -551,23 +503,23 @@ const InterviewTracker = () => {
 
             {/* Quick Tips */}
             <Card>
-              <h3 className="text-lg font-semibold text-white mb-4">Советы</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">{t('interview.tracker.tips.title')}</h3>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  Подготовьте вопросы к компании заранее
+                  {t('interview.tracker.tips.tip1')}
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  Изучите проекты и технологии компании
+                  {t('interview.tracker.tips.tip2')}
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  Проверьте связь за 15 минут до онлайн-собеседования
+                  {t('interview.tracker.tips.tip3')}
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  Записывайте обратную связь после каждого интервью
+                  {t('interview.tracker.tips.tip4')}
                 </li>
               </ul>
             </Card>
@@ -582,7 +534,7 @@ const InterviewTracker = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white">
-                  {editingInterview ? 'Редактировать собеседование' : 'Новое собеседование'}
+                  {editingInterview ? t('interview.tracker.form.editInterview') : t('interview.tracker.form.newInterview')}
                 </h2>
                 <button onClick={closeModal} className="p-2 hover:bg-dark-surface rounded-lg">
                   <X className="h-5 w-5 text-gray-400" />
@@ -592,7 +544,7 @@ const InterviewTracker = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Компания *</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.tracker.form.company')} *</label>
                     <input
                       type="text"
                       value={formData.company}
@@ -602,7 +554,7 @@ const InterviewTracker = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Позиция *</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.tracker.form.position')} *</label>
                     <input
                       type="text"
                       value={formData.position}
@@ -615,7 +567,7 @@ const InterviewTracker = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Дата *</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.tracker.form.date')} *</label>
                     <input
                       type="date"
                       value={formData.date}
@@ -625,7 +577,7 @@ const InterviewTracker = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Время *</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.tracker.form.time')} *</label>
                     <input
                       type="time"
                       value={formData.time}
@@ -635,22 +587,22 @@ const InterviewTracker = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Тип</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.tracker.form.type')}</label>
                     <select
                       value={formData.type}
                       onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                       className="w-full bg-dark-surface border border-dark-card rounded-lg px-4 py-2 text-white"
                     >
-                      <option value="online">Онлайн</option>
-                      <option value="offline">Офис</option>
-                      <option value="phone">Телефон</option>
+                      <option value="online">{t('interview.tracker.form.online')}</option>
+                      <option value="offline">{t('interview.tracker.form.offline')}</option>
+                      <option value="phone">{t('interview.tracker.form.phone')}</option>
                     </select>
                   </div>
                 </div>
 
                 {formData.type === 'online' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Ссылка на встречу</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.tracker.form.meetingLink')}</label>
                     <input
                       type="url"
                       value={formData.meetingLink}
@@ -663,20 +615,19 @@ const InterviewTracker = () => {
 
                 {formData.type === 'offline' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Адрес</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.tracker.form.address')}</label>
                     <input
                       type="text"
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                       className="w-full bg-dark-surface border border-dark-card rounded-lg px-4 py-2 text-white"
-                      placeholder="Адрес офиса"
                     />
                   </div>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Контактное лицо</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.tracker.form.contactPerson')}</label>
                     <input
                       type="text"
                       value={formData.contactPerson}
@@ -685,7 +636,7 @@ const InterviewTracker = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Телефон контакта</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.tracker.form.contactPhone')}</label>
                     <input
                       type="tel"
                       value={formData.contactPhone}
@@ -696,12 +647,12 @@ const InterviewTracker = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Заметки</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.tracker.form.notes')}</label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     className="w-full bg-dark-surface border border-dark-card rounded-lg px-4 py-2 text-white h-24 resize-none"
-                    placeholder="Что подготовить, вопросы к компании..."
+                    placeholder={t('interview.tracker.form.notesPlaceholder')}
                   />
                 </div>
 
@@ -714,13 +665,13 @@ const InterviewTracker = () => {
                     className="w-4 h-4 rounded border-gray-600 bg-dark-surface"
                   />
                   <label htmlFor="reminder" className="text-gray-300">
-                    Напомнить за день до собеседования
+                    {t('interview.tracker.form.reminder')}
                   </label>
                 </div>
 
                 <div className="flex gap-3 pt-4">
                   <button type="submit" className="btn-primary flex-1">
-                    {editingInterview ? 'Сохранить' : 'Добавить'}
+                    {editingInterview ? t('interview.tracker.form.save') : t('interview.tracker.form.add')}
                   </button>
                   {editingInterview && (
                     <button
@@ -732,11 +683,11 @@ const InterviewTracker = () => {
                       className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
                     >
                       <Trash2 className="h-4 w-4" />
-                      Удалить
+                      {t('interview.tracker.form.delete')}
                     </button>
                   )}
                   <button type="button" onClick={closeModal} className="btn-secondary">
-                    Отмена
+                    {t('interview.tracker.form.cancel')}
                   </button>
                 </div>
               </form>
@@ -758,6 +709,7 @@ interface InterviewCardProps {
 }
 
 const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultChange }: InterviewCardProps) => {
+  const { t, i18n } = useTranslation()
   const TypeIcon = INTERVIEW_TYPES[interview.type].icon
   const [showFeedback, setShowFeedback] = useState(false)
 
@@ -769,13 +721,11 @@ const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultCh
             <Building2 className="h-5 w-5 text-accent-cyan" />
             <h3 className="text-lg font-semibold text-white">{interview.company}</h3>
             <span className={`px-2 py-0.5 rounded text-xs border ${STATUS_COLORS[interview.status]}`}>
-              {interview.status === 'scheduled' ? 'Запланировано' :
-               interview.status === 'completed' ? 'Завершено' : 'Отменено'}
+              {t(`interview.tracker.status.${interview.status}`)}
             </span>
             {interview.result && (
               <span className={`px-2 py-0.5 rounded text-xs ${RESULT_COLORS[interview.result]}`}>
-                {interview.result === 'passed' ? 'Успешно' :
-                 interview.result === 'failed' ? 'Отказ' : 'Ожидание'}
+                {t(`interview.tracker.result.${interview.result}`)}
               </span>
             )}
           </div>
@@ -783,7 +733,7 @@ const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultCh
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              {new Date(interview.date).toLocaleDateString('ru-RU')}
+              {new Date(interview.date).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
@@ -791,7 +741,7 @@ const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultCh
             </span>
             <span className={`flex items-center gap-1 ${INTERVIEW_TYPES[interview.type].color}`}>
               <TypeIcon className="h-4 w-4" />
-              {INTERVIEW_TYPES[interview.type].label}
+              {t(`interview.tracker.types.${interview.type}`)}
             </span>
             {interview.contactPerson && (
               <span className="flex items-center gap-1">
@@ -809,7 +759,7 @@ const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultCh
                 onClick={() => setShowFeedback(!showFeedback)}
                 className="text-accent-cyan text-sm hover:underline"
               >
-                {showFeedback ? 'Скрыть обратную связь' : 'Показать обратную связь'}
+                {showFeedback ? t('interview.tracker.actions.hideFeedback') : t('interview.tracker.actions.showFeedback')}
               </button>
               {showFeedback && (
                 <p className="mt-2 p-3 bg-dark-surface rounded-lg text-gray-300 text-sm">
@@ -826,14 +776,14 @@ const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultCh
               <button
                 onClick={() => onStatusChange('completed')}
                 className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-colors"
-                title="Отметить как пройденное"
+                title={t('interview.tracker.actions.markCompleted')}
               >
                 <CheckCircle className="h-5 w-5" />
               </button>
               <button
                 onClick={() => onStatusChange('cancelled')}
                 className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                title="Отменить"
+                title={t('interview.tracker.actions.markCancelled')}
               >
                 <AlertCircle className="h-5 w-5" />
               </button>
@@ -845,33 +795,33 @@ const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultCh
                 onClick={() => onResultChange('passed')}
                 className="px-3 py-1 text-xs bg-green-500/20 text-green-400 rounded hover:bg-green-500/30"
               >
-                Успешно
+                {t('interview.tracker.result.passed')}
               </button>
               <button
                 onClick={() => onResultChange('failed')}
                 className="px-3 py-1 text-xs bg-red-500/20 text-red-400 rounded hover:bg-red-500/30"
               >
-                Отказ
+                {t('interview.tracker.result.failed')}
               </button>
               <button
                 onClick={() => onResultChange('pending')}
                 className="px-3 py-1 text-xs bg-yellow-500/20 text-yellow-400 rounded hover:bg-yellow-500/30"
               >
-                Ожидание
+                {t('interview.tracker.result.pending')}
               </button>
             </div>
           )}
           <button
             onClick={onEdit}
             className="p-2 text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors"
-            title="Редактировать"
+            title={t('interview.tracker.actions.edit')}
           >
             <Edit2 className="h-5 w-5" />
           </button>
           <button
             onClick={onDelete}
             className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-            title="Удалить"
+            title={t('interview.tracker.actions.delete')}
           >
             <Trash2 className="h-5 w-5" />
           </button>

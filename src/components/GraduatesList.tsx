@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Search, Filter, X, MapPin, User, Eye } from 'lucide-react'
 import Card from './ui/Card'
 import GraduatesFilterWizard, { GraduateFilterData } from './GraduatesFilterWizard'
@@ -29,6 +30,7 @@ interface GraduatesListProps {
 }
 
 const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
+  const { t } = useTranslation()
   const [searchTerm, setSearchTerm] = useState('')
   const [showFilterWizard, setShowFilterWizard] = useState(false)
   const [selectedGraduate, setSelectedGraduate] = useState<Graduate | null>(null)
@@ -186,7 +188,7 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Поиск выпускников..."
+              placeholder={t('graduates.searchPlaceholder')}
               className="input-field pl-10"
             />
           </div>
@@ -195,7 +197,7 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
             className="btn-secondary flex items-center justify-center gap-2"
           >
             <Filter className="h-5 w-5" />
-            Фильтры
+            {t('graduates.filters')}
           </button>
         </div>
 
@@ -211,10 +213,10 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
           filters.englishLevel) && (
           <div className="mt-4 pt-4 border-t border-dark-surface">
             <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-gray-400 text-sm">Активные фильтры:</span>
+              <span className="text-gray-400 text-sm">{t('common.activeFilters')}:</span>
               {filters.workFormat.length > 0 && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Формат ({filters.workFormat.length})
+                  {t('graduates.workFormat')} ({filters.workFormat.length})
                 </span>
               )}
               {filters.region && (
@@ -224,51 +226,51 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
               )}
               {filters.experience && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  {filters.experience === 'no-experience' ? 'Нет опыта' :
-                   filters.experience === 'junior' ? 'Junior (до 2-х лет)' :
-                   filters.experience === 'middle' ? 'Middle (от 2 до 5 лет)' :
-                   filters.experience === 'senior' ? 'Senior (более 5 лет)' :
+                  {filters.experience === 'no-experience' ? t('graduates.experience.none') :
+                   filters.experience === 'junior' ? t('graduates.experience.junior') :
+                   filters.experience === 'middle' ? t('graduates.experience.middle') :
+                   filters.experience === 'senior' ? t('graduates.experience.senior') :
                    filters.experience === 'lead' ? 'Team Lead/Tech Lead' : filters.experience}
                 </span>
               )}
               {filters.education && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Образование: {filters.education}
+                  {t('graduates.education')}: {filters.education}
                 </span>
               )}
               {filters.educationInstitutions.length > 0 && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Учебные заведения ({filters.educationInstitutions.length})
+                  {t('graduates.institutions')} ({filters.educationInstitutions.length})
                 </span>
               )}
               {filters.technology.length > 0 && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Технологии ({filters.technology.length})
+                  {t('graduates.technologies')} ({filters.technology.length})
                 </span>
               )}
               {filters.programmingLanguages.length > 0 && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Языки ({filters.programmingLanguages.length})
+                  {t('graduates.languages')} ({filters.programmingLanguages.length})
                 </span>
               )}
               {filters.additionalSkills.length > 0 && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Навыки ({filters.additionalSkills.length})
+                  {t('graduates.additionalSkills')} ({filters.additionalSkills.length})
                 </span>
               )}
               {filters.englishLevel && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  {filters.englishLevel === 'basic' ? 'Английский: Базовый' :
-                   filters.englishLevel === 'intermediate' ? 'Английский: Средний' :
-                   filters.englishLevel === 'advanced' ? 'Английский: Продвинутый' :
-                   filters.englishLevel === 'fluent' ? 'Английский: Свободное владение' : 'Английский'}
+                  {filters.englishLevel === 'basic' ? t('graduates.english.basic') :
+                   filters.englishLevel === 'intermediate' ? t('graduates.english.intermediate') :
+                   filters.englishLevel === 'advanced' ? t('graduates.english.advanced') :
+                   filters.englishLevel === 'fluent' ? t('graduates.english.fluent') : 'English'}
                 </span>
               )}
               <button
                 onClick={clearFilters}
                 className="text-gray-400 hover:text-accent-cyan text-sm transition-colors"
               >
-                Сбросить все
+                {t('common.resetAll')}
               </button>
             </div>
           </div>
@@ -355,7 +357,7 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
                     className="btn-primary text-sm whitespace-nowrap flex items-center gap-2"
                   >
                     <Eye className="h-4 w-4" />
-                    Посмотреть профиль
+                    {t('candidates.viewResume')}
                   </button>
                 </div>
               </div>
@@ -363,7 +365,7 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
           ))
         ) : (
           <Card>
-            <p className="text-gray-300 text-center py-8">Выпускники не найдены</p>
+            <p className="text-gray-300 text-center py-8">{t('common.noResults')}</p>
           </Card>
         )}
       </div>
@@ -401,30 +403,30 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
 
             <div className="space-y-4">
               <div>
-                <label className="text-gray-400 text-sm">Город</label>
+                <label className="text-gray-400 text-sm">{t('profile.city')}</label>
                 <p className="text-white">{selectedGraduate.city}</p>
               </div>
               {selectedGraduate.education && (
                 <div>
-                  <label className="text-gray-400 text-sm">Образование</label>
+                  <label className="text-gray-400 text-sm">{t('profile.education')}</label>
                   <p className="text-white">{selectedGraduate.education}</p>
                 </div>
               )}
               {selectedGraduate.experience && (
                 <div>
-                  <label className="text-gray-400 text-sm">Опыт работы</label>
+                  <label className="text-gray-400 text-sm">{t('profile.experience')}</label>
                   <p className="text-white">{selectedGraduate.experience}</p>
                 </div>
               )}
               {selectedGraduate.about && (
                 <div>
-                  <label className="text-gray-400 text-sm">О себе</label>
+                  <label className="text-gray-400 text-sm">{t('profile.about')}</label>
                   <p className="text-white whitespace-pre-wrap">{selectedGraduate.about}</p>
                 </div>
               )}
               {selectedGraduate.skills && selectedGraduate.skills.length > 0 && (
                 <div>
-                  <label className="text-gray-400 text-sm">Навыки</label>
+                  <label className="text-gray-400 text-sm">{t('profile.skills')}</label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {selectedGraduate.skills.map((skill, idx) => (
                       <span key={idx} className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
@@ -436,7 +438,7 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
               )}
               {selectedGraduate.programmingLanguages && selectedGraduate.programmingLanguages.length > 0 && (
                 <div>
-                  <label className="text-gray-400 text-sm">Языки программирования</label>
+                  <label className="text-gray-400 text-sm">{t('graduates.languages')}</label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {selectedGraduate.programmingLanguages.map((lang, idx) => (
                       <span key={idx} className="px-3 py-1 bg-dark-surface text-accent-cyan text-sm rounded">
@@ -448,7 +450,7 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
               )}
               {selectedGraduate.technology && selectedGraduate.technology.length > 0 && (
                 <div>
-                  <label className="text-gray-400 text-sm">Технологии</label>
+                  <label className="text-gray-400 text-sm">{t('graduates.technologies')}</label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {selectedGraduate.technology.map((tech, idx) => (
                       <span key={idx} className="px-3 py-1 bg-dark-surface text-accent-cyan text-sm rounded">
@@ -460,22 +462,22 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
               )}
               {selectedGraduate.englishLevel && (
                 <div>
-                  <label className="text-gray-400 text-sm">Уровень английского</label>
+                  <label className="text-gray-400 text-sm">{t('graduates.english.basic').split(':')[0]}</label>
                   <p className="text-white">
-                    {selectedGraduate.englishLevel === 'basic' ? 'Базовый' :
-                     selectedGraduate.englishLevel === 'intermediate' ? 'Средний' :
-                     selectedGraduate.englishLevel === 'advanced' ? 'Продвинутый' :
-                     'Свободное владение'}
+                    {selectedGraduate.englishLevel === 'basic' ? t('autoRadar.levels.basic') :
+                     selectedGraduate.englishLevel === 'intermediate' ? t('autoRadar.levels.intermediate') :
+                     selectedGraduate.englishLevel === 'advanced' ? t('autoRadar.levels.advanced') :
+                     t('autoRadar.levels.expert')}
                   </p>
                 </div>
               )}
               {selectedGraduate.workFormat && (
                 <div>
-                  <label className="text-gray-400 text-sm">Формат работы</label>
+                  <label className="text-gray-400 text-sm">{t('graduates.workFormat')}</label>
                   <p className="text-white">
-                    {selectedGraduate.workFormat === 'office' ? 'Офисная работа' :
-                     selectedGraduate.workFormat === 'hybrid' ? 'Гибридная работа' :
-                     'Удалённо (WFH)'}
+                    {selectedGraduate.workFormat === 'office' ? t('vacancies.office') :
+                     selectedGraduate.workFormat === 'hybrid' ? t('vacancies.hybrid') :
+                     t('vacancies.remote')}
                   </p>
                 </div>
               )}
@@ -484,7 +486,7 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
                   onClick={() => setSelectedGraduate(null)}
                   className="btn-secondary flex-1"
                 >
-                  Закрыть
+                  {t('common.close')}
                 </button>
               </div>
             </div>

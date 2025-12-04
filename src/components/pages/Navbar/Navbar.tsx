@@ -113,7 +113,9 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
 
     const graduateNavLinks = [
         ...baseNavLinks,
+        { path: '/interview/tracker', label: t('navbar.interviewTracker') },
         { path: '/roadmap', label: t('navbar.roadmap') },
+        { path: '/codebattle', label: 'Code Battle' },
     ]
 
     const employerNavLinks = [

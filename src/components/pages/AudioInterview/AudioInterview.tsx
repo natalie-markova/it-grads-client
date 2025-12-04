@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Mic, MicOff, Volume2, VolumeX, Award, TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
 import { $api } from '../../../utils/axios.instance';
 import toast from 'react-hot-toast';
@@ -34,30 +35,31 @@ interface VoiceInfo {
   gender: string;
 }
 
-const POSITIONS = [
-  'Frontend разработчик',
-  'Backend разработчик',
-  'Fullstack разработчик',
-  'React разработчик',
-  'Node.js разработчик',
-  'Python разработчик',
-  'Java разработчик',
-  'DevOps инженер',
-  'QA инженер',
-  'Data Scientist',
-  'Data Analyst',
-  'Mobile разработчик (iOS)',
-  'Mobile разработчик (Android)',
-  'UI/UX дизайнер',
-  'Product Manager',
-  'Project Manager',
-  'System Administrator',
-  'Бизнес-аналитик',
-  'ML инженер',
-  'Технический писатель'
+const POSITION_KEYS = [
+  'frontend',
+  'backend',
+  'fullstack',
+  'react',
+  'nodejs',
+  'python',
+  'java',
+  'devops',
+  'qa',
+  'dataScientist',
+  'dataAnalyst',
+  'iosDev',
+  'androidDev',
+  'uiux',
+  'productManager',
+  'projectManager',
+  'sysAdmin',
+  'businessAnalyst',
+  'mlEngineer',
+  'techWriter'
 ];
 
 const AudioInterview = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState<'setup' | 'interview' | 'feedback'>('setup');
   const [session, setSession] = useState<InterviewSession | null>(null);
@@ -134,9 +136,9 @@ const AudioInterview = () => {
         if (event.error !== 'no-speech') {
           setIsListening(false);
           if (event.error === 'not-allowed') {
-            toast.error('Доступ к микрофону запрещен. Разрешите доступ в настройках браузера.');
+            toast.error(t('audioInterview.micAccessDenied'));
           } else if (event.error === 'network') {
-            toast.error('Ошибка сети при распознавании речи');
+            toast.error(t('audioInterview.networkError'));
           }
         }
       };
@@ -228,7 +230,7 @@ const AudioInterview = () => {
 
   const startListening = () => {
     if (!recognitionRef.current) {
-      toast.error('Распознавание речи не поддерживается вашим браузером');
+      toast.error(t('audioInterview.speechNotSupported'));
       return;
     }
 
@@ -246,30 +248,28 @@ const AudioInterview = () => {
 
   const startInterview = async () => {
     if (!position) {
-      toast.error('Выберите желаемую позицию');
+      toast.error(t('audioInterview.selectPositionError'));
       return;
     }
 
     try {
-      // Сбрасываем голос для нового интервью (будет выбран случайный)
       setCurrentVoice(null);
 
       const response = await $api.post('/interviews/audio', {
         interviewerPersona: persona,
-        position: position.trim()
+        position: t(`audioInterview.positions.${position}`)
       });
 
       setSession(response.data.session);
       setMessages([response.data.firstMessage]);
       setStep('interview');
 
-      // Speak greeting
       speak(response.data.firstMessage.content);
 
-      toast.success('Интервью начато!');
+      toast.success(t('audioInterview.interviewStarted'));
     } catch (error) {
       console.error('Error starting interview:', error);
-      toast.error('Ошибка при создании интервью');
+      toast.error(t('audioInterview.interviewCreateError'));
     }
   };
 
@@ -301,7 +301,7 @@ const AudioInterview = () => {
       }
     } catch (error) {
       console.error('Error sending answer:', error);
-      toast.error('Ошибка при отправке ответа');
+      toast.error(t('audioInterview.answerSendError'));
     }
   };
 
@@ -313,11 +313,10 @@ const AudioInterview = () => {
       setFeedback(response.data);
       setStep('feedback');
 
-      // Speak feedback
       speak(response.data.feedback);
     } catch (error) {
       console.error('Error completing interview:', error);
-      toast.error('Ошибка при завершении интервью');
+      toast.error(t('audioInterview.interviewCompleteError'));
     }
   };
 
@@ -331,47 +330,35 @@ const AudioInterview = () => {
     }
   };
 
-  const personaInfo = {
-    strict_hr: {
-      name: 'Строгий HR-директор',
-      description: 'Профессиональный, требовательный, фокус на опыте и soft skills',
-      icon: '👔'
-    },
-    friendly_tech: {
-      name: 'Дружелюбный тимлид',
-      description: 'Открытый, технический, интересуется проектами и технологиями',
-      icon: '👨‍💻'
-    },
-    direct_ceo: {
-      name: 'Прямолинейный CEO',
-      description: 'Деловой, конкретный, ожидает быстрых и четких ответов',
-      icon: '💼'
-    }
+  const personaInfo: Record<string, { icon: string }> = {
+    strict_hr: { icon: '👔' },
+    friendly_tech: { icon: '👨‍💻' },
+    direct_ceo: { icon: '💼' }
   };
 
   return (
     <div className="min-h-screen bg-dark-bg text-white py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <Section title="🎙️ Аудио-интервью с AI" subtitle="Практикуйтесь в собеседованиях с виртуальным интервьюером" className="bg-dark-bg py-0 mb-8" />
+        <Section title={`🎙️ ${t('audioInterview.title')}`} subtitle={t('audioInterview.subtitle')} className="bg-dark-bg py-0 mb-8" />
 
         {/* Setup Step */}
         {step === 'setup' && (
           <Card>
-            <h2 className="text-2xl font-bold text-white mb-6">Настройка интервью</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">{t('audioInterview.setupTitle')}</h2>
 
             {/* Position Select */}
             <div className="mb-6">
-              <label className="block text-gray-300 mb-2">Желаемая позиция</label>
+              <label className="block text-gray-300 mb-2">{t('audioInterview.desiredPosition')}</label>
               <div className="relative">
                 <select
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
                   className="w-full px-4 py-3 bg-dark-surface border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-accent-cyan focus:border-transparent outline-none appearance-none cursor-pointer"
                 >
-                  <option value="">Выберите позицию...</option>
-                  {POSITIONS.map((pos) => (
-                    <option key={pos} value={pos}>{pos}</option>
+                  <option value="">{t('audioInterview.selectPosition')}</option>
+                  {POSITION_KEYS.map((key) => (
+                    <option key={key} value={key}>{t(`audioInterview.positions.${key}`)}</option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
@@ -380,7 +367,7 @@ const AudioInterview = () => {
 
             {/* Persona Selection */}
             <div className="mb-8">
-              <label className="block text-gray-300 mb-3">Выберите интервьюера</label>
+              <label className="block text-gray-300 mb-3">{t('audioInterview.chooseInterviewer')}</label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {Object.entries(personaInfo).map(([key, info]) => (
                   <button
@@ -393,8 +380,8 @@ const AudioInterview = () => {
                     }`}
                   >
                     <div className="text-4xl mb-2">{info.icon}</div>
-                    <div className="font-semibold mb-1">{info.name}</div>
-                    <div className="text-xs text-gray-400">{info.description}</div>
+                    <div className="font-semibold mb-1">{t(`audioInterview.personas.${key}.name`)}</div>
+                    <div className="text-xs text-gray-400">{t(`audioInterview.personas.${key}.description`)}</div>
                   </button>
                 ))}
               </div>
@@ -405,7 +392,7 @@ const AudioInterview = () => {
               onClick={startInterview}
               className="w-full btn-primary"
             >
-              Начать интервью
+              {t('audioInterview.startInterview')}
             </button>
           </Card>
         )}
@@ -416,9 +403,9 @@ const AudioInterview = () => {
             {/* Progress */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-400">Прогресс</span>
+                <span className="text-sm text-gray-400">{t('audioInterview.progress')}</span>
                 <span className="text-sm text-gray-400">
-                  Вопрос {session?.currentQuestionIndex || 0} из 5
+                  {t('audioInterview.questionOf', { current: session?.currentQuestionIndex || 0, total: 5 })}
                 </span>
               </div>
               <div className="w-full bg-dark-surface rounded-full h-2">
@@ -441,7 +428,7 @@ const AudioInterview = () => {
                   }`}
                 >
                   <div className="text-xs text-gray-400 mb-1">
-                    {msg.role === 'assistant' ? 'Интервьюер' : 'Вы'}
+                    {msg.role === 'assistant' ? t('audioInterview.interviewer') : t('audioInterview.you')}
                   </div>
                   <div className="text-gray-300">{msg.content}</div>
                 </div>
@@ -453,7 +440,7 @@ const AudioInterview = () => {
               <button
                 onClick={toggleAudio}
                 className="btn-secondary px-4 py-2"
-                title={audioEnabled ? 'Отключить звук' : 'Включить звук'}
+                title={audioEnabled ? t('audioInterview.disableSound') : t('audioInterview.enableSound')}
               >
                 {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
               </button>
@@ -463,7 +450,7 @@ const AudioInterview = () => {
                   type="text"
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
-                  placeholder="Или напишите ответ..."
+                  placeholder={t('audioInterview.writeAnswer')}
                   className="input-field pr-20"
                   onKeyPress={(e) => e.key === 'Enter' && sendAnswer()}
                 />
@@ -474,7 +461,7 @@ const AudioInterview = () => {
                       ? 'bg-red-500 animate-pulse text-white'
                       : 'bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg'
                   }`}
-                  title={isListening ? 'Остановить запись' : 'Начать запись'}
+                  title={isListening ? t('audioInterview.stopRecording') : t('audioInterview.startRecording')}
                 >
                   {isListening ? <MicOff size={20} /> : <Mic size={20} />}
                 </button>
@@ -485,16 +472,16 @@ const AudioInterview = () => {
                 disabled={!currentMessage.trim() || isSpeaking}
                 className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Отправить
+                {t('audioInterview.send')}
               </button>
             </div>
 
             {isSpeaking && (
               <div className="text-center text-sm text-accent-cyan animate-pulse mb-2">
-                🔊 Интервьюер говорит...
+                🔊 {t('audioInterview.interviewerSpeaking')}
                 {currentVoice && (
                   <span className="ml-2 text-xs opacity-75 text-gray-400">
-                    ({currentVoice.name}, {currentVoice.gender === 'female' ? 'женский' : 'мужской'} голос)
+                    ({currentVoice.name}, {currentVoice.gender === 'female' ? t('audioInterview.femaleVoice') : t('audioInterview.maleVoice')} {t('audioInterview.voice')})
                   </span>
                 )}
               </div>
@@ -502,7 +489,7 @@ const AudioInterview = () => {
 
             {isListening && (
               <div className="text-center text-sm text-red-400 animate-pulse mb-2">
-                🎙️ Слушаю... (говорите чётко)
+                🎙️ {t('audioInterview.listening')}
               </div>
             )}
 
@@ -512,7 +499,7 @@ const AudioInterview = () => {
                 onClick={completeInterview}
                 className="px-6 py-2 bg-red-500/20 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/30 transition-all text-sm"
               >
-                Завершить интервью досрочно
+                {t('audioInterview.endEarly')}
               </button>
             </div>
           </Card>
@@ -523,12 +510,12 @@ const AudioInterview = () => {
           <Card>
             <div className="text-center mb-8">
               <Award className="w-16 h-16 mx-auto mb-4 text-accent-gold" />
-              <h2 className="text-3xl font-bold text-white mb-2">Интервью завершено!</h2>
+              <h2 className="text-3xl font-bold text-white mb-2">{t('audioInterview.interviewComplete')}</h2>
               <div className="text-5xl font-bold text-accent-cyan mb-2">
                 {feedback.overallScore}/100
               </div>
               <div className="text-gray-400">
-                Длительность: {Math.floor(feedback.duration / 60)} мин {feedback.duration % 60} сек
+                {t('audioInterview.duration')}: {Math.floor(feedback.duration / 60)} {t('audioInterview.min')} {feedback.duration % 60} {t('audioInterview.sec')}
               </div>
             </div>
 
@@ -536,7 +523,7 @@ const AudioInterview = () => {
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp className="text-green-400" />
-                <h3 className="text-xl font-semibold text-white">Сильные стороны</h3>
+                <h3 className="text-xl font-semibold text-white">{t('audioInterview.strengths')}</h3>
               </div>
               <ul className="space-y-2">
                 {feedback.strengths.map((strength, idx) => (
@@ -552,7 +539,7 @@ const AudioInterview = () => {
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingDown className="text-orange-400" />
-                <h3 className="text-xl font-semibold text-white">Области для улучшения</h3>
+                <h3 className="text-xl font-semibold text-white">{t('audioInterview.improvements')}</h3>
               </div>
               <ul className="space-y-2">
                 {feedback.weaknesses.map((weakness, idx) => (
@@ -566,7 +553,7 @@ const AudioInterview = () => {
 
             {/* Detailed Feedback */}
             <div className="mb-8 p-4 bg-dark-surface rounded-lg border border-gray-700">
-              <h3 className="text-xl font-semibold text-white mb-2">Комментарий интервьюера</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">{t('audioInterview.interviewerComment')}</h3>
               <p className="text-gray-300">{feedback.feedback}</p>
             </div>
 
@@ -583,13 +570,13 @@ const AudioInterview = () => {
                 }}
                 className="btn-primary flex-1"
               >
-                Новое интервью
+                {t('audioInterview.newInterview')}
               </button>
               <button
                 onClick={() => navigate('/home')}
                 className="btn-secondary flex-1"
               >
-                На главную
+                {t('audioInterview.toHome')}
               </button>
             </div>
           </Card>

@@ -22,13 +22,136 @@
     "less": "Меньше",
     "learnMore": "Узнать больше",
     "users": "Пользователей",
-    "onlineNow": "Онлайн сейчас"
+    "onlineNow": "Онлайн сейчас",
+    "retry": "Повторить",
+    "recalculate": "Пересчитать",
+    "updated": "Обновлено",
+    "tasks": "задач",
+    "rating": "рейтинг",
+    "achievements": "достижений",
+    "filled": "заполнено",
+    "passed": "пройдено",
+    "averageProgress": "средний прогресс",
+    "never": "Никогда",
+    "justNow": "Только что",
+    "minutesAgo": "{{count}} мин. назад",
+    "hoursAgo": "{{count}} ч. назад",
+    "resetAll": "Сбросить все",
+    "activeFilters": "Активные фильтры"
+  },
+  "chat": {
+    "title": "Сообщения",
+    "newMessageFrom": "Новое сообщение от {{username}}",
+    "loadError": "Ошибка при загрузке сообщений",
+    "employer": "Работодатель",
+    "candidate": "Кандидат",
+    "enterMessage": "Введите сообщение...",
+    "noActiveChats": "Нет активных чатов"
+  },
+  "autoRadar": {
+    "title": "Автоматический радар навыков",
+    "subtitle": "Рассчитывается на основе вашей активности на платформе",
+    "profileCompletion": "Заполненность профиля",
+    "averageLevel": "Средний уровень",
+    "completion": "Заполненность",
+    "level": "Уровень",
+    "strengths": "Сильные стороны",
+    "growthAreas": "Зоны роста",
+    "recommendations": "Рекомендации по развитию",
+    "dataSources": "Источники данных",
+    "sourcesLabel": "Источники оценки",
+    "noData": "Нет данных. Начните активность!",
+    "startActivity": "Начните активность, чтобы определить сильные стороны",
+    "greatWork": "Отличная работа! Продолжайте развиваться",
+    "loadError": "Не удалось загрузить данные радара",
+    "loadSkillsError": "Не удалось загрузить радар навыков",
+    "recalculated": "Радар пересчитан!",
+    "recalculateError": "Ошибка пересчёта радара",
+    "tasksSolved": "задач решено",
+    "interviewsPassed": "интервью",
+    "categories": {
+      "programming": "Программирование",
+      "algorithms": "Алгоритмы",
+      "databases": "Базы данных",
+      "cloud": "Облачные технологии",
+      "devops": "DevOps",
+      "testing": "Тестирование",
+      "networking": "Сети",
+      "security": "Безопасность",
+      "ai": "ML & AI",
+      "management": "Управление",
+      "uiux": "UI/UX",
+      "mobile": "Мобильная разработка",
+      "communication": "Коммуникация"
+    },
+    "sources": {
+      "codeBattle": "Code Battle",
+      "resume": "Резюме",
+      "roadmap": "Карта развития",
+      "aiInterview": "AI Интервью",
+      "audioInterview": "Аудио Интервью",
+      "practice": "Практика"
+    },
+    "levels": {
+      "expert": "Эксперт",
+      "advanced": "Продвинутый",
+      "intermediate": "Средний",
+      "basic": "Базовый",
+      "beginner": "Начинающий",
+      "notDefined": "Не определён"
+    }
+  },
+  "graduates": {
+    "searchPlaceholder": "Поиск выпускников...",
+    "filters": "Фильтры",
+    "workFormat": "Формат",
+    "experience": {
+      "none": "Нет опыта",
+      "junior": "Junior (до 2-х лет)",
+      "middle": "Middle (от 2 до 5 лет)",
+      "senior": "Senior (более 5 лет)"
+    },
+    "education": "Образование",
+    "institutions": "Учебные заведения",
+    "technologies": "Технологии",
+    "languages": "Языки",
+    "additionalSkills": "Навыки",
+    "english": {
+      "basic": "Английский: Базовый",
+      "intermediate": "Английский: Средний",
+      "advanced": "Английский: Продвинутый",
+      "fluent": "Английский: Свободное владение"
+    }
+  },
+  "codeBattle": {
+    "subtitle": "Соревнуйся, решай задачи, становись лучше",
+    "solo": {
+      "title": "Одиночная игра",
+      "description": "Решай задачи в своём темпе без давления"
+    },
+    "multiplayer": {
+      "title": "Мультиплеер",
+      "description": "Сразись с другими игроками в реальном времени"
+    },
+    "vsBot": {
+      "title": "Против бота",
+      "description": "Тренируйся против компьютера разной сложности"
+    },
+    "dailyChallenge": {
+      "title": "Daily Challenge",
+      "bonus": "Выполни для +50 бонусных очков!",
+      "start": "Начать Daily Challenge"
+    },
+    "tasks": "Задачи",
+    "allTasks": "Все задачи",
+    "solutions": "{{count}} решений"
   },
   "navbar": {
     "skillsRadar": "Радар навыков",
-    "interviews": "Собеседования",
+    "interviews": "Тренажер интервью",
     "vacancies": "Вакансии",
-    "roadmap": "Карта специальностей",
+    "roadmap": "Карта развития",
+    "interviewTracker": "Трекер собеседований",
     "candidates": "Кандидаты",
     "candidatesMap": "Карта соискателей",
     "profile": "Профиль",
@@ -61,6 +184,11 @@
     "heroTitle2": "искусственным",
     "heroTitle3": "интеллектом",
     "heroSubtitle": "IT-Grads объединяет выпускников IT-школ и работодателей. AI-симулятор собеседований, умный подбор вакансий и прозрачные рейтинги компаний.",
+    "heroTitleEmployer": "Найдите талантливых",
+    "heroTitleEmployerHighlight": "IT-специалистов",
+    "heroSubtitleEmployer": "Платформа для поиска выпускников IT-школ. Верифицированные кандидаты, интерактивная карта и умные фильтры поиска.",
+    "startButton": "Начать",
+    "createAccount": "Создать аккаунт",
     "startFree": "Начать бесплатно",
     "viewVacancies": "Смотреть вакансии",
     "freeRegistration": "Бесплатная регистрация",
@@ -126,6 +254,17 @@
   "skills": {
     "title": "Радар навыков",
     "subtitle": "Визуализируйте свои умения и отслеживайте прогресс",
+    "autoSubtitle": "Ваш радар навыков рассчитывается автоматически на основе активности",
+    "autoRadar": "Автоматический радар",
+    "manualMode": "Ручной режим",
+    "howItWorks": "Как это работает:",
+    "howItWorksDesc": "Ваши навыки оцениваются автоматически на основе:",
+    "codeBattle": "Code Battle",
+    "codeBattleDesc": "решённые задачи, рейтинг, языки программирования",
+    "resumeDesc": "указанные технологии и опыт",
+    "aiInterviewDesc": "оценки по направлениям",
+    "audioInterviewDesc": "коммуникация и стрессоустойчивость",
+    "roadmapsDesc": "прогресс по специальностям",
     "evaluate": "Оценить",
     "level": "Уровень",
     "category": "Категория",
@@ -221,7 +360,104 @@
       "feature1": "Календарь встреч",
       "feature2": "Напоминания",
       "feature3": "Заметки и результаты",
-      "button": "Открыть трекер"
+      "button": "Открыть трекер",
+      "subtitle": "Управляйте своими собеседованиями в одном месте",
+      "addInterview": "Добавить собеседование",
+      "calendarView": "Календарь",
+      "listView": "Список собеседований",
+      "allStatuses": "Все статусы",
+      "scheduledStatus": "Запланированные",
+      "completedStatus": "Завершённые",
+      "cancelledStatus": "Отменённые",
+      "stats": {
+        "total": "Всего",
+        "scheduled": "Запланировано",
+        "completed": "Пройдено",
+        "passed": "Успешных"
+      },
+      "upcoming": "Ближайшие собеседования",
+      "noUpcoming": "Нет запланированных собеседований",
+      "noInterviews": "Нет собеседований для отображения",
+      "today": "Сегодня",
+      "tomorrow": "Завтра",
+      "inDays": "Через {{count}} дн.",
+      "more": "ещё",
+      "tips": {
+        "title": "Советы",
+        "tip1": "Подготовьте вопросы к компании заранее",
+        "tip2": "Изучите проекты и технологии компании",
+        "tip3": "Проверьте связь за 15 минут до онлайн-собеседования",
+        "tip4": "Записывайте обратную связь после каждого интервью"
+      },
+      "form": {
+        "newInterview": "Новое собеседование",
+        "editInterview": "Редактировать собеседование",
+        "company": "Компания",
+        "position": "Позиция",
+        "date": "Дата",
+        "time": "Время",
+        "type": "Тип",
+        "online": "Онлайн",
+        "offline": "Офис",
+        "phone": "Телефон",
+        "meetingLink": "Ссылка на встречу",
+        "address": "Адрес",
+        "contactPerson": "Контактное лицо",
+        "contactPhone": "Телефон контакта",
+        "notes": "Заметки",
+        "notesPlaceholder": "Что подготовить, вопросы к компании...",
+        "reminder": "Напомнить за день до собеседования",
+        "save": "Сохранить",
+        "add": "Добавить",
+        "delete": "Удалить",
+        "cancel": "Отмена"
+      },
+      "status": {
+        "scheduled": "Запланировано",
+        "completed": "Завершено",
+        "cancelled": "Отменено"
+      },
+      "result": {
+        "passed": "Успешно",
+        "failed": "Отказ",
+        "pending": "Ожидание"
+      },
+      "actions": {
+        "markCompleted": "Отметить как пройденное",
+        "markCancelled": "Отменить",
+        "edit": "Редактировать",
+        "delete": "Удалить",
+        "showFeedback": "Показать обратную связь",
+        "hideFeedback": "Скрыть обратную связь"
+      },
+      "messages": {
+        "added": "Собеседование добавлено",
+        "updated": "Собеседование обновлено",
+        "deleted": "Собеседование удалено",
+        "statusUpdated": "Статус обновлён",
+        "resultSaved": "Результат сохранён",
+        "saveError": "Ошибка при сохранении собеседования",
+        "deleteError": "Ошибка при удалении собеседования",
+        "statusError": "Ошибка при обновлении статуса",
+        "resultError": "Ошибка при сохранении результата",
+        "deleteConfirm": "Удалить это собеседование?",
+        "loginRequired": "Войдите в систему, чтобы использовать трекер собеседований",
+        "login": "Войти"
+      },
+      "calendar": {
+        "mon": "Пн",
+        "tue": "Вт",
+        "wed": "Ср",
+        "thu": "Чт",
+        "fri": "Пт",
+        "sat": "Сб",
+        "sun": "Вс"
+      },
+      "types": {
+        "online": "Онлайн",
+        "offline": "Офис",
+        "phone": "Телефон"
+      }
     }
   },
   "vacancies": {
@@ -269,7 +505,7 @@
     "totalInCity": "Всего кандидатов"
   },
   "roadmap": {
-    "title": "Карта специальностей",
+    "title": "Карта развития",
     "subtitle": "Выберите свой путь развития",
     "headerDesc": "Изучите карьерные пути и технологии. Найдите свой путь в IT и начните обучение с пошаговыми roadmap для каждой специальности.",
     "filters": "Фильтры",
@@ -407,6 +643,100 @@
     "privacy": "Политика конфиденциальности",
     "terms": "Условия использования",
     "copyright": "© 2024 IT-Grads. Все права защищены."
+  },
+  "ai": {
+    "title": "Искусственный интеллект и автоматизация",
+    "subtitle": "Персонализированные рекомендации и оптимизация поиска",
+    "careerConsultant": {
+      "title": "Персональный карьерный консультант",
+      "description": "ИИ-чат-бот помогает определить сильные стороны, выбрать направление и найти идеальную работу."
+    },
+    "resumeCreation": {
+      "title": "Автоматическое создание резюме",
+      "description": "Генерация резюме в различных форматах на основе профиля и проектов, с возможностью кастомизации под вакансию."
+    },
+    "vacancyAnalysis": {
+      "title": "Анализ вакансии на соответствие",
+      "description": "ИИ анализирует текст вакансии, сравнивая требуемые навыки с вашими, и оценивает соответствие в процентах."
+    }
+  },
+  "audioInterview": {
+    "title": "Аудио-интервью с AI",
+    "subtitle": "Практикуйтесь в собеседованиях с виртуальным интервьюером",
+    "setupTitle": "Настройка интервью",
+    "desiredPosition": "Желаемая позиция",
+    "selectPosition": "Выберите позицию...",
+    "chooseInterviewer": "Выберите интервьюера",
+    "startInterview": "Начать интервью",
+    "progress": "Прогресс",
+    "questionOf": "Вопрос {{current}} из {{total}}",
+    "interviewer": "Интервьюер",
+    "you": "Вы",
+    "disableSound": "Отключить звук",
+    "enableSound": "Включить звук",
+    "writeAnswer": "Или напишите ответ...",
+    "stopRecording": "Остановить запись",
+    "startRecording": "Начать запись",
+    "send": "Отправить",
+    "interviewerSpeaking": "Интервьюер говорит...",
+    "femaleVoice": "женский",
+    "maleVoice": "мужской",
+    "voice": "голос",
+    "listening": "Слушаю... (говорите чётко)",
+    "endEarly": "Завершить интервью досрочно",
+    "interviewComplete": "Интервью завершено!",
+    "duration": "Длительность",
+    "min": "мин",
+    "sec": "сек",
+    "strengths": "Сильные стороны",
+    "improvements": "Области для улучшения",
+    "interviewerComment": "Комментарий интервьюера",
+    "newInterview": "Новое интервью",
+    "toHome": "На главную",
+    "micAccessDenied": "Доступ к микрофону запрещен. Разрешите доступ в настройках браузера.",
+    "networkError": "Ошибка сети при распознавании речи",
+    "speechNotSupported": "Распознавание речи не поддерживается вашим браузером",
+    "selectPositionError": "Выберите желаемую позицию",
+    "interviewStarted": "Интервью начато!",
+    "interviewCreateError": "Ошибка при создании интервью",
+    "answerSendError": "Ошибка при отправке ответа",
+    "interviewCompleteError": "Ошибка при завершении интервью",
+    "personas": {
+      "strict_hr": {
+        "name": "Строгий HR-директор",
+        "description": "Профессиональный, требовательный, фокус на опыте и soft skills"
+      },
+      "friendly_tech": {
+        "name": "Дружелюбный тимлид",
+        "description": "Открытый, технический, интересуется проектами и технологиями"
+      },
+      "direct_ceo": {
+        "name": "Прямолинейный CEO",
+        "description": "Деловой, конкретный, ожидает быстрых и четких ответов"
+      }
+    },
+    "positions": {
+      "frontend": "Frontend разработчик",
+      "backend": "Backend разработчик",
+      "fullstack": "Fullstack разработчик",
+      "react": "React разработчик",
+      "nodejs": "Node.js разработчик",
+      "python": "Python разработчик",
+      "java": "Java разработчик",
+      "devops": "DevOps инженер",
+      "qa": "QA инженер",
+      "dataScientist": "Data Scientist",
+      "dataAnalyst": "Data Analyst",
+      "iosDev": "Mobile разработчик (iOS)",
+      "androidDev": "Mobile разработчик (Android)",
+      "uiux": "UI/UX дизайнер",
+      "productManager": "Product Manager",
+      "projectManager": "Project Manager",
+      "sysAdmin": "System Administrator",
+      "businessAnalyst": "Бизнес-аналитик",
+      "mlEngineer": "ML инженер",
+      "techWriter": "Технический писатель"
+    }
   },
   "errors": {
     "required": "Обязательное поле",

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { Chat, ChatMessage } from '../types';
 import { $api } from '../utils/axios.instance';
@@ -10,6 +11,7 @@ interface ChatSidebarProps {
 }
 
 const ChatSidebar = ({ userId }: ChatSidebarProps) => {
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
@@ -49,7 +51,7 @@ const ChatSidebar = ({ userId }: ChatSidebarProps) => {
     });
 
     newSocket.on('chat-notification', ({ chatId, message: notificationMessage }: { chatId: number, message: ChatMessage }) => {
-      toast.success(`Новое сообщение от ${notificationMessage.sender?.username}`);
+      toast.success(t('chat.newMessageFrom', { username: notificationMessage.sender?.username }));
       fetchChats();
     });
 
@@ -92,7 +94,7 @@ const ChatSidebar = ({ userId }: ChatSidebarProps) => {
       setSelectedChat(response.data);
     } catch (error) {
       console.error('Error fetching chat messages:', error);
-      toast.error('Ошибка при загрузке сообщений');
+      toast.error(t('chat.loadError'));
     }
   };
 
@@ -147,7 +149,7 @@ const ChatSidebar = ({ userId }: ChatSidebarProps) => {
         <div className="fixed right-0 top-0 h-full w-full md:w-96 bg-dark-surface shadow-2xl z-50 flex flex-col border-l border-dark-card">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-dark-card">
-            <h2 className="text-xl font-bold text-white">Сообщения</h2>
+            <h2 className="text-xl font-bold text-white">{t('chat.title')}</h2>
             <button
               onClick={() => {
                 setIsOpen(false);
@@ -175,7 +177,7 @@ const ChatSidebar = ({ userId }: ChatSidebarProps) => {
                     {getOtherUser(selectedChat).username}
                   </h3>
                   <p className="text-sm text-gray-400">
-                    {getOtherUser(selectedChat).role === 'employer' ? 'Работодатель' : 'Кандидат'}
+                    {getOtherUser(selectedChat).role === 'employer' ? t('chat.employer') : t('chat.candidate')}
                   </p>
                 </div>
               </div>
@@ -196,7 +198,7 @@ const ChatSidebar = ({ userId }: ChatSidebarProps) => {
                     >
                       <p className="text-sm">{msg.content}</p>
                       <p className="text-xs mt-1 opacity-70">
-                        {new Date(msg.createdAt).toLocaleTimeString('ru-RU', {
+                        {new Date(msg.createdAt).toLocaleTimeString(i18n.language === 'ru' ? 'ru-RU' : 'en-US', {
                           hour: '2-digit',
                           minute: '2-digit'
                         })}
@@ -214,7 +216,7 @@ const ChatSidebar = ({ userId }: ChatSidebarProps) => {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Введите сообщение..."
+                    placeholder={t('chat.enterMessage')}
                     className="flex-1 px-4 py-2 bg-dark-bg border border-dark-card rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan"
                   />
                   <button
@@ -231,7 +233,7 @@ const ChatSidebar = ({ userId }: ChatSidebarProps) => {
             <div className="flex-1 overflow-y-auto">
               {chats.length === 0 ? (
                 <div className="p-8 text-center text-gray-400">
-                  Нет активных чатов
+                  {t('chat.noActiveChats')}
                 </div>
               ) : (
                 chats.map((chat) => {
@@ -253,11 +255,11 @@ const ChatSidebar = ({ userId }: ChatSidebarProps) => {
                             )}
                           </h3>
                           <p className="text-sm text-gray-400">
-                            {otherUser.role === 'employer' ? 'Работодатель' : 'Кандидат'}
+                            {otherUser.role === 'employer' ? t('chat.employer') : t('chat.candidate')}
                           </p>
                         </div>
                         <p className="text-xs text-gray-500">
-                          {new Date(chat.lastMessageAt).toLocaleDateString('ru-RU')}
+                          {new Date(chat.lastMessageAt).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')}
                         </p>
                       </div>
                     </div>

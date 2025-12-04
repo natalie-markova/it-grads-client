@@ -75,7 +75,7 @@ const Home = () => {
       return () => cancelAnimationFrame(animationFrame)
     }, [value, duration])
 
-    return <span>{displayValue.toLocaleString('ru-RU')}</span>
+    return <span>{displayValue.toLocaleString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')}</span>
   }
 
   // Преимущества для студентов
@@ -150,9 +150,9 @@ const Home = () => {
             <h1 className="text-[40px] md:text-[56px] lg:text-[64px] font-bold leading-tight mb-6 text-white">
               {user?.role === 'employer' ? (
                 <>
-                  Найдите талантливых{' '}
+                  {t('home.heroTitleEmployer')}{' '}
                   <span className="relative inline-block">
-                    <span className="relative z-10">IT-специалистов</span>
+                    <span className="relative z-10">{t('home.heroTitleEmployerHighlight')}</span>
                     <span className="absolute bottom-2 left-0 w-full h-3 bg-accent-blue/30 -rotate-1"></span>
                   </span>
                 </>
@@ -170,15 +170,9 @@ const Home = () => {
             {/* Subtitle */}
             <p className="text-lg md:text-xl text-gray-300 mb-10 leading-relaxed max-w-3xl mx-auto">
               {user?.role === 'employer' ? (
-                <>
-                  Платформа для поиска выпускников IT-школ.<br/>
-                  Верифицированные кандидаты, интерактивная карта и умные фильтры поиска.
-                </>
+                t('home.heroSubtitleEmployer')
               ) : (
-                <>
-                  IT-Grads объединяет выпускников IT-школ и работодателей.<br/>
-                  AI-симулятор собеседований, умный подбор вакансий и прозрачные рейтинги компаний.
-                </>
+                t('home.heroSubtitle')
               )}
             </p>
 
@@ -217,7 +211,7 @@ const Home = () => {
                   to="/registration"
                   className="group relative px-8 py-4 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 inline-flex items-center shadow-lg shadow-accent-cyan/25 hover:shadow-accent-cyan/40"
                 >
-                  Начать
+                  {t('home.startButton')}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
@@ -454,7 +448,7 @@ const Home = () => {
               {t('home.joinThousands')}
             </p>
             <Link to="/registration" className="group inline-flex items-center px-10 py-5 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-semibold rounded-xl transition-all duration-300 shadow-xl shadow-accent-cyan/25 hover:shadow-accent-cyan/40 text-lg">
-              Создать аккаунт 
+              {t('home.createAccount')}
               <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>

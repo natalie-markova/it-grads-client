@@ -14,7 +14,8 @@ COPY . .
 
 # Установка переменных окружения для production сборки
 ENV VITE_API_URL=/api
-ENV VITE_DOMAIN=itgrads.ru
+ENV VITE_SOCKET_URL=https://www.itgrads.ru
+ENV VITE_DOMAIN=www.itgrads.ru
 
 # Сборка production билда
 RUN npm run build

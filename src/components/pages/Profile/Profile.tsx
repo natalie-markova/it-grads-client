@@ -10,6 +10,7 @@ import ResumeForm from '../Resume/ResumeForm'
 import { $api } from '../../../utils/axios.instance'
 import GraduateProfileNav from './GraduateProfileNav'
 import { useTranslation } from 'react-i18next'
+import AutoSkillsRadar from '../../AutoSkillsRadar'
 
 // Функция для формирования полного URL изображения
 const getImageUrl = (url: string | undefined | null): string => {
@@ -1114,47 +1115,7 @@ const GraduateProfile = () => {
         {/* Skills Radar Section */}
         {activeTab === 'radar' && (
           <Section key="radar" title={t('profile.skillsRadar')} className="bg-dark-bg py-0 scroll-animate-item">
-            {resumes.length > 0 && resumes[0].radarImage ? (
-              <Card>
-                <div className="flex flex-col gap-4">
-                  <div className="flex justify-between items-start">
-                    <p className="text-gray-300">
-                      {t('skills.subtitle')}
-                    </p>
-                    <button
-                      onClick={async () => {
-                        try {
-                          await $api.put(`/resumes/${resumes[0].id}`, { radarImage: null })
-                          toast.success('Радар навыков удалён')
-                          loadResumes()
-                        } catch (error: any) {
-                          console.error('Error deleting radar:', error)
-                          const errorMessage = error.response?.data?.error || error.message || 'Ошибка при удалении радара'
-                          toast.error(errorMessage)
-                        }
-                      }}
-                      className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
-                      title="Удалить радар навыков"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <div className="flex justify-center">
-                    <img
-                      src={resumes[0].radarImage}
-                      alt="Радар навыков"
-                      className="max-w-full h-auto rounded-lg border border-dark-card"
-                    />
-                  </div>
-                </div>
-              </Card>
-            ) : (
-              <Card>
-                <p className="text-gray-300 text-center py-8">
-                  {t('profile.noRadar')}
-                </p>
-              </Card>
-            )}
+            <AutoSkillsRadar userId={user.id} />
           </Section>
         )}
 

@@ -22,13 +22,136 @@
     "less": "Less",
     "learnMore": "Learn more",
     "users": "Users",
-    "onlineNow": "Online now"
+    "onlineNow": "Online now",
+    "retry": "Retry",
+    "recalculate": "Recalculate",
+    "updated": "Updated",
+    "tasks": "tasks",
+    "rating": "rating",
+    "achievements": "achievements",
+    "filled": "filled",
+    "passed": "passed",
+    "averageProgress": "average progress",
+    "never": "Never",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} h ago",
+    "resetAll": "Reset all",
+    "activeFilters": "Active filters"
+  },
+  "chat": {
+    "title": "Messages",
+    "newMessageFrom": "New message from {{username}}",
+    "loadError": "Error loading messages",
+    "employer": "Employer",
+    "candidate": "Candidate",
+    "enterMessage": "Enter message...",
+    "noActiveChats": "No active chats"
+  },
+  "autoRadar": {
+    "title": "Automatic Skills Radar",
+    "subtitle": "Calculated based on your platform activity",
+    "profileCompletion": "Profile Completion",
+    "averageLevel": "Average Level",
+    "completion": "Completion",
+    "level": "Level",
+    "strengths": "Strengths",
+    "growthAreas": "Growth Areas",
+    "recommendations": "Development Recommendations",
+    "dataSources": "Data Sources",
+    "sourcesLabel": "Assessment Sources",
+    "noData": "No data. Start your activity!",
+    "startActivity": "Start your activity to identify strengths",
+    "greatWork": "Great work! Keep developing",
+    "loadError": "Failed to load radar data",
+    "loadSkillsError": "Failed to load skills radar",
+    "recalculated": "Radar recalculated!",
+    "recalculateError": "Error recalculating radar",
+    "tasksSolved": "tasks solved",
+    "interviewsPassed": "interviews",
+    "categories": {
+      "programming": "Programming",
+      "algorithms": "Algorithms",
+      "databases": "Databases",
+      "cloud": "Cloud Technologies",
+      "devops": "DevOps",
+      "testing": "Testing",
+      "networking": "Networking",
+      "security": "Security",
+      "ai": "ML & AI",
+      "management": "Management",
+      "uiux": "UI/UX",
+      "mobile": "Mobile Development",
+      "communication": "Communication"
+    },
+    "sources": {
+      "codeBattle": "Code Battle",
+      "resume": "Resume",
+      "roadmap": "Career Roadmap",
+      "aiInterview": "AI Interview",
+      "audioInterview": "Audio Interview",
+      "practice": "Practice"
+    },
+    "levels": {
+      "expert": "Expert",
+      "advanced": "Advanced",
+      "intermediate": "Intermediate",
+      "basic": "Basic",
+      "beginner": "Beginner",
+      "notDefined": "Not defined"
+    }
+  },
+  "graduates": {
+    "searchPlaceholder": "Search graduates...",
+    "filters": "Filters",
+    "workFormat": "Format",
+    "experience": {
+      "none": "No experience",
+      "junior": "Junior (up to 2 years)",
+      "middle": "Middle (2 to 5 years)",
+      "senior": "Senior (over 5 years)"
+    },
+    "education": "Education",
+    "institutions": "Institutions",
+    "technologies": "Technologies",
+    "languages": "Languages",
+    "additionalSkills": "Skills",
+    "english": {
+      "basic": "English: Basic",
+      "intermediate": "English: Intermediate",
+      "advanced": "English: Advanced",
+      "fluent": "English: Fluent"
+    }
+  },
+  "codeBattle": {
+    "subtitle": "Compete, solve tasks, become better",
+    "solo": {
+      "title": "Solo Play",
+      "description": "Solve tasks at your own pace without pressure"
+    },
+    "multiplayer": {
+      "title": "Multiplayer",
+      "description": "Battle other players in real time"
+    },
+    "vsBot": {
+      "title": "Versus Bot",
+      "description": "Practice against computer at different difficulty levels"
+    },
+    "dailyChallenge": {
+      "title": "Daily Challenge",
+      "bonus": "Complete for +50 bonus points!",
+      "start": "Start Daily Challenge"
+    },
+    "tasks": "Tasks",
+    "allTasks": "All tasks",
+    "solutions": "{{count}} solutions"
   },
   "navbar": {
     "skillsRadar": "Skills Radar",
-    "interviews": "Interviews",
+    "interviews": "Interview Trainer",
     "vacancies": "Vacancies",
     "roadmap": "Career Roadmap",
+    "interviewTracker": "Interview Tracker",
     "candidates": "Candidates",
     "candidatesMap": "Candidates Map",
     "profile": "Profile",
@@ -61,6 +184,11 @@
     "heroTitle2": "artificial",
     "heroTitle3": "intelligence",
     "heroSubtitle": "IT-Grads connects IT school graduates and employers. AI interview simulator, smart job matching and transparent company ratings.",
+    "heroTitleEmployer": "Find talented",
+    "heroTitleEmployerHighlight": "IT professionals",
+    "heroSubtitleEmployer": "Platform for finding IT school graduates. Verified candidates, interactive map and smart search filters.",
+    "startButton": "Get Started",
+    "createAccount": "Create account",
     "startFree": "Start for free",
     "viewVacancies": "View vacancies",
     "freeRegistration": "Free registration",
@@ -126,6 +254,17 @@
   "skills": {
     "title": "Skills Radar",
     "subtitle": "Visualize your skills and track progress",
+    "autoSubtitle": "Your skills radar is calculated automatically based on your activity",
+    "autoRadar": "Auto Radar",
+    "manualMode": "Manual Mode",
+    "howItWorks": "How it works:",
+    "howItWorksDesc": "Your skills are evaluated automatically based on:",
+    "codeBattle": "Code Battle",
+    "codeBattleDesc": "solved tasks, rating, programming languages",
+    "resumeDesc": "listed technologies and experience",
+    "aiInterviewDesc": "scores by direction",
+    "audioInterviewDesc": "communication and stress resistance",
+    "roadmapsDesc": "progress on specializations",
     "evaluate": "Evaluate",
     "level": "Level",
     "category": "Category",
@@ -221,7 +360,104 @@
       "feature1": "Meeting calendar",
       "feature2": "Reminders",
       "feature3": "Notes and results",
-      "button": "Open tracker"
+      "button": "Open tracker",
+      "subtitle": "Manage all your interviews in one place",
+      "addInterview": "Add interview",
+      "calendarView": "Calendar",
+      "listView": "Interview list",
+      "allStatuses": "All statuses",
+      "scheduledStatus": "Scheduled",
+      "completedStatus": "Completed",
+      "cancelledStatus": "Cancelled",
+      "stats": {
+        "total": "Total",
+        "scheduled": "Scheduled",
+        "completed": "Completed",
+        "passed": "Passed"
+      },
+      "upcoming": "Upcoming interviews",
+      "noUpcoming": "No scheduled interviews",
+      "noInterviews": "No interviews to display",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "inDays": "In {{count}} days",
+      "more": "more",
+      "tips": {
+        "title": "Tips",
+        "tip1": "Prepare questions for the company in advance",
+        "tip2": "Research the company's projects and technologies",
+        "tip3": "Check your connection 15 minutes before an online interview",
+        "tip4": "Write down feedback after each interview"
+      },
+      "form": {
+        "newInterview": "New interview",
+        "editInterview": "Edit interview",
+        "company": "Company",
+        "position": "Position",
+        "date": "Date",
+        "time": "Time",
+        "type": "Type",
+        "online": "Online",
+        "offline": "Office",
+        "phone": "Phone",
+        "meetingLink": "Meeting link",
+        "address": "Address",
+        "contactPerson": "Contact person",
+        "contactPhone": "Contact phone",
+        "notes": "Notes",
+        "notesPlaceholder": "What to prepare, questions for the company...",
+        "reminder": "Remind me a day before the interview",
+        "save": "Save",
+        "add": "Add",
+        "delete": "Delete",
+        "cancel": "Cancel"
+      },
+      "status": {
+        "scheduled": "Scheduled",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "result": {
+        "passed": "Passed",
+        "failed": "Rejected",
+        "pending": "Pending"
+      },
+      "actions": {
+        "markCompleted": "Mark as completed",
+        "markCancelled": "Cancel",
+        "edit": "Edit",
+        "delete": "Delete",
+        "showFeedback": "Show feedback",
+        "hideFeedback": "Hide feedback"
+      },
+      "messages": {
+        "added": "Interview added",
+        "updated": "Interview updated",
+        "deleted": "Interview deleted",
+        "statusUpdated": "Status updated",
+        "resultSaved": "Result saved",
+        "saveError": "Error saving interview",
+        "deleteError": "Error deleting interview",
+        "statusError": "Error updating status",
+        "resultError": "Error saving result",
+        "deleteConfirm": "Delete this interview?",
+        "loginRequired": "Please log in to use the interview tracker",
+        "login": "Login"
+      },
+      "calendar": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      },
+      "types": {
+        "online": "Online",
+        "offline": "Office",
+        "phone": "Phone"
+      }
     }
   },
   "vacancies": {
@@ -555,6 +791,100 @@
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "copyright": "© 2024 IT-Grads. All rights reserved."
+  },
+  "ai": {
+    "title": "Artificial Intelligence and Automation",
+    "subtitle": "Personalized recommendations and search optimization",
+    "careerConsultant": {
+      "title": "Personal Career Consultant",
+      "description": "AI chatbot helps identify strengths, choose a direction, and find the ideal job."
+    },
+    "resumeCreation": {
+      "title": "Automatic Resume Creation",
+      "description": "Resume generation in various formats based on profile and projects, with customization options for specific vacancies."
+    },
+    "vacancyAnalysis": {
+      "title": "Vacancy Match Analysis",
+      "description": "AI analyzes vacancy text, comparing required skills with yours, and evaluates match percentage."
+    }
+  },
+  "audioInterview": {
+    "title": "AI Audio Interview",
+    "subtitle": "Practice interviews with a virtual interviewer",
+    "setupTitle": "Interview Setup",
+    "desiredPosition": "Desired Position",
+    "selectPosition": "Select position...",
+    "chooseInterviewer": "Choose Interviewer",
+    "startInterview": "Start Interview",
+    "progress": "Progress",
+    "questionOf": "Question {{current}} of {{total}}",
+    "interviewer": "Interviewer",
+    "you": "You",
+    "disableSound": "Disable sound",
+    "enableSound": "Enable sound",
+    "writeAnswer": "Or type your answer...",
+    "stopRecording": "Stop recording",
+    "startRecording": "Start recording",
+    "send": "Send",
+    "interviewerSpeaking": "Interviewer is speaking...",
+    "femaleVoice": "female",
+    "maleVoice": "male",
+    "voice": "voice",
+    "listening": "Listening... (speak clearly)",
+    "endEarly": "End interview early",
+    "interviewComplete": "Interview Complete!",
+    "duration": "Duration",
+    "min": "min",
+    "sec": "sec",
+    "strengths": "Strengths",
+    "improvements": "Areas for Improvement",
+    "interviewerComment": "Interviewer's Comment",
+    "newInterview": "New Interview",
+    "toHome": "Go to Home",
+    "micAccessDenied": "Microphone access denied. Please allow access in browser settings.",
+    "networkError": "Network error during speech recognition",
+    "speechNotSupported": "Speech recognition is not supported by your browser",
+    "selectPositionError": "Please select a desired position",
+    "interviewStarted": "Interview started!",
+    "interviewCreateError": "Error creating interview",
+    "answerSendError": "Error sending answer",
+    "interviewCompleteError": "Error completing interview",
+    "personas": {
+      "strict_hr": {
+        "name": "Strict HR Director",
+        "description": "Professional, demanding, focus on experience and soft skills"
+      },
+      "friendly_tech": {
+        "name": "Friendly Team Lead",
+        "description": "Open, technical, interested in projects and technologies"
+      },
+      "direct_ceo": {
+        "name": "Direct CEO",
+        "description": "Business-like, specific, expects quick and clear answers"
+      }
+    },
+    "positions": {
+      "frontend": "Frontend Developer",
+      "backend": "Backend Developer",
+      "fullstack": "Fullstack Developer",
+      "react": "React Developer",
+      "nodejs": "Node.js Developer",
+      "python": "Python Developer",
+      "java": "Java Developer",
+      "devops": "DevOps Engineer",
+      "qa": "QA Engineer",
+      "dataScientist": "Data Scientist",
+      "dataAnalyst": "Data Analyst",
+      "iosDev": "Mobile Developer (iOS)",
+      "androidDev": "Mobile Developer (Android)",
+      "uiux": "UI/UX Designer",
+      "productManager": "Product Manager",
+      "projectManager": "Project Manager",
+      "sysAdmin": "System Administrator",
+      "businessAnalyst": "Business Analyst",
+      "mlEngineer": "ML Engineer",
+      "techWriter": "Technical Writer"
+    }
   },
   "errors": {
     "required": "Required field",

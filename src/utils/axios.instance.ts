@@ -27,6 +27,9 @@ $api.interceptors.request.use((config) => {
     if (config.headers && !config.headers.Authorization) {
         config.headers.Authorization = "Bearer " + accessToken
     }
+    // Add Accept-Language header based on current i18n language
+    const currentLang = localStorage.getItem('i18nextLng') || 'ru';
+    config.headers['Accept-Language'] = currentLang;
     return config
 })
 
