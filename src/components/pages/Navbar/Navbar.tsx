@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, X, LogIn, UserCircle, LogOut, MessageSquare, Globe, ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -46,57 +46,66 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
     }, []);
 
     // Функция для загрузки непрочитанных сообщений
-    const loadUnreadCount = () => {
+    const loadUnreadCount = useCallback(() => {
         if (user) {
             chatAPI.getUnreadCount()
-                .then(data => setUnreadCount(data.unreadCount))
+                .then(data => {
+                    console.log('📊 Unread count loaded:', data.unreadCount);
+                    setUnreadCount(data.unreadCount);
+                })
                 .catch(err => console.error('Error loading unread count:', err));
+        } else {
+            setUnreadCount(0);
         }
-    };
+    }, [user]);
 
-    // Загрузка количества непрочитанных сообщений
+    // Загрузка количества непрочитанных сообщений и WebSocket подключение
     useEffect(() => {
+        if (!user) {
+            setUnreadCount(0);
+            socketService.disconnect();
+            return;
+        }
+
+        // Загрузить начальное количество
         loadUnreadCount();
-    }, [user]);
 
-    // Периодическое обновление счетчика непрочитанных сообщений
-    useEffect(() => {
-        if (!user) return;
-
-        // Обновляем каждые 30 секунд
-        const interval = setInterval(() => {
-            loadUnreadCount();
-        }, 30000);
-
-        return () => clearInterval(interval);
-    }, [user]);
-
-    // WebSocket подключение для обновления в реальном времени
-    useEffect(() => {
-        if (!user) return;
-
-        const token = localStorage.getItem('accessToken') || '';
+        // Подключиться к WebSocket если еще не подключены
+        const token = localStorage.getItem('accessToken');
         if (token && !socketService.isConnected()) {
+            console.log('🔌 Connecting to WebSocket from Navbar');
             socketService.connect(token);
         }
 
-        // Подписываемся на уведомления о непрочитанных сообщениях
-        socketService.onNotificationUnread(() => {
-            console.log('📬 Получено уведомление о новом сообщении');
+        // Создать обработчики событий
+        const handleNotificationUnread = (data: any) => {
+            console.log('📬 Navbar: Получено уведомление о новом сообщении', data);
             loadUnreadCount();
-        });
+        };
 
-        // Подписываемся на событие прочтения сообщений
-        socketService.onMessagesRead(() => {
-            console.log('✅ Сообщения прочитаны, обновляем счетчик');
+        const handleMessagesRead = (data: any) => {
+            console.log('✅ Navbar: Сообщения прочитаны', data);
             loadUnreadCount();
-        });
+        };
+
+        // Подписаться на события
+        socketService.onNotificationUnread(handleNotificationUnread);
+        socketService.onMessagesRead(handleMessagesRead);
+
+        // Fallback: периодическое обновление только если WebSocket не работает
+        const interval = setInterval(() => {
+            if (!socketService.isConnected()) {
+                console.log('⚠️ WebSocket disconnected, polling for updates');
+                loadUnreadCount();
+            }
+        }, 60000); // 1 минута вместо 30 секунд
 
         return () => {
             socketService.off('notification-unread');
             socketService.off('messages-read');
+            clearInterval(interval);
         };
-    }, [user]);
+    }, [user, loadUnreadCount]);
 
     const isActive = (path: string) => {
     if (path === '/home') {
