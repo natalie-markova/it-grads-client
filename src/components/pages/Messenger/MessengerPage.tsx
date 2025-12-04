@@ -69,7 +69,7 @@ const MessengerPage = () => {
 
     socketService.joinChat(Number(chatId));
 
-    socketService.onNewMessage((message) => {
+    const handleNewMessage = (message: any) => {
         console.log('Новое сообщение получено:', message);
         setMessages((prev) => [...prev, message]);
 
@@ -81,11 +81,22 @@ const MessengerPage = () => {
                 })
                 .catch(err => console.error('Error auto-marking as read:', err));
         }
-    });
+    };
+
+    const handleJoinChatError = (error: any) => {
+        console.error('Ошибка присоединения к чату:', error);
+        toast.error('Не удалось присоединиться к чату');
+    };
+
+    socketService.onNewMessage(handleNewMessage);
+    socketService.onJoinChatError(handleJoinChatError);
 
     return () => {
         socketService.leaveChat(Number(chatId));
         socketService.off('new-message');
+        socketService.off('notification-unread');
+        socketService.off('messages-read');
+        socketService.off('join-chat-error');
     };
     }, [chatId, user]);  
 
@@ -123,20 +134,42 @@ const MessengerPage = () => {
 
     if (!newMessage.trim() || !activeChat || !user) return;
 
+    const messageText = newMessage.trim();
     setSending(true);
+
     try {
       // Попытка отправить через WebSocket
       if (socketService.isConnected()) {
         // Отправляем через WebSocket
-        socketService.sendMessage(activeChat.id, newMessage.trim());
-        setNewMessage('');
+        socketService.sendMessage(activeChat.id, messageText);
+
+        // Подписываемся на ошибку однократно
+        const errorHandler = (error: any) => {
+          console.error('Ошибка отправки сообщения:', error);
+          toast.error('Не удалось отправить сообщение');
+          socketService.off('message-error');
+          setSending(false);
+        };
+
+        socketService.onMessageError(errorHandler);
+
+        // Очищаем поле только после успешной отправки (когда получим new-message с нашим senderId)
+        // Сообщение появится через обработчик onNewMessage из useEffect
+        // Просто очистим поле и состояние через небольшую задержку
+        setTimeout(() => {
+          setNewMessage('');
+          socketService.off('message-error');
+          setSending(false);
+        }, 300);
+
         console.log('Сообщение отправлено через WebSocket');
       } else {
         // Fallback на HTTP если WebSocket не подключен
         console.log('WebSocket отключен, используем HTTP API');
-        const message = await chatAPI.sendMessage(activeChat.id, newMessage.trim());
+        const message = await chatAPI.sendMessage(activeChat.id, messageText);
         setMessages([...messages, message]);
         setNewMessage('');
+        setSending(false);
       }
 
       // Обновить список чатов
@@ -144,7 +177,6 @@ const MessengerPage = () => {
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast.error('Ошибка при отправке сообщения');
-    } finally {
       setSending(false);
     }
   };

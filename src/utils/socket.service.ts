@@ -78,6 +78,20 @@ class SocketService {
     }
   }
 
+  // Подписаться на ошибки отправки сообщений
+  onMessageError(callback: (error: any) => void): void {
+    if (this.socket) {
+      this.socket.on('message-error', callback);
+    }
+  }
+
+  // Подписаться на ошибки присоединения к чату
+  onJoinChatError(callback: (error: any) => void): void {
+    if (this.socket) {
+      this.socket.on('join-chat-error', callback);
+    }
+  }
+
   // Отписаться от событий
   off(event: string): void {
     if (this.socket) {
