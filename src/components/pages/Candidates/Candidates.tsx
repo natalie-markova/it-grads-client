@@ -44,22 +44,6 @@ const Candidates = () => {
     loadResumes();
   }, []);
 
-  useEffect(() => {
-    const updateGrid = () => {
-      if (gridRef.current) {
-        if (window.innerWidth >= 1024) {
-          gridRef.current.style.gridTemplateColumns = 'repeat(4, minmax(0, 1fr))';
-        } else if (window.innerWidth >= 768) {
-          gridRef.current.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
-        } else {
-          gridRef.current.style.gridTemplateColumns = 'repeat(1, minmax(0, 1fr))';
-        }
-      }
-    };
-    updateGrid();
-    window.addEventListener('resize', updateGrid);
-    return () => window.removeEventListener('resize', updateGrid);
-  }, [showFilters]);
 
   const loadResumes = async () => {
     setLoading(true);
