@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import Card from '../../ui/Card';
-import { $api } from '../../../utils/axios.instance';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 

@@ -171,29 +171,14 @@ export default function Leaderboard() {
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-dark-surface flex items-center justify-center overflow-hidden">
-                                {player.user?.avatar ? (
-                                  <img
-                                    src={player.user.avatar}
-                                    alt=""
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <span className="text-lg">
-                                    {player.user?.username?.charAt(0).toUpperCase() || '?'}
-                                  </span>
-                                )}
+                            <div>
+                              <div className="font-medium">
+                                {player.user?.firstName || player.user?.username || 'Unknown'}
+                                {isMe && <span className="ml-2 text-xs text-accent-cyan">(вы)</span>}
                               </div>
-                              <div>
-                                <div className="font-medium">
-                                  {player.user?.firstName || player.user?.username || 'Unknown'}
-                                  {isMe && <span className="ml-2 text-xs text-accent-cyan">(вы)</span>}
-                                </div>
-                                {player.user?.lastName && (
-                                  <div className="text-sm text-gray-500">{player.user.lastName}</div>
-                                )}
-                              </div>
+                              {player.user?.lastName && (
+                                <div className="text-sm text-gray-500">{player.user.lastName}</div>
+                              )}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-center">

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function FileUpload() {
 
@@ -22,9 +23,9 @@ export default function FileUpload() {
       
       const data = await response.json();
       setUrl(data.url);
-      alert('File uploaded successfully!');
-    } catch (error) {
-      alert('Upload failed: ' + error.message);
+      toast.success('Файл успешно загружен!');
+    } catch (error: any) {
+      toast.error('Ошибка загрузки: ' + (error.message || 'Неизвестная ошибка'));
     } finally {
       setUploading(false);
     }

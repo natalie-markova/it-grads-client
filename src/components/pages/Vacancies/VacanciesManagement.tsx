@@ -4,6 +4,7 @@ import { vacanciesAPI } from '../../../utils/vacancies.api';
 import VacancyForm from './VacancyForm';
 import type { Vacancy } from '../../../types';
 import toast from 'react-hot-toast';
+import ConfirmModal from '../../ui/ConfirmModal';
 
 interface VacanciesManagementProps {
   userId?: number;
@@ -14,6 +15,7 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingVacancy, setEditingVacancy] = useState<Vacancy | undefined>();
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
   useEffect(() => {
     if (userId) {
@@ -62,16 +64,21 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Вы уверены, что хотите удалить эту вакансию?')) return;
-    
+  const handleDelete = (id: number) => {
+    setDeleteConfirm({ isOpen: true, id });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm.id) return;
     try {
-      await vacanciesAPI.delete(id);
+      await vacanciesAPI.delete(deleteConfirm.id);
       await loadVacancies();
       toast.success('Вакансия удалена');
     } catch (error) {
       console.error('Error deleting vacancy:', error);
       toast.error('Ошибка при удалении вакансии');
+    } finally {
+      setDeleteConfirm({ isOpen: false, id: null });
     }
   };
 
@@ -235,6 +242,18 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
           </div>
         </div>
       )}
+
+      {/* Модальное окно подтверждения удаления */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title="Удаление вакансии"
+        message="Вы уверены, что хотите удалить эту вакансию? Это действие нельзя отменить."
+        confirmText="Удалить"
+        cancelText="Отмена"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm({ isOpen: false, id: null })}
+      />
     </div>
   );
 }

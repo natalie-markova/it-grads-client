@@ -4,6 +4,9 @@ import { io, Socket } from 'socket.io-client';
 import CodeEditor from './CodeEditor';
 import type { GameTask, TestResult, MatchFoundData, MatchFinishedData, League } from './types';
 import ReactMarkdown from 'react-markdown';
+import toast from 'react-hot-toast';
+import ConfirmModal from '../../ui/ConfirmModal';
+import { getImageUrl } from '../../../utils/image.utils';
 
 interface OutletContext {
   user: { id: number; role: string } | null;
@@ -189,7 +192,7 @@ export default function PvPBattle() {
 
     socket.on('codebattle:error', ({ message }) => {
       console.error('Code Battle error:', message);
-      alert(message);
+      toast.error(message);
     });
 
     socket.on('disconnect', () => {
@@ -278,12 +281,19 @@ export default function PvPBattle() {
     });
   }, [matchId, code, selectedLanguage, submitted]);
 
+  const [leaveConfirm, setLeaveConfirm] = useState(false);
+
   const handleLeaveMatch = () => {
     if (!socketRef.current || !matchId) return;
-    if (confirm('Are you sure? You will lose rating if you leave.')) {
+    setLeaveConfirm(true);
+  };
+
+  const confirmLeave = () => {
+    if (socketRef.current && matchId) {
       socketRef.current.emit('codebattle:leave-match', { matchId });
       setStatus('idle');
     }
+    setLeaveConfirm(false);
   };
 
   const handlePlayAgain = () => {
@@ -490,7 +500,7 @@ export default function PvPBattle() {
             <div className="text-center">
               <div className="w-20 h-20 rounded-full bg-dark-surface flex items-center justify-center text-2xl mb-2 mx-auto border-2 border-red-500">
                 {opponent.avatar ? (
-                  <img src={opponent.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                  <img src={getImageUrl(opponent.avatar)} alt="" className="w-full h-full rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 ) : (
                   opponent.username?.charAt(0).toUpperCase() || '?'
                 )}
@@ -540,7 +550,7 @@ export default function PvPBattle() {
               <div className="flex items-center gap-2 px-3 py-1.5 bg-dark-card rounded-lg">
                 <div className="w-6 h-6 rounded-full bg-dark-surface flex items-center justify-center text-xs">
                   {opponent?.avatar ? (
-                    <img src={opponent.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                    <img src={getImageUrl(opponent.avatar)} alt="" className="w-full h-full rounded-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   ) : (
                     opponent?.username?.charAt(0).toUpperCase()
                   )}
@@ -742,5 +752,20 @@ export default function PvPBattle() {
     );
   }
 
-  return null;
+  return (
+    <>
+      {leaveConfirm && (
+        <ConfirmModal
+          isOpen={leaveConfirm}
+          title="Покинуть матч"
+          message="Вы уверены, что хотите покинуть матч? Вы потеряете рейтинг, если покинете игру."
+          confirmText="Покинуть"
+          cancelText="Отмена"
+          variant="warning"
+          onConfirm={confirmLeave}
+          onCancel={() => setLeaveConfirm(false)}
+        />
+      )}
+    </>
+  );
 }

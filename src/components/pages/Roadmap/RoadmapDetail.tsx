@@ -17,6 +17,7 @@ import { $api } from '../../../utils/axios.instance';
 import toast from 'react-hot-toast';
 import type { OutletContext } from '../../../types';
 import { useTranslation } from 'react-i18next';
+import ConfirmModal from '../../ui/ConfirmModal';
 
 interface LearningStep {
   title: string;
@@ -142,16 +143,21 @@ const RoadmapDetail = () => {
     }
   };
 
+  const [resetConfirm, setResetConfirm] = useState(false);
+
   const resetProgress = async () => {
     if (!slug || !isAuthenticated) return;
+    setResetConfirm(true);
+  };
 
-    if (!confirm(t('roadmap.resetConfirm'))) return;
-
+  const confirmReset = async () => {
+    if (!slug) return;
     try {
       await $api.delete(`/roadmaps/${slug}/progress`);
       setCompletedSteps(new Set());
       setSavedProgress(null);
       setHasUnsavedChanges(false);
+      setResetConfirm(false);
       toast.success(t('roadmap.progressReset'));
     } catch (error) {
       console.error('Error resetting progress:', error);
@@ -507,6 +513,18 @@ const RoadmapDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Модальное окно подтверждения сброса прогресса */}
+      <ConfirmModal
+        isOpen={resetConfirm}
+        title={t('roadmap.resetConfirmTitle') || 'Сброс прогресса'}
+        message={t('roadmap.resetConfirm') || 'Вы уверены, что хотите сбросить весь прогресс? Это действие нельзя отменить.'}
+        confirmText={t('common.confirm') || 'Подтвердить'}
+        cancelText={t('common.cancel') || 'Отмена'}
+        variant="warning"
+        onConfirm={confirmReset}
+        onCancel={() => setResetConfirm(false)}
+      />
     </div>
   );
 };

@@ -1,31 +1,77 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { $api, setAccessToken } from "../../../utils/axios.instance";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { OutletContext } from "../../../types";
 import toast from "react-hot-toast";
 
+const REMEMBERED_EMAIL_KEY = 'rememberedEmail';
+const REMEMBERED_PASSWORD_KEY = 'rememberedPassword';
+
 function Login() {
     const { setUser } = useOutletContext<OutletContext>();
     const navigate = useNavigate();
     const { t } = useTranslation();
     const [showPassword, setShowPassword] = useState<boolean>(false);
+    const [rememberMe, setRememberMe] = useState<boolean>(false);
+    const [savedEmail, setSavedEmail] = useState<string>('');
+    const [savedPassword, setSavedPassword] = useState<string>('');
+    
+    // Загружаем сохраненные данные при монтировании компонента
+    useEffect(() => {
+        const rememberedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+        const rememberedPassword = localStorage.getItem(REMEMBERED_PASSWORD_KEY);
+        
+        if (rememberedEmail) {
+            setSavedEmail(rememberedEmail);
+            setRememberMe(true);
+        }
+        
+        if (rememberedPassword) {
+            // Декодируем пароль из base64
+            try {
+                const decodedPassword = atob(rememberedPassword);
+                setSavedPassword(decodedPassword);
+            } catch (error) {
+                console.error('Error decoding password:', error);
+                // Если не удалось декодировать, удаляем невалидные данные
+                localStorage.removeItem(REMEMBERED_PASSWORD_KEY);
+            }
+        }
+    }, []);
     
     function submitHandler(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
+        const email = formData.get('email') as string;
+        const password = formData.get('password') as string;
+        
         const data = {
-            email: formData.get('email') as string,
-            password: formData.get('password') as string
+            email,
+            password
         };
+        
         $api.post("/users/login", data)
         .then(data => {
             console.log("Response:", data.data);
             toast.success("Авторизация прошла успешно!");
             setAccessToken(data.data.accessToken)
             setUser(data.data.user)
+            
+            // Сохраняем email и пароль, если чекбокс "Запомнить меня" отмечен
+            if (rememberMe) {
+                localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+                // Кодируем пароль в base64 для минимальной защиты (не настоящая защита, но лучше чем открытый текст)
+                const encodedPassword = btoa(password);
+                localStorage.setItem(REMEMBERED_PASSWORD_KEY, encodedPassword);
+            } else {
+                // Удаляем сохраненные данные, если чекбокс не отмечен
+                localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+                localStorage.removeItem(REMEMBERED_PASSWORD_KEY);
+            }
+            
             const userRole = data.data.user?.role || 'graduate'
             navigate(`/profile/${userRole}`);
         })
@@ -70,6 +116,7 @@ function Login() {
                                     required
                                     className="input-field pl-10"
                                     placeholder="your@email.com"
+                                    defaultValue={savedEmail}
                                 />
                             </div>
                         </div>
@@ -89,6 +136,7 @@ function Login() {
                                     required
                                     className="input-field pl-10 pr-10"
                                     placeholder="••••••••"
+                                    defaultValue={savedPassword}
                                 />
                                 <button
                                     type="button"
@@ -103,6 +151,27 @@ function Login() {
                                 </button>
                             </div>
                         </div>
+
+                        <label 
+                            htmlFor="rememberMe" 
+                            className="flex items-center gap-3 p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors border border-transparent hover:border-accent-cyan/30"
+                        >
+                            <div className="relative flex items-center justify-center">
+                                <input
+                                    type="checkbox"
+                                    id="rememberMe"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    className="h-5 w-5 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-card cursor-pointer appearance-none checked:bg-accent-cyan checked:border-accent-cyan transition-colors"
+                                />
+                                {rememberMe && (
+                                    <Check className="h-5 w-5 text-dark-bg absolute pointer-events-none" />
+                                )}
+                            </div>
+                            <span className="text-gray-300 text-sm flex-1">
+                                {t('auth.rememberMe') || 'Запомнить меня'}
+                            </span>
+                        </label>
 
                         <button
                             type="submit"

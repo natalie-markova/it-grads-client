@@ -78,6 +78,20 @@ class SocketService {
     }
   }
 
+  // Подписаться на событие удаления чата
+  onChatDeleted(callback: (data: { chatId: number }) => void): void {
+    if (this.socket) {
+      this.socket.on('chat-deleted', callback);
+    }
+  }
+
+  // Подписаться на событие создания чата
+  onChatCreated(callback: (data: { chat: any }) => void): void {
+    if (this.socket) {
+      this.socket.on('chat-created', callback);
+    }
+  }
+
   // Подписаться на ошибки отправки сообщений
   onMessageError(callback: (error: any) => void): void {
     if (this.socket) {

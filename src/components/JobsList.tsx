@@ -525,7 +525,11 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
           ))
         ) : (
           <Card>
-            <p className="text-gray-300 text-center py-8">Вакансии не найдены</p>
+            <p className="text-gray-300 text-center py-8">
+              {jobs.length === 0 && filteredJobs.length === 0 
+                ? 'Вакансии не найдены. Заполните резюме, профиль или радар навыков для получения рекомендаций.'
+                : 'Вакансии не найдены'}
+            </p>
           </Card>
         )}
       </div>

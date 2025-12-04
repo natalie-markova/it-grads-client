@@ -1,5 +1,6 @@
 import { User } from '../../../types';
 import type { Message } from '../../../types';
+import { getImageUrl } from '../../../utils/image.utils';
 
 interface MessageItemProps {
   message: Message;
@@ -20,9 +21,12 @@ const MessageItem = ({ message, isOwn }: MessageItemProps) => {
           <div className="flex items-center gap-2 mb-1">
             {message.sender.avatar ? (
               <img
-                src={message.sender.avatar}
+                src={getImageUrl(message.sender.avatar)}
                 alt={message.sender.username}
-                className="w-6 h-6 rounded-full"
+                className="w-6 h-6 rounded-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             ) : (
               <div className="w-6 h-6 rounded-full bg-accent-cyan/20 flex items-center justify-center">

@@ -7,6 +7,7 @@ import type { Employer, Vacancy, OutletContext } from '../../../types';
 import Section from '../../ui/Section';
 import Card from '../../ui/Card';
 import toast from 'react-hot-toast';
+import { getImageUrl } from '../../../utils/image.utils';
 
 export default function EmployerPublicProfile() {
   const { employerId } = useParams<{ employerId: string }>();
@@ -106,9 +107,10 @@ export default function EmployerPublicProfile() {
             <div className="w-24 h-24 bg-accent-cyan/20 rounded-lg flex items-center justify-center flex-shrink-0">
               {employer.avatar ? (
                 <img
-                  src={employer.avatar}
+                  src={getImageUrl(employer.avatar)}
                   alt={employer.companyName || employer.username}
                   className="w-full h-full object-cover rounded-lg"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
               ) : (
                 <Building2 className="h-12 w-12 text-accent-cyan" />

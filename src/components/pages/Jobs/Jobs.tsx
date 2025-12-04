@@ -125,6 +125,9 @@ const Jobs = () => {
         // Эндпоинт не найден - показываем пустой список
         console.log('Jobs endpoint not found, showing empty list')
         setJobs([])
+      } else if (response.status === 200 && data.length === 0 && showRecommended) {
+        // Пустой массив для рекомендованных вакансий
+        setJobs([])
       }
     } catch (error) {
       console.error('Error loading jobs:', error)

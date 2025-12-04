@@ -1,14 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { Send, ArrowLeft, User as UserIcon, Loader2 } from 'lucide-react';
 import { chatAPI } from '../../../utils/chat.api';
-import type { Chat, Message, User, OutletContext } from '../../../types';
+import type { Chat, Message, OutletContext } from '../../../types';
 import ChatListItem from './ChatListItem';
 import MessageItem from './MessageItem';
 import toast from 'react-hot-toast';
 import { socketService } from '../../../utils/socket.service';
 import Card from '../../ui/Card';
 import { useTranslation } from 'react-i18next';
+import { getImageUrl } from '../../../utils/image.utils';
 
 const MessengerPage = () => {
   const { t } = useTranslation();
@@ -26,6 +27,19 @@ const MessengerPage = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  // Функция загрузки списка чатов
+  const loadChats = useCallback(async () => {
+    try {
+      const data = await chatAPI.getChats();
+      setChats(data);
+    } catch (error: any) {
+      console.error('Error loading chats:', error);
+      toast.error('Ошибка при загрузке чатов');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Загрузка списка чатов
   useEffect(() => {
     if (!user) {
@@ -33,7 +47,7 @@ const MessengerPage = () => {
       return;
     }
     loadChats();
-  }, [user]);
+  }, [user, loadChats, navigate]);
 
   // Загрузка конкретного чата
   useEffect(() => {
@@ -63,6 +77,82 @@ const MessengerPage = () => {
     };
     }, [user]);
 
+    // Глобальный обработчик для обновления списка чатов при получении новых сообщений и создании чатов
+    useEffect(() => {
+      if (!user) return;
+
+      const handleNotificationUnread = (data: any) => {
+        console.log('📬 Получено уведомление о новом сообщении:', data);
+        // Обновляем список чатов для получения актуальных данных, включая счетчик непрочитанных
+        loadChats();
+      };
+
+      const handleNewMessageGlobal = (message: any) => {
+        console.log('📨 Глобальное новое сообщение получено:', message);
+        // Обновляем список чатов для обновления lastMessageAt и счетчика непрочитанных
+        // Это сработает для всех чатов, включая активный
+        loadChats();
+      };
+
+      const handleChatCreated = (data: { chat: any }) => {
+        console.log('💬 Создан новый чат:', data.chat);
+        // Обновляем список чатов, чтобы новый чат появился в списке
+        loadChats();
+      };
+
+      const handleMessagesRead = (data: { chatId: number }) => {
+        console.log('✅ Сообщения отмечены как прочитанные в чате:', data.chatId);
+        // Обновляем список чатов для обновления счетчика непрочитанных
+        loadChats();
+      };
+
+      socketService.onNotificationUnread(handleNotificationUnread);
+      socketService.onNewMessage(handleNewMessageGlobal);
+      socketService.onChatCreated(handleChatCreated);
+      socketService.onMessagesRead(handleMessagesRead);
+
+      return () => {
+        socketService.off('notification-unread');
+        socketService.off('chat-created');
+        socketService.off('messages-read');
+        // Не отписываемся от 'new-message' здесь полностью, так как это используется в активном чате
+        // Отписка от 'new-message' происходит в useEffect для активного чата
+      };
+    }, [user, loadChats]);
+
+    // Обработчик удаления чата другим пользователем
+    useEffect(() => {
+      if (!user) return;
+
+      const handleChatDeleted = (data: { chatId: number }) => {
+        console.log('Чат удален другим пользователем:', data.chatId);
+        
+        // Проверяем, был ли удаленный чат активным
+        const currentChatId = chatId ? Number(chatId) : null;
+        const isActiveChat = (currentChatId === data.chatId) || (activeChat && activeChat.id === data.chatId);
+        
+        // Очищаем состояние перед перенаправлением
+        setActiveChat(null);
+        setMessages([]);
+        
+        // Если удаленный чат был активным, всегда перенаправляем на список чатов
+        if (isActiveChat) {
+          navigate('/messenger', { replace: true });
+        }
+        
+        // Перезагружаем список чатов с сервера для получения актуальных данных
+        loadChats().catch(err => {
+          console.error('Error reloading chats after deletion:', err);
+        });
+      };
+
+      socketService.onChatDeleted(handleChatDeleted);
+
+      return () => {
+        socketService.off('chat-deleted');
+      };
+    }, [user, chatId, activeChat, navigate, loadChats]);
+
     // Подписка на новые сообщения в активном чате
     useEffect(() => {
     if (!chatId || !user) return;
@@ -70,7 +160,7 @@ const MessengerPage = () => {
     socketService.joinChat(Number(chatId));
 
     const handleNewMessage = (message: any) => {
-        console.log('Новое сообщение получено:', message);
+        console.log('Новое сообщение получено в активном чате:', message);
         setMessages((prev) => [...prev, message]);
 
         // Если сообщение от другого пользователя, автоматически отмечаем как прочитанное
@@ -78,6 +168,8 @@ const MessengerPage = () => {
             chatAPI.markAsRead(Number(chatId))
                 .then(() => {
                     console.log('Сообщение автоматически отмечено как прочитанное');
+                    // Обновляем список чатов для обновления счетчика непрочитанных
+                    loadChats();
                 })
                 .catch(err => console.error('Error auto-marking as read:', err));
         }
@@ -98,19 +190,7 @@ const MessengerPage = () => {
         socketService.off('messages-read');
         socketService.off('join-chat-error');
     };
-    }, [chatId, user]);  
-
-  const loadChats = async () => {
-    try {
-      const data = await chatAPI.getChats();
-      setChats(data);
-    } catch (error: any) {
-      console.error('Error loading chats:', error);
-      toast.error('Ошибка при загрузке чатов');
-    } finally {
-      setLoading(false);
-    }
-  };
+    }, [chatId, user]);
 
   const loadChat = async (id: number) => {
     try {
@@ -125,7 +205,15 @@ const MessengerPage = () => {
       loadChats();
     } catch (error: any) {
       console.error('Error loading chat:', error);
-      toast.error('Ошибка при загрузке чата');
+      // Если чат не найден (404), перенаправляем на список чатов
+      if (error.response?.status === 404) {
+        setActiveChat(null);
+        setMessages([]);
+        navigate('/messenger', { replace: true });
+        toast.error('Чат не найден');
+      } else {
+        toast.error('Ошибка при загрузке чата');
+      }
     }
   };
 
@@ -198,11 +286,14 @@ const MessengerPage = () => {
       await chatAPI.deleteChat(deleteConfirmChatId);
       toast.success('Чат успешно удален');
       
+      // Очищаем состояние перед перенаправлением
+      setActiveChat(null);
+      setMessages([]);
+      
       // Если удаленный чат был активным, перенаправляем на список чатов
-      if (activeChat && activeChat.id === deleteConfirmChatId) {
-        navigate('/messenger');
-        setActiveChat(null);
-        setMessages([]);
+      const currentChatId = chatId ? Number(chatId) : null;
+      if (currentChatId === deleteConfirmChatId || (activeChat && activeChat.id === deleteConfirmChatId)) {
+        navigate('/messenger', { replace: true });
       }
       
       // Обновляем список чатов
@@ -275,9 +366,12 @@ const MessengerPage = () => {
               
               {otherUser.avatar ? (
                 <img
-                  src={otherUser.avatar}
+                  src={getImageUrl(otherUser.avatar)}
                   alt={otherUser.username}
                   className="w-10 h-10 rounded-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center">
@@ -326,7 +420,7 @@ const MessengerPage = () => {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder={t('messenger.typeMessage')}
-                  className="flex-1 px-4 py-2 bg-dark-card border border-dark-surface rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan"
+                  className="flex-1 px-4 py-4 bg-dark-card border border-dark-surface rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan"
                   disabled={sending}
                 />
                 <button
@@ -360,11 +454,9 @@ const MessengerPage = () => {
           onClick={() => setDeleteConfirmChatId(null)}
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
-          <Card
-            className="max-w-md w-full"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          >
-            <div className="p-6">
+          <div onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+            <Card className="max-w-md w-full">
+              <div className="p-6">
               <h3 className="text-xl font-semibold text-white mb-4">
                 {t('messenger.deleteConfirm')}
               </h3>
@@ -386,7 +478,8 @@ const MessengerPage = () => {
                 </button>
               </div>
             </div>
-          </Card>
+            </Card>
+          </div>
         </div>
       )}
     </div>

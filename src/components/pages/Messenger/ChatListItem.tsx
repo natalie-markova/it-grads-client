@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MessageCircle, User as UserIcon, Trash2 } from 'lucide-react';
 import type { Chat, User } from '../../../types';
+import { getImageUrl } from '../../../utils/image.utils';
 
 interface ChatListItemProps {
   chat: Chat;
@@ -44,9 +45,12 @@ const ChatListItem = ({ chat, currentUser, isActive, onDelete }: ChatListItemPro
         <div className="flex-shrink-0">
           {otherUser?.avatar ? (
             <img
-              src={otherUser.avatar}
+              src={getImageUrl(otherUser.avatar)}
               alt={otherUser.username}
               className="w-12 h-12 rounded-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
             />
           ) : (
             <div className="w-12 h-12 rounded-full bg-accent-cyan/20 flex items-center justify-center">

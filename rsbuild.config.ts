@@ -11,7 +11,8 @@ const hasSslCerts = fs.existsSync(path.join(sslPath, 'cert.pem')) &&
 export default defineConfig({
   plugins: [pluginReact()],
   html: {
-    title: 'IT Grads - Платформа для выпускников IT'
+    title: 'IT Grads - Платформа для выпускников IT',
+    favicon: path.join(__dirname, 'public/favicon.svg')
   },
   server: {
     https: hasSslCerts ? {

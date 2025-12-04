@@ -25,6 +25,7 @@ import Section from '../../ui/Section'
 import { type OutletContext } from '../../../types'
 import toast from 'react-hot-toast'
 import { $api } from '../../../utils/axios.instance'
+import ConfirmModal from '../../ui/ConfirmModal'
 
 interface Interview {
   id: number
@@ -72,6 +73,7 @@ const InterviewTracker = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null })
 
   // Form state
   const [formData, setFormData] = useState({
@@ -125,13 +127,17 @@ const InterviewTracker = () => {
     }
   }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm(t('interview.tracker.messages.deleteConfirm'))) return
+  const handleDelete = (id: number) => {
+    setDeleteConfirm({ isOpen: true, id })
+  }
 
+  const confirmDelete = async () => {
+    if (!deleteConfirm.id) return
     try {
-      await $api.delete(`/interview-tracker/${id}`)
+      await $api.delete(`/interview-tracker/${deleteConfirm.id}`)
       toast.success(t('interview.tracker.messages.deleted'))
       loadInterviews()
+      setDeleteConfirm({ isOpen: false, id: null })
     } catch (error: any) {
       console.error('Error deleting interview:', error)
       const errorMessage = error.response?.data?.message || t('interview.tracker.messages.deleteError')
@@ -703,6 +709,18 @@ const InterviewTracker = () => {
           </div>
         </div>
       )}
+
+      {/* Модальное окно подтверждения удаления */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title={t('interview.tracker.messages.deleteConfirm')}
+        message={t('interview.tracker.messages.deleteConfirmText') || 'Вы уверены, что хотите удалить это собеседование? Это действие нельзя отменить.'}
+        confirmText={t('common.delete') || 'Удалить'}
+        cancelText={t('common.cancel') || 'Отмена'}
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm({ isOpen: false, id: null })}
+      />
     </div>
   )
 }

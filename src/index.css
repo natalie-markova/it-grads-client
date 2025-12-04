@@ -16,6 +16,38 @@
     background-color: #0a0a0a;
     color: #ffffff;
     line-height: 1.6;
+    cursor: default;
+  }
+
+  /* Единый стиль курсора для интерактивных элементов */
+  button,
+  a,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="file"],
+  label[for],
+  select,
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea {
+    cursor: text;
+  }
+
+  input:disabled,
+  textarea:disabled,
+  button:disabled,
+  .cursor-not-allowed {
+    cursor: not-allowed;
   }
 
   html {

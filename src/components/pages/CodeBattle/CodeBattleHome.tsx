@@ -251,13 +251,6 @@ export default function CodeBattleHome() {
                     <div className="w-6 text-center font-bold text-gray-500">
                       {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`}
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-dark-surface flex items-center justify-center text-sm">
-                      {player.user?.avatar ? (
-                        <img src={player.user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
-                      ) : (
-                        player.user?.username?.charAt(0).toUpperCase() || '?'
-                      )}
-                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="truncate text-sm font-medium">
                         {player.user?.firstName || player.user?.username || 'Unknown'}

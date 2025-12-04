@@ -115,7 +115,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
   }
 
     const baseNavLinks = [
-        { path: '/skills', label: t('navbar.skillsRadar') },
         { path: '/interview', label: t('navbar.interviews') },
         { path: '/jobs', label: t('navbar.vacancies') },
     ]
@@ -158,9 +157,9 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
     return (
         <nav className="bg-dark-surface shadow-lg border-b border-dark-card sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-16">
+                <div className="flex items-center h-16 w-full">
                     {/* Logo */}
-                    <Link to="/home" className="flex items-center space-x-2">
+                    <Link to="/home" className="flex items-center space-x-2 flex-shrink-0">
                         <div className="bg-accent-cyan px-2 py-1 rounded-lg">
                             <span className="text-xl font-mono font-bold text-dark-bg">&lt;/&gt;</span>
                         </div>
@@ -168,7 +167,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center space-x-8">
+                    <div className="hidden md:flex items-center flex-1 justify-center gap-4 mx-8">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.path}
@@ -185,7 +184,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                     </div>
 
                     {/* Auth Buttons */}
-                    <div className="hidden md:flex items-center space-x-4">
+                    <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
                         {user && userType ? (
                             <>
                                 <Link

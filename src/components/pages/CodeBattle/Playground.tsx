@@ -4,6 +4,7 @@ import { getTask, startSession, submitSolution, getHint, executeCode, getLanguag
 import CodeEditor from './CodeEditor';
 import type { GameTask, GameSession, TestResult, Language, SubmitResult } from './types';
 import ReactMarkdown from 'react-markdown';
+import toast from 'react-hot-toast';
 
 interface OutletContext {
   user: { id: number; role: string } | null;
@@ -138,7 +139,7 @@ export default function Playground() {
       setGameStarted(true);
     } catch (error) {
       console.error('Failed to start game:', error);
-      alert('Не удалось начать игру');
+      toast.error('Не удалось начать игру');
     } finally {
       setStartingGame(false);
     }
@@ -183,7 +184,7 @@ export default function Playground() {
 
   const handleSubmit = async () => {
     if (!session || !code.trim()) {
-      alert('Войдите в систему для отправки решения');
+      toast.error('Войдите в систему для отправки решения');
       return;
     }
 
@@ -221,7 +222,7 @@ export default function Playground() {
       setShowHints(true);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error?: string } } };
-      alert(err.response?.data?.error || 'Не удалось получить подсказку');
+      toast.error(err.response?.data?.error || 'Не удалось получить подсказку');
     }
   };
 

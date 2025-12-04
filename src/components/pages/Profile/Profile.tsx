@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
-import { Edit, Trash2, Mail, Phone, MapPin, Calendar, GraduationCap, Briefcase, Code, Github, Linkedin, Globe, Award } from 'lucide-react'
+import { Edit, Trash2, Mail, Phone, MapPin, Calendar, GraduationCap, Briefcase, Code, Github, Linkedin, Globe, Award, X } from 'lucide-react'
 import Card from '../../ui/Card'
 import Section from '../../ui/Section'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
@@ -11,34 +11,10 @@ import { $api } from '../../../utils/axios.instance'
 import GraduateProfileNav from './GraduateProfileNav'
 import { useTranslation } from 'react-i18next'
 import AutoSkillsRadar from '../../AutoSkillsRadar'
+import SkillsRadarCompact from '../../SkillsRadarCompact'
 import ChangePassword from './ChangePassword'
-
-// Функция для формирования полного URL изображения
-const getImageUrl = (url: string | undefined | null): string => {
-  if (!url || url.trim() === '') return ''
-  
-  // Если URL уже полный (начинается с http), возвращаем как есть
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url
-  }
-  
-  // Если это относительный путь к загруженному файлу, добавляем базовый URL сервера
-  if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
-    const baseUrl = apiUrl.replace('/api', '')
-    const cleanUrl = url.startsWith('/') ? url : `/${url}`
-    return `${baseUrl}${cleanUrl}`
-  }
-  
-  // Если это просто путь без слеша в начале, добавляем базовый URL
-  if (!url.startsWith('/') && !url.startsWith('http')) {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
-    const baseUrl = apiUrl.replace('/api', '')
-    return `${baseUrl}/uploads/avatars/${url}`
-  }
-  
-  return url
-}
+import ConfirmModal from '../../ui/ConfirmModal'
+import { getImageUrl } from '../../../utils/image.utils'
 
 interface Profile {
   photo: string
@@ -210,8 +186,21 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
         <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.profilePhoto')}</label>
         <div className="space-y-3">
           {photoPreview && (
-            <div className="w-32 h-32 rounded-lg overflow-hidden border border-dark-card">
+            <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-dark-card">
               <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => {
+                  setPhotoPreview(null)
+                  setPhotoFile(null)
+                  setUploadedPhotoUrl(null)
+                  setFormData({ ...formData, photo: '' })
+                }}
+                className="absolute top-1 right-1 p-1 bg-black/50 hover:bg-black/70 rounded-full transition-all cursor-default"
+                title="Удалить фото"
+              >
+                <X className="h-4 w-4 text-red-500" />
+              </button>
             </div>
           )}
           <div className="flex gap-2">
@@ -259,7 +248,6 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
             value={formData.lastName}
             onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
             className="input-field"
-            required
           />
         </div>
         <div>
@@ -269,7 +257,6 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
             value={formData.firstName}
             onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
             className="input-field"
-            required
           />
         </div>
         <div>
@@ -291,7 +278,6 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
             onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
             className="input-field"
             placeholder="01.01.2000"
-            required
           />
         </div>
         <div>
@@ -301,7 +287,6 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
             value={formData.city}
             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
             className="input-field"
-            required
           />
         </div>
       </div>
@@ -312,7 +297,6 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
           value={formData.education}
           onChange={(e) => setFormData({ ...formData, education: e.target.value })}
           className="input-field"
-          required
         />
       </div>
       <div>
@@ -322,7 +306,6 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
           value={formData.experience}
           onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
           className="input-field"
-          required
         />
       </div>
       <div>
@@ -332,7 +315,6 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
           onChange={(e) => setFormData({ ...formData, about: e.target.value })}
           className="input-field"
           rows={4}
-          required
         />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -404,37 +386,26 @@ const GraduateProfile = () => {
   const { user } = useOutletContext<OutletContext>()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    variant: 'info'
+  })
 
   // Функция для формирования полного URL изображения
-  const getImageUrl = (url: string | undefined | null): string => {
-    if (!url || url.trim() === '') return ''
-    
-    // Если URL уже полный (начинается с http), возвращаем как есть
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url
-    }
-    
-    // Если это относительный путь к загруженному файлу, добавляем базовый URL сервера
-    if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
-      const baseUrl = apiUrl.replace('/api', '')
-      const cleanUrl = url.startsWith('/') ? url : `/${url}`
-      return `${baseUrl}${cleanUrl}`
-    }
-    
-    // Если это просто путь без слеша в начале, добавляем базовый URL
-    if (!url.startsWith('/') && !url.startsWith('http')) {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
-      const baseUrl = apiUrl.replace('/api', '')
-      return `${baseUrl}/uploads/avatars/${url}`
-    }
-    
-    return url
-  }
   const [applications, setApplications] = useState<Application[]>([])
   const [favorites, setFavorites] = useState<any[]>([])
   const [resumes, setResumes] = useState<Resume[]>([])
   const [isCreatingResume, setIsCreatingResume] = useState(false)
+  const [showManualRadar, setShowManualRadar] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -755,18 +726,26 @@ const GraduateProfile = () => {
 
   const handleDeleteProfile = async () => {
     if (!user) return
-    if (confirm('Вы уверены, что хотите удалить профиль?')) {
-      try {
-        await $api.delete('/user/profile')
-        setProfile(null)
-        toast.success('Профиль успешно удален')
-        navigate('/login')
-      } catch (error: any) {
-        console.error('Error deleting profile:', error)
-        const errorMessage = error.response?.data?.message || error.message || 'Ошибка при удалении профиля'
-        toast.error(errorMessage)
+    setConfirmModal({
+      isOpen: true,
+      title: 'Удаление профиля',
+      message: 'Вы уверены, что хотите удалить профиль? Это действие нельзя отменить.',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await $api.delete('/user/profile')
+          setProfile(null)
+          toast.success('Профиль успешно удален')
+          navigate('/login')
+        } catch (error: any) {
+          console.error('Error deleting profile:', error)
+          const errorMessage = error.response?.data?.message || error.message || 'Ошибка при удалении профиля'
+          toast.error(errorMessage)
+        } finally {
+          setConfirmModal({ ...confirmModal, isOpen: false })
+        }
       }
-    }
+    })
   }
 
   const handleDeleteApplication = async (id: string) => {
@@ -796,22 +775,24 @@ const GraduateProfile = () => {
 
   const handleDeleteResume = async (id: number) => {
     if (!user) return
-    if (!confirm('Вы уверены, что хотите удалить это резюме?')) return
-
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-      const response = await fetch(`${apiUrl}/resumes/${id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      })
-      if (response.ok) {
-        setResumes(resumes.filter(resume => resume.id !== id))
-        toast.success('Резюме удалено')
+    setConfirmModal({
+      isOpen: true,
+      title: 'Удаление резюме',
+      message: 'Вы уверены, что хотите удалить это резюме? Это действие нельзя отменить.',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await $api.delete(`/resumes/${id}`)
+          setResumes(resumes.filter(resume => resume.id !== id))
+          toast.success('Резюме удалено')
+        } catch (error: any) {
+          console.error('Error deleting resume:', error)
+          toast.error(error.response?.data?.message || 'Ошибка при удалении резюме')
+        } finally {
+          setConfirmModal({ ...confirmModal, isOpen: false })
+        }
       }
-    } catch (error) {
-      console.error('Error deleting resume:', error)
-      toast.error('Ошибка при удалении резюме')
-    }
+    })
   }
 
   useScrollAnimation()
@@ -1118,8 +1099,55 @@ const GraduateProfile = () => {
 
         {/* Skills Radar Section */}
         {activeTab === 'radar' && (
-          <Section key="radar" title={t('profile.skillsRadar')} className="bg-dark-bg py-0 scroll-animate-item">
-            <AutoSkillsRadar userId={user.id} />
+          <Section key="radar" title={t('profile.skillsRadar')} subtitle={t('skills.autoSubtitle')} className="bg-dark-bg py-0 scroll-animate-item">
+            <div className="space-y-6">
+              {/* Tab switcher */}
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={() => setShowManualRadar(false)}
+                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                    !showManualRadar
+                      ? 'bg-accent-cyan text-white'
+                      : 'bg-dark-surface text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {t('skills.autoRadar')}
+                </button>
+                <button
+                  onClick={() => setShowManualRadar(true)}
+                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                    showManualRadar
+                      ? 'bg-accent-cyan text-white'
+                      : 'bg-dark-surface text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {t('skills.manualMode')}
+                </button>
+              </div>
+
+              {/* Info banner for auto radar */}
+              {!showManualRadar && (
+                <div className="bg-gradient-to-r from-accent-cyan/10 to-accent-blue/10 border border-accent-cyan/30 rounded-lg p-4">
+                  <p className="text-gray-300 text-sm">
+                    <span className="text-accent-cyan font-medium">{t('skills.howItWorks')}</span> {t('skills.howItWorksDesc')}
+                  </p>
+                  <ul className="text-gray-400 text-sm mt-2 space-y-1 ml-4 list-disc">
+                    <li><strong className="text-white">{t('skills.codeBattle')}</strong> - {t('skills.codeBattleDesc')}</li>
+                    <li><strong className="text-white">{t('resume.title')}</strong> - {t('skills.resumeDesc')}</li>
+                    <li><strong className="text-white">{t('interview.aiInterview.title')}</strong> - {t('skills.aiInterviewDesc')}</li>
+                    <li><strong className="text-white">{t('interview.audioInterview.title')}</strong> - {t('skills.audioInterviewDesc')}</li>
+                    <li><strong className="text-white">{t('roadmap.title')}</strong> - {t('skills.roadmapsDesc')}</li>
+                  </ul>
+                </div>
+              )}
+
+              {/* Radar */}
+              {showManualRadar ? (
+                user && <SkillsRadarCompact user={user} />
+              ) : (
+                user?.id && <AutoSkillsRadar userId={user.id} />
+              )}
+            </div>
           </Section>
         )}
 
@@ -1375,6 +1403,18 @@ const GraduateProfile = () => {
         )}
 
       </div>
+
+      {/* Модальное окно подтверждения */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText="Подтвердить"
+        cancelText="Отмена"
+        variant={confirmModal.variant}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+      />
     </div>
   )
 }

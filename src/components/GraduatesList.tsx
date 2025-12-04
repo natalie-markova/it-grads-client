@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Search, Filter, X, MapPin, User, Eye } from 'lucide-react'
 import Card from './ui/Card'
 import GraduatesFilterWizard, { GraduateFilterData } from './GraduatesFilterWizard'
+import { getImageUrl } from '../utils/image.utils'
 
 export interface Graduate {
   id: string
@@ -295,9 +296,10 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
                 <div className="flex-shrink-0">
                   {graduate.photo ? (
                     <img
-                      src={graduate.photo}
+                      src={getImageUrl(graduate.photo)}
                       alt={`${graduate.firstName} ${graduate.lastName}`}
                       className="w-20 h-20 rounded-full object-cover border-2 border-accent-cyan/50"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                   ) : (
                     <div className="w-20 h-20 rounded-full bg-dark-surface border-2 border-accent-cyan/50 flex items-center justify-center">
@@ -378,9 +380,10 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
               <div className="flex items-center gap-4">
                 {selectedGraduate.photo ? (
                   <img
-                    src={selectedGraduate.photo}
+                    src={getImageUrl(selectedGraduate.photo)}
                     alt={`${selectedGraduate.firstName} ${selectedGraduate.lastName}`}
                     className="w-20 h-20 rounded-full object-cover border-2 border-accent-cyan/50"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-dark-surface border-2 border-accent-cyan/50 flex items-center justify-center">

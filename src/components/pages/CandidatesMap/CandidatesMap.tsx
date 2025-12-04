@@ -3,11 +3,12 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
-import { Search, Filter, List, MapPin, Briefcase, MessageSquare, ArrowLeft, Users, ChevronUp, Home } from 'lucide-react';
+import { Search, Filter, List, MapPin, Briefcase, MessageSquare, ArrowLeft, Users, ChevronUp, Home, Eye, ChevronLeft, ChevronRight, X, Award, GraduationCap, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Card from '../../ui/Card';
 import Section from '../../ui/Section';
 import { chatAPI } from '../../../utils/chat.api';
+import { $api } from '../../../utils/axios.instance';
 import type { OutletContext } from '../../../types';
 import toast from 'react-hot-toast';
 import 'leaflet/dist/leaflet.css';
@@ -273,6 +274,9 @@ const CandidatesMap = () => {
   const [creatingChatFor, setCreatingChatFor] = useState<number | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([55.7558, 49.0]);
   const [mapZoom, setMapZoom] = useState(4);
+  const [viewingResumes, setViewingResumes] = useState<Resume[]>([]);
+  const [currentResumeIndex, setCurrentResumeIndex] = useState<number>(0);
+  const [showResumeModal, setShowResumeModal] = useState<boolean>(false);
 
   useEffect(() => {
     loadResumes();
@@ -383,6 +387,41 @@ const CandidatesMap = () => {
       toast.error('Ошибка при создании чата');
     } finally {
       setCreatingChatFor(null);
+    }
+  };
+
+  const handleViewResumes = async (userId: number) => {
+    if (!user || user.role !== 'employer') {
+      return;
+    }
+
+    try {
+      const response = await $api.get(`/resumes/user/${userId}`);
+      const userResumes = response.data;
+      
+      if (userResumes.length === 0) {
+        toast.error('У пользователя нет резюме');
+        return;
+      }
+
+      setViewingResumes(userResumes);
+      setCurrentResumeIndex(0);
+      setShowResumeModal(true);
+    } catch (error: any) {
+      console.error('Error loading user resumes:', error);
+      toast.error('Ошибка при загрузке резюме');
+    }
+  };
+
+  const handleNextResume = () => {
+    if (currentResumeIndex < viewingResumes.length - 1) {
+      setCurrentResumeIndex(currentResumeIndex + 1);
+    }
+  };
+
+  const handlePrevResume = () => {
+    if (currentResumeIndex > 0) {
+      setCurrentResumeIndex(currentResumeIndex - 1);
     }
   };
 
@@ -659,14 +698,23 @@ const CandidatesMap = () => {
                                     </div>
                                   )}
                                   {user?.role === 'employer' && (
-                                    <button
-                                      onClick={() => handleStartChat(resume.user?.id || resume.userId || 0)}
-                                      disabled={creatingChatFor === (resume.user?.id || resume.userId)}
-                                      className="mt-2 text-xs text-accent-cyan hover:text-accent-cyan/80 flex items-center gap-1"
-                                    >
-                                      <MessageSquare className="h-3 w-3" />
-                                      {t('candidates.writeMessage')}
-                                    </button>
+                                    <div className="flex gap-2 mt-2">
+                                      <button
+                                        onClick={() => handleViewResumes(resume.user?.id || resume.userId || 0)}
+                                        className="text-xs text-accent-cyan hover:text-accent-cyan/80 flex items-center gap-1 px-2 py-1 rounded bg-dark-card hover:bg-dark-surface transition-colors"
+                                      >
+                                        <Eye className="h-3 w-3" />
+                                        {t('candidates.viewResume')}
+                                      </button>
+                                      <button
+                                        onClick={() => handleStartChat(resume.user?.id || resume.userId || 0)}
+                                        disabled={creatingChatFor === (resume.user?.id || resume.userId)}
+                                        className="text-xs text-accent-cyan hover:text-accent-cyan/80 flex items-center gap-1 px-2 py-1 rounded bg-dark-card hover:bg-dark-surface transition-colors disabled:opacity-50"
+                                      >
+                                        <MessageSquare className="h-3 w-3" />
+                                        {t('candidates.writeMessage')}
+                                      </button>
+                                    </div>
                                   )}
                                 </div>
                               ))}
@@ -692,6 +740,181 @@ const CandidatesMap = () => {
       >
         <ChevronUp className="h-6 w-6" />
       </button>
+
+      {/* Модальное окно просмотра резюме */}
+      {showResumeModal && viewingResumes.length > 0 && (
+        <div 
+          className="fixed inset-0 bg-black/75 flex items-center justify-center z-[100] p-4"
+          onClick={() => setShowResumeModal(false)}
+        >
+          <div 
+            className="max-w-4xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar relative z-[101]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Card className="w-full">
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex-1">
+                  <h2 className="text-3xl font-bold text-white mb-2">
+                    {viewingResumes[currentResumeIndex].title}
+                  </h2>
+                  <p className="text-gray-400">
+                    {viewingResumes[currentResumeIndex].user?.username || 'Кандидат'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowResumeModal(false)}
+                  className="p-2 text-gray-400 hover:text-white hover:bg-dark-surface rounded-lg transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Счетчик резюме */}
+              {viewingResumes.length > 1 && (
+                <div className="mb-6 pb-4 border-b border-dark-card">
+                  <div className="text-sm text-gray-400">
+                    Резюме {currentResumeIndex + 1} из {viewingResumes.length}
+                  </div>
+                </div>
+              )}
+
+              {/* Содержимое резюме */}
+              <div className="space-y-6">
+                {/* Описание */}
+                {viewingResumes[currentResumeIndex].description && (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-3">Описание</h3>
+                    <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                      {viewingResumes[currentResumeIndex].description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Основная информация */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {viewingResumes[currentResumeIndex].location && (
+                    <div className="flex items-center gap-2 text-gray-300">
+                      <MapPin className="h-5 w-5 text-accent-cyan" />
+                      <span>{viewingResumes[currentResumeIndex].location}</span>
+                    </div>
+                  )}
+                  {viewingResumes[currentResumeIndex].level && (
+                    <div className="flex items-center gap-2 text-gray-300">
+                      <Briefcase className="h-5 w-5 text-accent-cyan" />
+                      <span className="capitalize">{viewingResumes[currentResumeIndex].level}</span>
+                    </div>
+                  )}
+                  {viewingResumes[currentResumeIndex].desiredSalary && (
+                    <div className="flex items-center gap-2 text-accent-cyan font-semibold">
+                      <span>от {viewingResumes[currentResumeIndex].desiredSalary.toLocaleString()} ₽</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Навыки */}
+                {viewingResumes[currentResumeIndex].skillsArray && viewingResumes[currentResumeIndex].skillsArray.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-3">Навыки</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {viewingResumes[currentResumeIndex].skillsArray.map((skill, i) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan rounded-full text-sm"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Опыт работы */}
+                {viewingResumes[currentResumeIndex].experience && (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                      <Award className="h-5 w-5 text-accent-cyan" />
+                      Опыт работы
+                    </h3>
+                    <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                      {viewingResumes[currentResumeIndex].experience}
+                    </p>
+                  </div>
+                )}
+
+                {/* Образование */}
+                {viewingResumes[currentResumeIndex].education && (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5 text-accent-cyan" />
+                      Образование
+                    </h3>
+                    <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                      {viewingResumes[currentResumeIndex].education}
+                    </p>
+                  </div>
+                )}
+
+                {/* Портфолио */}
+                {viewingResumes[currentResumeIndex].portfolio && (
+                  <div>
+                    <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                      <Globe className="h-5 w-5 text-accent-cyan" />
+                      Портфолио
+                    </h3>
+                    <a
+                      href={viewingResumes[currentResumeIndex].portfolio}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent-cyan hover:text-accent-cyan/80 transition-colors break-all"
+                    >
+                      {viewingResumes[currentResumeIndex].portfolio}
+                    </a>
+                  </div>
+                )}
+
+                {/* Кнопки навигации и написать сообщение */}
+                <div className="pt-4 border-t border-dark-card">
+                  <div className="flex gap-3 flex-wrap">
+                    {viewingResumes.length > 1 && currentResumeIndex > 0 && (
+                      <button
+                        onClick={handlePrevResume}
+                        className="btn-primary flex items-center gap-2"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Предыдущее резюме
+                      </button>
+                    )}
+                    {viewingResumes.length > 1 && currentResumeIndex < viewingResumes.length - 1 && (
+                      <button
+                        onClick={handleNextResume}
+                        className="btn-primary flex items-center gap-2"
+                      >
+                        Следующее резюме
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    )}
+                    {user?.role === 'employer' && (
+                      <button
+                        onClick={() => {
+                          const userId = viewingResumes[currentResumeIndex].user?.id || viewingResumes[currentResumeIndex].userId;
+                          if (userId) {
+                            setShowResumeModal(false);
+                            handleStartChat(userId);
+                          }
+                        }}
+                        className="btn-primary flex items-center gap-2"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Написать сообщение
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
