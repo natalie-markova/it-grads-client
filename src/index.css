@@ -150,5 +150,19 @@
     opacity: 1;
     transform: scale(1);
   }
+
+  /* Медленное мерцание для счетчиков */
+  @keyframes slow-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  .animate-slow-pulse {
+    animation: slow-pulse 3s ease-in-out infinite;
+  }
 }
 

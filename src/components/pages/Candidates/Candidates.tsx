@@ -44,6 +44,23 @@ const Candidates = () => {
     loadResumes();
   }, []);
 
+  useEffect(() => {
+    const updateGrid = () => {
+      if (gridRef.current) {
+        if (window.innerWidth >= 1024) {
+          gridRef.current.style.gridTemplateColumns = 'repeat(4, minmax(0, 1fr))';
+        } else if (window.innerWidth >= 768) {
+          gridRef.current.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+        } else {
+          gridRef.current.style.gridTemplateColumns = 'repeat(1, minmax(0, 1fr))';
+        }
+      }
+    };
+    updateGrid();
+    window.addEventListener('resize', updateGrid);
+    return () => window.removeEventListener('resize', updateGrid);
+  }, [showFilters]);
+
   const loadResumes = async () => {
     setLoading(true);
     try {
@@ -289,7 +306,7 @@ const Candidates = () => {
                         placeholder="мин. ₽"
                         value={salaryRange.min || ''}
                         onChange={(e) => setSalaryRange(prev => ({ ...prev, min: e.target.value ? Number(e.target.value) : null }))}
-                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan"
+                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
 
@@ -301,7 +318,7 @@ const Candidates = () => {
                         placeholder="макс. ₽"
                         value={salaryRange.max || ''}
                         onChange={(e) => setSalaryRange(prev => ({ ...prev, max: e.target.value ? Number(e.target.value) : null }))}
-                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan"
+                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
                   </div>

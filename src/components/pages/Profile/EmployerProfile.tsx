@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import VacanciesManagement from '../Vacancies/VacanciesManagement';
 import Card from '../../ui/Card';
 import EmployerProfileNav from './EmployerProfileNav';
+import ChangePassword from './ChangePassword';
 
 
 interface EmployerProfileData {
@@ -722,6 +723,9 @@ const EmployerProfile = () => {
             <VacanciesManagement userId={user?.id} />
           </div>
         )}
+
+        {/* Change Password Section */}
+        <ChangePassword />
       </div>
     </div>
   );

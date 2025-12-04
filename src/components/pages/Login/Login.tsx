@@ -1,6 +1,6 @@
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
-import { LogIn, Mail, Lock } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { $api, setAccessToken } from "../../../utils/axios.instance";
 import { useNavigate, useOutletContext } from "react-router-dom";
@@ -11,6 +11,7 @@ function Login() {
     const { setUser } = useOutletContext<OutletContext>();
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const [showPassword, setShowPassword] = useState<boolean>(false);
     
     function submitHandler(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -82,13 +83,24 @@ function Login() {
                                     <Lock className="h-5 w-5 text-gray-500" />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     id="password"
                                     name="password"
                                     required
-                                    className="input-field pl-10"
+                                    className="input-field pl-10 pr-10"
                                     placeholder="••••••••"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" />
+                                    )}
+                                </button>
                             </div>
                         </div>
 

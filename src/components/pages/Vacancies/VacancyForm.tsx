@@ -170,7 +170,7 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
               id="salary"
               name="salary"
               defaultValue={vacancy?.salary}
-              className="input-field"
+              className="input-field [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="Например: 150000"
             />
           </div>

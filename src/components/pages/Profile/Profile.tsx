@@ -11,6 +11,7 @@ import { $api } from '../../../utils/axios.instance'
 import GraduateProfileNav from './GraduateProfileNav'
 import { useTranslation } from 'react-i18next'
 import AutoSkillsRadar from '../../AutoSkillsRadar'
+import ChangePassword from './ChangePassword'
 
 // Функция для формирования полного URL изображения
 const getImageUrl = (url: string | undefined | null): string => {
@@ -1369,6 +1370,9 @@ const GraduateProfile = () => {
           )}
         </Section>
         )}
+
+        {/* Change Password Section */}
+        <ChangePassword />
 
       </div>
     </div>

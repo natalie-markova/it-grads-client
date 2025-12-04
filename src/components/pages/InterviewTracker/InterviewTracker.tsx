@@ -118,9 +118,10 @@ const InterviewTracker = () => {
       }
       loadInterviews()
       closeModal()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving interview:', error)
-      toast.error(t('interview.tracker.messages.saveError'))
+      const errorMessage = error.response?.data?.message || t('interview.tracker.messages.saveError')
+      toast.error(errorMessage)
     }
   }
 
@@ -131,9 +132,10 @@ const InterviewTracker = () => {
       await $api.delete(`/interview-tracker/${id}`)
       toast.success(t('interview.tracker.messages.deleted'))
       loadInterviews()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting interview:', error)
-      toast.error(t('interview.tracker.messages.deleteError'))
+      const errorMessage = error.response?.data?.message || t('interview.tracker.messages.deleteError')
+      toast.error(errorMessage)
     }
   }
 
@@ -142,9 +144,10 @@ const InterviewTracker = () => {
       await $api.patch(`/interview-tracker/${id}/status`, { status })
       loadInterviews()
       toast.success(t('interview.tracker.messages.statusUpdated'))
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating status:', error)
-      toast.error(t('interview.tracker.messages.statusError'))
+      const errorMessage = error.response?.data?.message || t('interview.tracker.messages.statusError')
+      toast.error(errorMessage)
     }
   }
 
@@ -153,9 +156,10 @@ const InterviewTracker = () => {
       await $api.patch(`/interview-tracker/${id}/result`, { result })
       loadInterviews()
       toast.success(t('interview.tracker.messages.resultSaved'))
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating result:', error)
-      toast.error(t('interview.tracker.messages.resultError'))
+      const errorMessage = error.response?.data?.message || t('interview.tracker.messages.resultError')
+      toast.error(errorMessage)
     }
   }
 
@@ -355,11 +359,11 @@ const InterviewTracker = () => {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
           {/* Calendar / List View */}
           <div className="lg:col-span-2">
             {viewMode === 'calendar' ? (
-              <Card>
+              <Card className="h-full">
                 {/* Calendar Header */}
                 <div className="flex justify-between items-center mb-6">
                   <button
@@ -455,73 +459,77 @@ const InterviewTracker = () => {
           </div>
 
           {/* Sidebar - Upcoming Interviews */}
-          <div className="space-y-6">
-            <Card>
+          <div className="space-y-6 flex flex-col" style={{ height: '100%' }}>
+            <Card className="flex-1 flex flex-col min-h-0">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Bell className="h-5 w-5 text-accent-cyan" />
                 {t('interview.tracker.upcoming')}
               </h3>
-              {upcomingInterviews.length === 0 ? (
-                <p className="text-gray-400 text-sm">{t('interview.tracker.noUpcoming')}</p>
-              ) : (
-                <div className="space-y-3">
-                  {upcomingInterviews.slice(0, 5).map(interview => {
-                    const TypeIcon = INTERVIEW_TYPES[interview.type].icon
-                    const daysUntil = Math.ceil(
-                      (new Date(interview.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-                    )
-                    return (
-                      <div
-                        key={interview.id}
-                        onClick={() => openModal(interview)}
-                        className="p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-medium text-white">{interview.company}</div>
-                            <div className="text-sm text-gray-400">{interview.position}</div>
+              <div className="flex-1 overflow-y-auto">
+                {upcomingInterviews.length === 0 ? (
+                  <p className="text-gray-400 text-sm">{t('interview.tracker.noUpcoming')}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {upcomingInterviews.slice(0, 5).map(interview => {
+                      const TypeIcon = INTERVIEW_TYPES[interview.type].icon
+                      const daysUntil = Math.ceil(
+                        (new Date(interview.date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                      )
+                      return (
+                        <div
+                          key={interview.id}
+                          onClick={() => openModal(interview)}
+                          className="p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium text-white">{interview.company}</div>
+                              <div className="text-sm text-gray-400">{interview.position}</div>
+                            </div>
+                            <TypeIcon className={`h-5 w-5 ${INTERVIEW_TYPES[interview.type].color}`} />
                           </div>
-                          <TypeIcon className={`h-5 w-5 ${INTERVIEW_TYPES[interview.type].color}`} />
+                          <div className="flex items-center gap-2 mt-2 text-sm">
+                            <Clock className="h-4 w-4 text-gray-400" />
+                            <span className="text-gray-300">{interview.time}</span>
+                            <span className={`ml-auto px-2 py-0.5 rounded text-xs ${
+                              daysUntil === 0 ? 'bg-red-500/20 text-red-400' :
+                              daysUntil === 1 ? 'bg-yellow-500/20 text-yellow-400' :
+                              'bg-blue-500/20 text-blue-400'
+                            }`}>
+                              {daysUntil === 0 ? t('interview.tracker.today') : daysUntil === 1 ? t('interview.tracker.tomorrow') : t('interview.tracker.inDays', { count: daysUntil })}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-2 text-sm">
-                          <Clock className="h-4 w-4 text-gray-400" />
-                          <span className="text-gray-300">{interview.time}</span>
-                          <span className={`ml-auto px-2 py-0.5 rounded text-xs ${
-                            daysUntil === 0 ? 'bg-red-500/20 text-red-400' :
-                            daysUntil === 1 ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-blue-500/20 text-blue-400'
-                          }`}>
-                            {daysUntil === 0 ? t('interview.tracker.today') : daysUntil === 1 ? t('interview.tracker.tomorrow') : t('interview.tracker.inDays', { count: daysUntil })}
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </Card>
 
             {/* Quick Tips */}
-            <Card>
+            <Card className="flex-1 flex flex-col min-h-0">
               <h3 className="text-lg font-semibold text-white mb-4">{t('interview.tracker.tips.title')}</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  {t('interview.tracker.tips.tip1')}
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  {t('interview.tracker.tips.tip2')}
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  {t('interview.tracker.tips.tip3')}
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
-                  {t('interview.tracker.tips.tip4')}
-                </li>
-              </ul>
+              <div className="flex-1 overflow-y-auto">
+                <ul className="space-y-2 text-sm text-gray-400">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
+                    {t('interview.tracker.tips.tip1')}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
+                    {t('interview.tracker.tips.tip2')}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
+                    {t('interview.tracker.tips.tip3')}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-accent-cyan mt-0.5 flex-shrink-0" />
+                    {t('interview.tracker.tips.tip4')}
+                  </li>
+                </ul>
+              </div>
             </Card>
           </div>
         </div>
