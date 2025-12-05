@@ -163,7 +163,7 @@ const Jobs = () => {
   return (
     <div className="bg-dark-bg min-h-screen py-8">
       <Section title={t('vacancies.title')} subtitle={t('vacancies.subtitle')} className="bg-dark-bg py-0 scroll-animate-item">
-        {user && (
+        {user && user.role !== 'employer' && (
           <div className="mb-6 flex gap-4 items-center">
             <button
               onClick={() => setShowRecommended(false)}
