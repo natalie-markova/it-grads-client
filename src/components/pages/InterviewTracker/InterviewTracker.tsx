@@ -75,6 +75,9 @@ const InterviewTracker = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null })
 
+  // Определяем, является ли пользователь работодателем
+  const isEmployer = user?.role === 'employer'
+
   // Form state
   const [formData, setFormData] = useState({
     company: '',
@@ -98,7 +101,9 @@ const InterviewTracker = () => {
 
   const loadInterviews = async () => {
     try {
-      const response = await $api.get('/interview-tracker')
+      // Для работодателя используем специальный эндпоинт
+      const endpoint = isEmployer ? '/interview-tracker/employer' : '/interview-tracker'
+      const response = await $api.get(endpoint)
       setInterviews(response.data)
     } catch (error) {
       console.error('Error loading interviews:', error)
@@ -111,11 +116,14 @@ const InterviewTracker = () => {
     e.preventDefault()
 
     try {
+      // Для работодателя используем специальные эндпоинты
+      const baseEndpoint = isEmployer ? '/interview-tracker/employer' : '/interview-tracker'
+
       if (editingInterview) {
-        await $api.put(`/interview-tracker/${editingInterview.id}`, formData)
+        await $api.put(`${baseEndpoint}/${editingInterview.id}`, formData)
         toast.success(t('interview.tracker.messages.updated'))
       } else {
-        await $api.post('/interview-tracker', formData)
+        await $api.post(baseEndpoint, formData)
         toast.success(t('interview.tracker.messages.added'))
       }
       loadInterviews()
@@ -134,7 +142,8 @@ const InterviewTracker = () => {
   const confirmDelete = async () => {
     if (!deleteConfirm.id) return
     try {
-      await $api.delete(`/interview-tracker/${deleteConfirm.id}`)
+      const baseEndpoint = isEmployer ? '/interview-tracker/employer' : '/interview-tracker'
+      await $api.delete(`${baseEndpoint}/${deleteConfirm.id}`)
       toast.success(t('interview.tracker.messages.deleted'))
       loadInterviews()
       setDeleteConfirm({ isOpen: false, id: null })
@@ -147,7 +156,8 @@ const InterviewTracker = () => {
 
   const handleStatusChange = async (id: number, status: Interview['status']) => {
     try {
-      await $api.patch(`/interview-tracker/${id}/status`, { status })
+      const baseEndpoint = isEmployer ? '/interview-tracker/employer' : '/interview-tracker'
+      await $api.patch(`${baseEndpoint}/${id}/status`, { status })
       loadInterviews()
       toast.success(t('interview.tracker.messages.statusUpdated'))
     } catch (error: any) {
@@ -159,7 +169,8 @@ const InterviewTracker = () => {
 
   const handleResultChange = async (id: number, result: Interview['result']) => {
     try {
-      await $api.patch(`/interview-tracker/${id}/result`, { result })
+      const baseEndpoint = isEmployer ? '/interview-tracker/employer' : '/interview-tracker'
+      await $api.patch(`${baseEndpoint}/${id}/result`, { result })
       loadInterviews()
       toast.success(t('interview.tracker.messages.resultSaved'))
     } catch (error: any) {
@@ -457,6 +468,7 @@ const InterviewTracker = () => {
                       onDelete={() => handleDelete(interview.id)}
                       onStatusChange={(status) => handleStatusChange(interview.id, status)}
                       onResultChange={(result) => handleResultChange(interview.id, result)}
+                      isEmployer={isEmployer}
                     />
                   ))
                 )}
@@ -558,12 +570,15 @@ const InterviewTracker = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.tracker.form.company')} *</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      {isEmployer ? (t('interview.tracker.form.candidate') || 'Кандидат') : t('interview.tracker.form.company')} *
+                    </label>
                     <input
                       type="text"
                       value={formData.company}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                       className="w-full bg-dark-surface border border-dark-card rounded-lg px-4 py-2 text-white"
+                      placeholder={isEmployer ? 'ФИО кандидата' : ''}
                       required
                     />
                   </div>
@@ -732,9 +747,10 @@ interface InterviewCardProps {
   onDelete: () => void
   onStatusChange: (status: Interview['status']) => void
   onResultChange: (result: Interview['result']) => void
+  isEmployer?: boolean
 }
 
-const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultChange }: InterviewCardProps) => {
+const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultChange, isEmployer }: InterviewCardProps) => {
   const { t, i18n } = useTranslation()
   const TypeIcon = INTERVIEW_TYPES[interview.type].icon
   const [showFeedback, setShowFeedback] = useState(false)
@@ -744,7 +760,7 @@ const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultCh
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <Building2 className="h-5 w-5 text-accent-cyan" />
+            {isEmployer ? <Users className="h-5 w-5 text-accent-cyan" /> : <Building2 className="h-5 w-5 text-accent-cyan" />}
             <h3 className="text-lg font-semibold text-white">{interview.company}</h3>
             <span className={`px-2 py-0.5 rounded text-xs border ${STATUS_COLORS[interview.status]}`}>
               {t(`interview.tracker.status.${interview.status}`)}
