@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { Edit, Building2, Globe, MapPin, Users, Briefcase, Check, X, User as UserIcon, RefreshCw, Eye, ChevronLeft, ChevronRight, MessageSquare, Award, GraduationCap } from 'lucide-react';
 import type { OutletContext } from '../../../types';
@@ -77,6 +77,7 @@ const EmployerProfile = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const [viewingResumes, setViewingResumes] = useState<Resume[]>([]);
   const [currentResumeIndex, setCurrentResumeIndex] = useState<number>(0);
   const [showResumeModal, setShowResumeModal] = useState<boolean>(false);
@@ -402,18 +403,21 @@ const EmployerProfile = () => {
                       </button>
                     </div>
                   )}
-                  <div className="flex gap-2">
-                    <label className="flex-1 cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                        className="hidden"
-                      />
-                      <span className="inline-block px-4 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors text-sm">
-                        {avatarFile ? 'Файл выбран' : 'Выбрать файл'}
-                      </span>
-                    </label>
+                  <div className="flex gap-2 flex-wrap">
+                    <input
+                      ref={avatarFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => avatarFileInputRef.current?.click()}
+                      className="px-4 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors text-sm flex items-center gap-2"
+                    >
+                      📁 {avatarFile ? 'Файл выбран' : 'Выбрать файл'}
+                    </button>
                     {avatarFile && (
                       <button
                         type="button"
@@ -425,18 +429,7 @@ const EmployerProfile = () => {
                       </button>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400">Или введите URL фото</p>
-                  <input
-                    type="text"
-                    value={formData.avatar || ''}
-                    onChange={(e) => {
-                      const newAvatar = e.target.value
-                      setFormData({ ...formData, avatar: newAvatar })
-                      setAvatarPreview(newAvatar ? getImageUrl(newAvatar) : null)
-                    }}
-                    className="w-full px-4 py-2 bg-dark-bg border border-dark-card rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan"
-                    placeholder="https://..."
-                  />
+                  <p className="text-xs text-gray-400">Максимальный размер файла: 5MB. Поддерживаются JPG, PNG, GIF</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

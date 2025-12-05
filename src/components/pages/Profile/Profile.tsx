@@ -180,6 +180,13 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
     onSave(dataToSave)
   }
 
+  // Ref для input file чтобы программно открывать диалог
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  const handleSelectFromSystem = () => {
+    fileInputRef.current?.click()
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -203,18 +210,21 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
               </button>
             </div>
           )}
-          <div className="flex gap-2">
-            <label className="flex-1 cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                className="hidden"
-              />
-              <span className="inline-block px-4 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors text-sm">
-                {photoFile ? t('profile.fileSelected') : t('profile.selectFile')}
-              </span>
-            </label>
+          <div className="flex gap-2 flex-wrap">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={handleSelectFromSystem}
+              className="px-4 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors text-sm flex items-center gap-2"
+            >
+              📁 {photoFile ? t('profile.fileSelected') : t('profile.selectFile')}
+            </button>
             {photoFile && (
               <button
                 type="button"
@@ -226,18 +236,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
               </button>
             )}
           </div>
-          <p className="text-xs text-gray-400">{t('profile.orEnterUrl')}</p>
-          <input
-            type="text"
-            value={formData.photo}
-            onChange={(e) => {
-              const newPhoto = e.target.value
-              setFormData({ ...formData, photo: newPhoto })
-              setPhotoPreview(newPhoto ? getImageUrl(newPhoto) : null)
-            }}
-            className="input-field"
-            placeholder="https://..."
-          />
+          <p className="text-xs text-gray-400">{t('profile.maxFileSize')}</p>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -750,11 +750,11 @@
     "rejected": "Rejected",
     "pending": "Pending",
     "company": "Company",
-    "orEnterUrl": "Or enter photo URL",
     "fileSelected": "File selected",
     "selectFile": "Select file",
     "upload": "Upload",
-    "uploading": "Uploading..."
+    "uploading": "Uploading...",
+    "maxFileSize": "Max file size: 5MB. Supported formats: JPG, PNG, GIF"
   },
   "resume": {
     "title": "Resume",

@@ -602,11 +602,11 @@
     "rejected": "Отклонен",
     "pending": "На рассмотрении",
     "company": "Компания",
-    "orEnterUrl": "Или введите URL фото",
     "fileSelected": "Файл выбран",
     "selectFile": "Выбрать файл",
     "upload": "Загрузить",
-    "uploading": "Загрузка..."
+    "uploading": "Загрузка...",
+    "maxFileSize": "Максимальный размер файла: 5MB. Поддерживаются JPG, PNG, GIF"
   },
   "resume": {
     "title": "Резюме",
