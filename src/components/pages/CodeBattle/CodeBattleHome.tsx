@@ -43,7 +43,7 @@ export default function CodeBattleHome() {
   const loadData = async () => {
     try {
       const [leaderboardData, dailyData, tasksData] = await Promise.all([
-        getLeaderboard({ limit: 10 }).catch(() => []),
+        getLeaderboard({ limit: 3 }).catch(() => []),
         getDailyChallenge().catch(() => ({ task: null })),
         getTasks({ limit: 6 }).catch(() => ({ tasks: [], pagination: { page: 1, pages: 1, total: 0, limit: 6 } }))
       ]);
@@ -243,7 +243,7 @@ export default function CodeBattleHome() {
                 </button>
               </div>
               <div className="space-y-3">
-                {leaderboard.slice(0, 5).map((player, index) => (
+                {leaderboard.slice(0, 3).map((player, index) => (
                   <div
                     key={player.id}
                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-dark-surface transition-colors"

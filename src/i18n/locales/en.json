@@ -850,6 +850,9 @@
     "interviewCreateError": "Error creating interview",
     "answerSendError": "Error sending answer",
     "interviewCompleteError": "Error completing interview",
+    "audioPlaybackError": "Audio playback error",
+    "ttsUnavailable": "Speech synthesis temporarily unavailable",
+    "ttsError": "Speech synthesis error. Check your internet connection",
     "personas": {
       "strict_hr": {
         "name": "Strict HR Director",

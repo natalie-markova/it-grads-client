@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import CodeEditor from './CodeEditor';
+import { executeCode } from './api';
 import type { GameTask, TestResult, MatchFoundData, MatchFinishedData, League } from './types';
 import ReactMarkdown from 'react-markdown';
 import toast from 'react-hot-toast';
@@ -72,7 +73,15 @@ export default function PvPBattle() {
   const [status, setStatus] = useState<GameStatus>('idle');
   const [searchTime, setSearchTime] = useState(0);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
-  const [selectedTimeLimit, setSelectedTimeLimit] = useState(300);
+
+  // Автоматический лимит времени в зависимости от сложности
+  const getTimeLimit = (difficulty: 'easy' | 'medium' | 'hard') => {
+    switch (difficulty) {
+      case 'easy': return 180;    // 3 минуты
+      case 'medium': return 300;  // 5 минут
+      case 'hard': return 600;    // 10 минут
+    }
+  };
 
   // Match data
   const [matchId, setMatchId] = useState<number | null>(null);
@@ -238,7 +247,7 @@ export default function PvPBattle() {
     setSearchTime(0);
     socketRef.current.emit('codebattle:find-match', {
       difficulty: selectedDifficulty,
-      timeLimit: selectedTimeLimit
+      timeLimit: getTimeLimit(selectedDifficulty)
     });
   };
 
@@ -252,7 +261,7 @@ export default function PvPBattle() {
     if (!socketRef.current) return;
     socketRef.current.emit('codebattle:create-room', {
       difficulty: selectedDifficulty,
-      timeLimit: selectedTimeLimit
+      timeLimit: getTimeLimit(selectedDifficulty)
     });
   };
 
@@ -267,6 +276,33 @@ export default function PvPBattle() {
     setSelectedLanguage(lang);
     if (task?.starterCode?.[lang]) {
       setCode(task.starterCode[lang]);
+    }
+  };
+
+  const handleRun = async () => {
+    if (!code.trim()) return;
+
+    setRunning(true);
+    setOutput('');
+    setActiveTab('output');
+
+    try {
+      const result = await executeCode({
+        code,
+        language: selectedLanguage,
+        input: ''
+      });
+
+      if (result.success) {
+        setOutput(result.stdout || 'Код выполнен успешно (нет вывода)');
+      } else {
+        setOutput(`Ошибка: ${result.error || result.stderr || result.status}`);
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      setOutput(`Ошибка выполнения: ${err.message}`);
+    } finally {
+      setRunning(false);
     }
   };
 
@@ -361,28 +397,9 @@ export default function PvPBattle() {
                 </div>
               </div>
 
-              {/* Time Limit */}
-              <div className="mb-6">
-                <label className="block text-sm text-gray-400 mb-2">Лимит времени:</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { value: 180, label: '3 мин' },
-                    { value: 300, label: '5 мин' },
-                    { value: 600, label: '10 мин' }
-                  ].map(({ value, label }) => (
-                    <button
-                      key={value}
-                      onClick={() => setSelectedTimeLimit(value)}
-                      className={`p-3 rounded-lg text-center transition-all ${
-                        selectedTimeLimit === value
-                          ? 'bg-accent-cyan/20 text-accent-cyan border-2 border-accent-cyan'
-                          : 'bg-dark-surface border-2 border-transparent hover:border-dark-card text-white'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
+              {/* Auto Time Info */}
+              <div className="mb-6 p-3 bg-dark-surface rounded-lg text-center text-sm text-gray-400">
+                <span className="text-accent-cyan font-medium">{formatTime(getTimeLimit(selectedDifficulty))}</span> — автоматический лимит времени
               </div>
 
               {/* Find Match Button */}
@@ -462,7 +479,7 @@ export default function PvPBattle() {
           </div>
           <h2 className="text-2xl font-bold mb-2">Поиск соперника...</h2>
           <p className="text-gray-400 mb-4">
-            {selectedDifficulty.toUpperCase()} | {formatTime(selectedTimeLimit)}
+            {selectedDifficulty.toUpperCase()} | {formatTime(getTimeLimit(selectedDifficulty))}
           </p>
           <div className="text-3xl font-mono text-accent-cyan mb-8">
             {formatTime(searchTime)}
@@ -602,23 +619,55 @@ export default function PvPBattle() {
             <div className="flex-1 overflow-auto p-4 custom-scrollbar">
               {activeTab === 'description' && (
                 <div className="prose prose-invert max-w-none">
-                  <ReactMarkdown>{task.description}</ReactMarkdown>
+                  {/* Заголовок и сложность */}
+                  <div className="flex items-start justify-between mb-4 not-prose">
+                    <h2 className="text-xl font-bold">{task.title}</h2>
+                    <span className={`px-2 py-1 rounded text-xs border ${difficultyColors[task.difficulty]}`}>
+                      {task.difficulty.toUpperCase()}
+                    </span>
+                  </div>
 
-                  <div className="mt-6">
-                    <h4 className="text-sm font-semibold text-gray-400 mb-2">Примеры:</h4>
-                    {task.testCases?.filter(tc => !tc.isHidden).map((tc, i) => (
-                      <div key={i} className="bg-dark-card rounded p-3 mb-2 text-sm">
-                        <div><span className="text-gray-400">Input:</span> <code>{JSON.stringify(tc.input)}</code></div>
-                        <div><span className="text-gray-400">Output:</span> <code>{JSON.stringify(tc.expectedOutput)}</code></div>
-                      </div>
-                    ))}
+                  {/* Описание задачи */}
+                  <div className="mb-6">
+                    <ReactMarkdown>{task.description || 'Описание задачи недоступно'}</ReactMarkdown>
+                  </div>
+
+                  {/* Link to Codeforces */}
+                  {task.externalUrl && (
+                    <div className="mb-6 not-prose">
+                      <a
+                        href={task.externalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
+                      >
+                        Источник: Codeforces ↗
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Примеры тестов */}
+                  <div className="mt-6 not-prose">
+                    <h4 className="text-sm font-semibold text-gray-400 mb-2">Примеры тестов:</h4>
+                    {task.testCases && task.testCases.filter(tc => !tc.isHidden).length > 0 ? (
+                      task.testCases.filter(tc => !tc.isHidden).map((tc, i) => (
+                        <div key={i} className="bg-dark-card rounded p-3 mb-2 text-sm font-mono">
+                          <div><span className="text-gray-500">Input:</span> {JSON.stringify(tc.input)}</div>
+                          <div><span className="text-gray-500">Output:</span> {JSON.stringify(tc.expectedOutput)}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">Примеры недоступны</p>
+                    )}
                   </div>
                 </div>
               )}
 
               {activeTab === 'output' && (
                 <div className="bg-dark-card rounded-lg p-4 font-mono text-sm whitespace-pre-wrap min-h-[200px]">
-                  {output || (submitResult ? (
+                  {output ? (
+                    output
+                  ) : submitResult ? (
                     <div>
                       <div className={`text-lg mb-2 ${submitResult.solved ? 'text-green-400' : 'text-red-400'}`}>
                         {submitResult.solved ? '✅ Решено!' : '❌ Не все тесты пройдены'}
@@ -626,7 +675,9 @@ export default function PvPBattle() {
                       <div>Пройдено тестов: {submitResult.testsPassed}/{submitResult.totalTests}</div>
                       <div>Время: {submitResult.solveTime}с</div>
                     </div>
-                  ) : 'Отправьте решение для просмотра результатов')}
+                  ) : (
+                    <span className="text-gray-500">Нажмите "Запустить" чтобы выполнить код</span>
+                  )}
                 </div>
               )}
             </div>
@@ -646,11 +697,18 @@ export default function PvPBattle() {
             {/* Actions */}
             <div className="border-t border-dark-card p-4 flex items-center justify-end gap-3">
               <button
+                onClick={handleRun}
+                disabled={running || !code.trim()}
+                className="px-4 py-2 bg-dark-surface hover:bg-dark-card rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {running && !submitted ? '⏳ Выполнение...' : '▶ Запустить'}
+              </button>
+              <button
                 onClick={handleSubmit}
                 disabled={running || submitted || !code.trim()}
                 className="px-6 py-2 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {running ? '⏳ Проверка...' : submitted ? (submitResult?.solved ? '✓ Решено' : 'Отправлено') : '📤 Отправить'}
+                {running && !submitted ? '⏳ Проверка...' : submitted ? (submitResult?.solved ? '✓ Решено' : 'Отправлено') : '📤 Отправить'}
               </button>
             </div>
           </div>

@@ -149,7 +149,7 @@
   },
   "navbar": {
     "skillsRadar": "Радар навыков",
-    "interviews": "Подготовка к собеседованию",
+    "interviews": "Тренажер",
     "vacancies": "Вакансии",
     "roadmap": "Карта развития",
     "interviewTracker": "Трекер собеседований",
@@ -702,6 +702,9 @@
     "interviewCreateError": "Ошибка при создании интервью",
     "answerSendError": "Ошибка при отправке ответа",
     "interviewCompleteError": "Ошибка при завершении интервью",
+    "audioPlaybackError": "Ошибка воспроизведения аудио",
+    "ttsUnavailable": "Синтез речи временно недоступен",
+    "ttsError": "Ошибка синтеза речи. Проверьте подключение к интернету",
     "personas": {
       "strict_hr": {
         "name": "Строгий HR-директор",
