@@ -1,6 +1,6 @@
 import { Link, useOutletContext } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ArrowRight, Users, MessageCircle, TrendingUp, GraduationCap, Building2, MapPin, Search, Star, Target, Sparkles, CheckCircle } from 'lucide-react'
+import { ArrowRight, Users, MessageCircle, TrendingUp, GraduationCap, Building2, MapPin, Search, Star, Target, CheckCircle, ChevronDown, Mouse } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import Section from '../../../components/ui/Section'
 import Card from '../../../components/ui/Card'
@@ -137,17 +137,29 @@ const Home = () => {
   return (
     <div className="bg-dark-bg overflow-hidden">
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg py-20 md:py-32">
+      <section className="relative min-h-[100vh] flex items-center bg-dark-bg py-20 md:py-32">
         {/* Декоративные элементы */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-72 h-72 bg-accent-cyan/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-20 left-10 w-96 h-96 bg-accent-blue/10 rounded-full blur-3xl"></div>
         </div>
 
-        {/* Орнамент справа внизу - подсказка о скролле */}
-        <div className="absolute bottom-8 right-8 flex flex-col items-center gap-2 text-gray-500/40">
-          <div className="w-[1px] h-16 bg-gradient-to-b from-transparent via-accent-cyan/30 to-accent-cyan/50"></div>
-          <div className="w-2 h-2 rounded-full bg-accent-cyan/40 animate-pulse"></div>
+        {/* Scroll indicator - LEFT */}
+        <div className="absolute bottom-8 left-8 flex flex-col items-center gap-3 text-gray-400 animate-bounce-slow">
+          <Mouse className="w-6 h-6 text-accent-cyan" />
+          <div className="flex flex-col items-center">
+            <ChevronDown className="w-5 h-5 text-accent-cyan animate-pulse" />
+            <ChevronDown className="w-5 h-5 text-accent-cyan/60 -mt-2 animate-pulse" style={{ animationDelay: '0.15s' }} />
+          </div>
+        </div>
+
+        {/* Scroll indicator - RIGHT */}
+        <div className="absolute bottom-8 right-8 flex flex-col items-center gap-3 text-gray-400 animate-bounce-slow">
+          <Mouse className="w-6 h-6 text-accent-cyan" />
+          <div className="flex flex-col items-center">
+            <ChevronDown className="w-5 h-5 text-accent-cyan animate-pulse" />
+            <ChevronDown className="w-5 h-5 text-accent-cyan/60 -mt-2 animate-pulse" style={{ animationDelay: '0.15s' }} />
+          </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">

@@ -286,18 +286,14 @@ export default function Playground() {
 
               {/* Link to Codeforces if external task */}
               {task.externalUrl && (
-                <div className="mb-6 p-4 bg-accent-blue/10 border border-accent-blue/30 rounded-lg">
-                  <p className="text-sm text-gray-300 mb-3">
-                    Это задача с Codeforces. Полное условие доступно на сайте:
-                  </p>
+                <div className="mb-6">
                   <a
                     href={task.externalUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-accent-blue hover:bg-accent-blue/90 text-white rounded-lg transition-colors"
+                    className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
                   >
-                    <span>Открыть на Codeforces</span>
-                    <span>↗</span>
+                    Источник: Codeforces ↗
                   </a>
                 </div>
               )}
@@ -439,12 +435,16 @@ export default function Playground() {
             {/* Example Tests Preview */}
             <div className="bg-dark-card border border-dark-surface rounded-xl p-6">
               <h3 className="font-semibold mb-4">Примеры тестов:</h3>
-              {task.testCases?.filter(tc => !tc.isHidden).slice(0, 2).map((tc, i) => (
-                <div key={i} className="bg-dark-bg rounded p-3 mb-2 text-sm font-mono">
-                  <div><span className="text-gray-500">Input:</span> {JSON.stringify(tc.input)}</div>
-                  <div><span className="text-gray-500">Output:</span> {JSON.stringify(tc.expectedOutput)}</div>
-                </div>
-              ))}
+              {task.testCases && task.testCases.filter(tc => !tc.isHidden).length > 0 ? (
+                task.testCases.filter(tc => !tc.isHidden).slice(0, 3).map((tc, i) => (
+                  <div key={i} className="bg-dark-bg rounded p-3 mb-2 text-sm font-mono">
+                    <div><span className="text-gray-500">Input:</span> {JSON.stringify(tc.input)}</div>
+                    <div><span className="text-gray-500">Output:</span> {JSON.stringify(tc.expectedOutput)}</div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-sm">Примеры будут доступны во время игры</p>
+              )}
             </div>
           </div>
         </div>
@@ -533,33 +533,48 @@ export default function Playground() {
           <div className="flex-1 overflow-auto p-4 custom-scrollbar">
             {activeTab === 'description' && (
               <div className="prose prose-invert max-w-none">
-                <ReactMarkdown>{task.description}</ReactMarkdown>
+                {/* Заголовок и сложность задачи */}
+                <div className="flex items-start justify-between mb-4 not-prose">
+                  <h2 className="text-xl font-bold">{task.title}</h2>
+                  <span className={`px-2 py-1 rounded text-xs border ${difficultyColors[task.difficulty]}`}>
+                    {task.difficulty.toUpperCase()}
+                  </span>
+                </div>
+
+                {/* Описание задачи */}
+                <div className="mb-6">
+                  <ReactMarkdown>{task.description || 'Описание задачи недоступно'}</ReactMarkdown>
+                </div>
 
                 {/* Link to Codeforces */}
                 {task.externalUrl && (
-                  <div className="my-4 p-3 bg-accent-blue/10 border border-accent-blue/30 rounded-lg not-prose">
+                  <div className="mb-6 not-prose">
                     <a
                       href={task.externalUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-accent-cyan hover:text-accent-cyan/80 transition-colors"
+                      className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
                     >
-                      <span>Полное условие на Codeforces</span>
-                      <span>↗</span>
+                      Источник: Codeforces ↗
                     </a>
                   </div>
                 )}
 
-                <div className="mt-6">
+                {/* Примеры тестов */}
+                <div className="mt-6 not-prose">
                   <h4 className="text-sm font-semibold text-gray-400 mb-2">Примеры тестов:</h4>
-                  {task.testCases.filter(tc => !tc.isHidden).map((tc, i) => (
-                    <div key={i} className="bg-dark-card rounded p-3 mb-2 text-sm">
-                      <div><span className="text-gray-400">Input:</span> <code>{JSON.stringify(tc.input)}</code></div>
-                      <div><span className="text-gray-400">Output:</span> <code>{JSON.stringify(tc.expectedOutput)}</code></div>
-                    </div>
-                  ))}
+                  {task.testCases && task.testCases.filter(tc => !tc.isHidden).length > 0 ? (
+                    task.testCases.filter(tc => !tc.isHidden).map((tc, i) => (
+                      <div key={i} className="bg-dark-card rounded p-3 mb-2 text-sm font-mono">
+                        <div><span className="text-gray-500">Input:</span> {JSON.stringify(tc.input)}</div>
+                        <div><span className="text-gray-500">Output:</span> {JSON.stringify(tc.expectedOutput)}</div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm">Примеры недоступны</p>
+                  )}
                   {task.hiddenTestsCount && task.hiddenTestsCount > 0 && (
-                    <p className="text-sm text-gray-500">+ {task.hiddenTestsCount} скрытых тестов</p>
+                    <p className="text-sm text-gray-500 mt-2">+ {task.hiddenTestsCount} скрытых тестов</p>
                   )}
                 </div>
 

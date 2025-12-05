@@ -19,6 +19,15 @@ export default {
         'glow-cyan': '0 0 20px rgba(0, 168, 196, 0.5)',
         'glow-gold': '0 0 20px rgba(255, 215, 0, 0.5)',
       },
+      animation: {
+        'bounce-slow': 'bounce-slow 2s ease-in-out infinite',
+      },
+      keyframes: {
+        'bounce-slow': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+      },
     },
   },
   plugins: [],

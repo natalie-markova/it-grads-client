@@ -29,12 +29,6 @@ interface FeedbackResult {
   duration: number;
 }
 
-interface VoiceInfo {
-  id: string;
-  name: string;
-  gender: string;
-}
-
 const POSITION_KEYS = [
   'frontend',
   'backend',
@@ -78,8 +72,8 @@ const AudioInterview = () => {
   // Feedback
   const [feedback, setFeedback] = useState<FeedbackResult | null>(null);
 
-  // Voice info for current interview (random per session)
-  const [currentVoice, setCurrentVoice] = useState<VoiceInfo | null>(null);
+  // Sending state to prevent double-clicks
+  const [isSending, setIsSending] = useState(false);
 
   // Web Speech API for recognition
   const recognitionRef = useRef<any>(null);
@@ -99,36 +93,45 @@ const AudioInterview = () => {
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'ru-RU';
-      recognitionRef.current.maxAlternatives = 3;
+      recognitionRef.current.maxAlternatives = 1; // Уменьшаем для стабильности
+
+      // Храним финальный текст отдельно
+      let confirmedText = '';
 
       recognitionRef.current.onresult = (event: any) => {
-        let finalTranscript = '';
         let interimTranscript = '';
+        let newFinalTranscript = '';
 
+        // Обрабатываем только новые результаты
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            finalTranscript += transcript;
+            // Финальный результат - добавляем к подтверждённому тексту
+            newFinalTranscript += transcript;
           } else {
+            // Промежуточный результат - показываем как preview
             interimTranscript += transcript;
           }
         }
 
-        if (interimTranscript) {
-          interimTranscriptRef.current = interimTranscript;
-          setCurrentMessage(prev => {
-            const base = prev.replace(interimTranscriptRef.current, '');
-            return base + interimTranscript;
-          });
-        }
-
-        if (finalTranscript) {
-          setCurrentMessage(prev => {
-            const base = prev.replace(interimTranscriptRef.current, '');
-            return (base + ' ' + finalTranscript).trim();
-          });
+        // Если есть новый финальный текст - добавляем его
+        if (newFinalTranscript) {
+          confirmedText = (confirmedText + ' ' + newFinalTranscript).trim();
           interimTranscriptRef.current = '';
+          setCurrentMessage(confirmedText);
+        } else if (interimTranscript) {
+          // Показываем промежуточный результат (будет заменён финальным)
+          interimTranscriptRef.current = interimTranscript;
+          setCurrentMessage((confirmedText + ' ' + interimTranscript).trim());
         }
+      };
+
+      // Сбрасываем confirmedText при начале новой записи
+      const originalStart = recognitionRef.current.start.bind(recognitionRef.current);
+      recognitionRef.current.start = () => {
+        confirmedText = '';
+        interimTranscriptRef.current = '';
+        originalStart();
       };
 
       recognitionRef.current.onerror = (event: any) => {
@@ -167,66 +170,63 @@ const AudioInterview = () => {
     };
   }, [isListening]);
 
-  // Fallback на браузерный синтез речи (Web Speech API)
-  const speakWithBrowserTTS = useCallback((text: string) => {
-    const synth = window.speechSynthesis;
-    if (!synth) {
-      console.error('Browser TTS not supported');
-      setIsSpeaking(false);
-      return;
-    }
+  // Маппинг персоны на гендер голоса
+  const personaGender: Record<string, 'male' | 'female'> = {
+    strict_hr: 'female',
+    friendly_tech: 'male',
+    direct_ceo: 'male'
+  };
 
-    // Отменяем предыдущее озвучивание
-    synth.cancel();
+  // Синтез речи через Yandex SpeechKit (без браузерного fallback)
+  // Используем useRef для хранения voiceId, чтобы избежать проблем с зависимостями useCallback
+  const voiceIdRef = useRef<string | null>(null);
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ru-RU';
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-
-    // Пытаемся найти русский голос
-    const voices = synth.getVoices();
-    const russianVoice = voices.find(v => v.lang.startsWith('ru'));
-    if (russianVoice) {
-      utterance.voice = russianVoice;
-    }
-
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    synth.speak(utterance);
-  }, []);
-
-  // Синтез речи через Yandex SpeechKit с fallback на браузерный TTS
   const speak = useCallback(async (text: string) => {
     if (!audioEnabled) return;
     setIsSpeaking(true);
 
     try {
-      // Пробуем Yandex SpeechKit
-      const response = await $api.post('/interviews/tts', { text });
+      // Передаём гендер в зависимости от выбранной персоны
+      const gender = personaGender[persona] || 'male';
+
+      // Если у нас уже есть выбранный голос для этой сессии - используем его
+      // Иначе передаём только gender для первого вызова
+      const requestData: { text: string; gender?: string; voiceId?: string } = { text };
+
+      if (voiceIdRef.current) {
+        // Используем сохранённый голос для консистентности в рамках сессии
+        requestData.voiceId = voiceIdRef.current;
+      } else {
+        // Первый вызов - передаём gender, сервер выберет случайный голос
+        requestData.gender = gender;
+      }
+
+      const response = await $api.post('/interviews/tts', requestData);
 
       if (response.data.audio && audioRef.current) {
-        // Сохраняем информацию о голосе
-        if (response.data.voice) {
-          setCurrentVoice(response.data.voice);
+        // Сохраняем voiceId для использования в следующих запросах
+        if (response.data.voice && !voiceIdRef.current) {
+          voiceIdRef.current = response.data.voice.id;
         }
 
         // Декодируем base64 аудио и воспроизводим
         const audioData = `data:${response.data.format};base64,${response.data.audio}`;
         audioRef.current.src = audioData;
-        audioRef.current.play().catch(() => {
-          // Если не удалось воспроизвести, используем браузерный TTS
-          speakWithBrowserTTS(text);
+        audioRef.current.play().catch((err) => {
+          console.error('Audio playback error:', err);
+          setIsSpeaking(false);
+          toast.error(t('audioInterview.audioPlaybackError'));
         });
       } else {
-        speakWithBrowserTTS(text);
+        setIsSpeaking(false);
+        toast.error(t('audioInterview.ttsUnavailable'));
       }
     } catch (error) {
-      console.error('Yandex TTS error, falling back to browser TTS:', error);
-      speakWithBrowserTTS(text);
+      console.error('Yandex TTS error:', error);
+      setIsSpeaking(false);
+      toast.error(t('audioInterview.ttsError'));
     }
-  }, [audioEnabled, speakWithBrowserTTS]);
+  }, [audioEnabled, t, persona]);
 
   const startListening = () => {
     if (!recognitionRef.current) {
@@ -253,7 +253,8 @@ const AudioInterview = () => {
     }
 
     try {
-      setCurrentVoice(null);
+      // Сбрасываем голос для новой сессии
+      voiceIdRef.current = null;
 
       const response = await $api.post('/interviews/audio', {
         interviewerPersona: persona,
@@ -274,15 +275,24 @@ const AudioInterview = () => {
   };
 
   const sendAnswer = async () => {
-    if (!currentMessage.trim() || !session) return;
+    if (!currentMessage.trim() || !session || isSending) return;
+
+    // Сохраняем ответ и сразу очищаем поле ввода
+    const answerToSend = currentMessage.trim();
+    setCurrentMessage('');
+    setIsSending(true);
+
+    // Останавливаем запись если она активна
+    if (isListening) {
+      stopListening();
+    }
 
     try {
       const response = await $api.post(`/interviews/audio/${session.id}/answer`, {
-        content: currentMessage.trim()
+        content: answerToSend
       });
 
-      setMessages([...messages, response.data.userMessage, response.data.aiMessage]);
-      setCurrentMessage('');
+      setMessages(prev => [...prev, response.data.userMessage, response.data.aiMessage]);
 
       // Speak next question
       speak(response.data.aiMessage.content);
@@ -302,6 +312,10 @@ const AudioInterview = () => {
     } catch (error) {
       console.error('Error sending answer:', error);
       toast.error(t('audioInterview.answerSendError'));
+      // Восстанавливаем текст при ошибке
+      setCurrentMessage(answerToSend);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -330,10 +344,10 @@ const AudioInterview = () => {
     }
   };
 
-  const personaInfo: Record<string, { icon: string }> = {
-    strict_hr: { icon: '👔' },
-    friendly_tech: { icon: '👨‍💻' },
-    direct_ceo: { icon: '💼' }
+  const personaInfo: Record<string, { icon: string; gender: 'male' | 'female' }> = {
+    strict_hr: { icon: '👔', gender: 'female' },
+    friendly_tech: { icon: '👨‍💻', gender: 'male' },
+    direct_ceo: { icon: '💼', gender: 'male' }
   };
 
   return (
@@ -445,18 +459,18 @@ const AudioInterview = () => {
                 {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
               </button>
 
-              <div className="flex-1 relative">
+              <div className="flex-1 relative flex items-center">
                 <input
                   type="text"
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   placeholder={t('audioInterview.writeAnswer')}
-                  className="input-field pr-20"
+                  className="input-field pr-14 w-full"
                   onKeyPress={(e) => e.key === 'Enter' && sendAnswer()}
                 />
                 <button
                   onClick={isListening ? stopListening : startListening}
-                  className={`absolute right-2 top-2 p-2 rounded-lg transition-all ${
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all ${
                     isListening
                       ? 'bg-red-500 animate-pulse text-white'
                       : 'bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg'
@@ -469,21 +483,16 @@ const AudioInterview = () => {
 
               <button
                 onClick={sendAnswer}
-                disabled={!currentMessage.trim() || isSpeaking}
+                disabled={!currentMessage.trim() || isSpeaking || isSending}
                 className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {t('audioInterview.send')}
+                {isSending ? '...' : t('audioInterview.send')}
               </button>
             </div>
 
             {isSpeaking && (
               <div className="text-center text-sm text-accent-cyan animate-pulse mb-2">
                 🔊 {t('audioInterview.interviewerSpeaking')}
-                {currentVoice && (
-                  <span className="ml-2 text-xs opacity-75 text-gray-400">
-                    ({currentVoice.name}, {currentVoice.gender === 'female' ? t('audioInterview.femaleVoice') : t('audioInterview.maleVoice')} {t('audioInterview.voice')})
-                  </span>
-                )}
               </div>
             )}
 
@@ -566,7 +575,7 @@ const AudioInterview = () => {
                   setMessages([]);
                   setCurrentMessage('');
                   setFeedback(null);
-                  setCurrentVoice(null);
+                  voiceIdRef.current = null;
                 }}
                 className="btn-primary flex-1"
               >
