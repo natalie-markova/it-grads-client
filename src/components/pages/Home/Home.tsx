@@ -1,6 +1,6 @@
 import { Link, useOutletContext } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ArrowRight, Users, MessageCircle, TrendingUp, GraduationCap, Building2, MapPin, Search, Star, Target, Sparkles, CheckCircle } from 'lucide-react'
+import { ArrowRight, Users, MessageCircle, TrendingUp, GraduationCap, Building2, MapPin, Search, Star, Target, Sparkles, CheckCircle, ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import Section from '../../../components/ui/Section'
 import Card from '../../../components/ui/Card'
@@ -26,6 +26,14 @@ const Home = () => {
   const [hoveredEmployerCard, setHoveredEmployerCard] = useState<number | null>(null)
 
   useScrollAnimation()
+
+  // Функция скролла к следующему блоку
+  const scrollToNextSection = () => {
+    const nextSection = document.querySelector('section:nth-of-type(2)')
+    if (nextSection) {
+      nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
 
   // Загрузка статистики пользователей
   useEffect(() => {
@@ -137,7 +145,7 @@ const Home = () => {
   return (
     <div className="bg-dark-bg overflow-hidden">
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg py-20 md:py-32">
+      <section className="relative min-h-screen flex items-center bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg py-20 md:py-32">
         {/* Декоративные элементы */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-72 h-72 bg-accent-cyan/10 rounded-full blur-3xl"></div>
@@ -246,6 +254,16 @@ const Home = () => {
             </div>
           </div>
         </div>
+
+        {/* Кнопка "Узнать больше" */}
+        <button
+          onClick={scrollToNextSection}
+          className="absolute bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-accent-cyan hover:text-accent-cyan/80 transition-all duration-300 group cursor-pointer"
+          aria-label={t('common.learnMore')}
+        >
+          <span className="text-base md:text-lg font-semibold">{t('common.learnMore')}</span>
+          <ChevronDown className="h-8 w-8 animate-bounce" />
+        </button>
       </section>
 
       {/* Для студентов - Cards Grid */}

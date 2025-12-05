@@ -1095,7 +1095,11 @@ const GraduateProfile = () => {
         )}
 
         {/* Change Password Section - только на вкладке Профиль */}
-        {activeTab === 'profile' && <ChangePassword />}
+        {activeTab === 'profile' && (
+          <Section key="password" title="" className="bg-dark-bg py-0 scroll-animate-item">
+            <ChangePassword />
+          </Section>
+        )}
 
         {/* Skills Radar Section */}
         {activeTab === 'radar' && (
