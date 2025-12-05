@@ -412,7 +412,11 @@
         "save": "Save",
         "add": "Add",
         "delete": "Delete",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "candidate": "Candidate",
+        "selectCandidate": "Select a candidate",
+        "fromChat": "from chat",
+        "noCandidates": "No candidates. Get applications for vacancies or start a chat with graduates."
       },
       "status": {
         "scheduled": "Scheduled",
@@ -444,7 +448,21 @@
         "resultError": "Error saving result",
         "deleteConfirm": "Delete this interview?",
         "loginRequired": "Please log in to use the interview tracker",
-        "login": "Login"
+        "login": "Login",
+        "invitationAccepted": "Interview invitation accepted",
+        "invitationDeclined": "Interview invitation declined",
+        "invitationError": "Error responding to invitation"
+      },
+      "invitation": {
+        "pending": "Interview invitation",
+        "accept": "Accept",
+        "decline": "Decline",
+        "status": {
+          "none": "",
+          "pending": "Pending response",
+          "accepted": "Accepted",
+          "declined": "Declined"
+        }
       },
       "calendar": {
         "mon": "Mon",
