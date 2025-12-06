@@ -62,6 +62,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [selectedGraduateId, setSelectedGraduateId] = useState<number | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null; name: string }>({ 
     isOpen: false, 
     id: null,
@@ -97,8 +98,19 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
         setGrantedByMe(response.data.grantedByMe)
         setGrantedToMe(response.data.grantedToMe)
       } else {
-        // Для выпускника ответ - обычный массив
-        setAccesses(Array.isArray(response.data) ? response.data : [])
+        // Для выпускника ответ может быть объектом с двумя списками или обычным массивом
+        if (response.data && response.data.grantedByMe && response.data.grantedToMe) {
+          // Если ответ - объект с двумя списками
+          setAccesses(response.data.grantedByMe) // Те, кому выпускник разрешил доступ
+          setGrantedByMe(response.data.grantedByMe)
+          setGrantedToMe(response.data.grantedToMe) // Те, кто разрешил доступ выпускнику (компании)
+        } else {
+          // Если ответ - обычный массив (это те, кому он разрешил доступ)
+          const accesses = Array.isArray(response.data) ? response.data : []
+          setAccesses(accesses)
+          setGrantedByMe(accesses)
+          setGrantedToMe([]) // Для обратной совместимости
+        }
       }
     } catch (error) {
       console.error('Error loading accesses:', error)
@@ -130,19 +142,37 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
   }
 
 
-  const handleAddAccess = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedId) {
+  const handleAddAccess = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault()
+    }
+    const targetId = selectedId || selectedGraduateId
+    if (!targetId) {
       toast.error(userRole === 'graduate' ? 'Выберите компанию' : 'Выберите выпускника')
       return
     }
 
     try {
-      await $api.post('/interview-tracker/access', { targetId: Number(selectedId) })
+      await $api.post('/interview-tracker/access', { targetId: Number(targetId) })
       toast.success('Доступ предоставлен')
       loadAccesses()
       setIsModalOpen(false)
       setSelectedId('')
+      setSelectedGraduateId(null)
+      setSearchQuery('')
+    } catch (error: any) {
+      console.error('Error adding access:', error)
+      const errorMessage = error.response?.data?.error || 'Ошибка при предоставлении доступа'
+      toast.error(errorMessage)
+    }
+  }
+
+  const handleGrantAccess = async (graduateId: number) => {
+    try {
+      await $api.post('/interview-tracker/access', { targetId: graduateId })
+      toast.success('Доступ предоставлен')
+      loadAccesses()
+      setSelectedGraduateId(null)
       setSearchQuery('')
     } catch (error: any) {
       console.error('Error adding access:', error)
@@ -186,7 +216,61 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
     }
   }
 
-  // Фильтрация по первой букве или поиск
+  // Фильтрация выпускников для работодателя (по аналогии с поиском кандидата)
+  const getFilteredGraduatesForAccess = () => {
+    const query = searchQuery.toLowerCase().trim()
+    
+    if (query.length === 0) {
+      // Если запрос пустой, возвращаем всех выпускников, исключая уже добавленных
+      const addedGraduateIds = new Set(grantedByMe.map(a => a.graduateId).filter(Boolean))
+      return graduates
+        .filter(graduate => !addedGraduateIds.has(graduate.id))
+        .sort((a, b) => {
+          const lastNameA = (a.lastName || a.username || '').toLowerCase()
+          const lastNameB = (b.lastName || b.username || '').toLowerCase()
+          if (lastNameA !== lastNameB) {
+            return lastNameA.localeCompare(lastNameB)
+          }
+          const firstNameA = (a.firstName || '').toLowerCase()
+          const firstNameB = (b.firstName || '').toLowerCase()
+          return firstNameA.localeCompare(firstNameB)
+        })
+    }
+    
+    // Получаем уже добавленные ID
+    const addedGraduateIds = new Set(grantedByMe.map(a => a.graduateId).filter(Boolean))
+    
+    // Исключаем уже добавленных из всех выпускников
+    let availableGraduates = graduates.filter(graduate => !addedGraduateIds.has(graduate.id))
+    
+    // Фильтруем по запросу
+    const filtered = availableGraduates.filter(graduate => {
+      const lastName = (graduate.lastName || '').toLowerCase()
+      const firstName = (graduate.firstName || '').toLowerCase()
+      const username = (graduate.username || '').toLowerCase()
+      const fullName = `${lastName} ${firstName}`.trim().toLowerCase()
+      
+      // Поиск по вхождению в фамилию, имя, username или полное имя
+      return lastName.includes(query) || 
+             firstName.includes(query) || 
+             username.includes(query) ||
+             fullName.includes(query)
+    })
+    
+    // Сортируем по фамилии, затем по имени
+    return filtered.sort((a, b) => {
+      const lastNameA = (a.lastName || a.username || '').toLowerCase()
+      const lastNameB = (b.lastName || b.username || '').toLowerCase()
+      if (lastNameA !== lastNameB) {
+        return lastNameA.localeCompare(lastNameB)
+      }
+      const firstNameA = (a.firstName || '').toLowerCase()
+      const firstNameB = (b.firstName || '').toLowerCase()
+      return firstNameA.localeCompare(firstNameB)
+    })
+  }
+
+  // Фильтрация по первой букве или поиск (для модального окна)
   const getFilteredItems = () => {
     const query = searchQuery.toLowerCase().trim()
     
@@ -292,13 +376,15 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
               {userRole === 'graduate' ? 'Управление доступом к календарю' : 'Управление доступом к календарю'}
             </h2>
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus className="h-5 w-5" />
-            {userRole === 'graduate' ? 'Добавить компанию' : 'Добавить выпускника'}
-          </button>
+          {userRole === 'graduate' && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus className="h-5 w-5" />
+              Добавить компанию
+            </button>
+          )}
         </div>
 
         <p className="text-gray-400 text-sm mb-6">
@@ -306,6 +392,120 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
             ? 'Разрешите компаниям видеть ваш календарь собеседований. Вы можете в любой момент запретить доступ.'
             : 'Разрешите выпускникам видеть ваш календарь собеседований. Вы можете в любой момент запретить доступ.'}
         </p>
+
+        {/* Блок поиска выпускников для работодателя */}
+        {userRole === 'employer' && (
+          <div className="mb-6 p-4 bg-dark-surface border border-dark-card rounded-lg">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Поиск выпускника
+            </label>
+            <div className="relative z-10">
+              <input
+                type="text"
+                value={searchQuery || (selectedGraduateId ? (() => {
+                  const graduate = graduates.find(g => g.id === selectedGraduateId)
+                  return graduate?.lastName && graduate?.firstName
+                    ? `${graduate.lastName} ${graduate.firstName}`
+                    : graduate?.username || ''
+                })() : '')}
+                onChange={(e) => {
+                  const value = e.target.value
+                  setSearchQuery(value)
+                  setSelectedGraduateId(null)
+                  // Если поле очищено, сбрасываем выбранного выпускника
+                  if (value === '') {
+                    setSelectedGraduateId(null)
+                  }
+                }}
+                placeholder="Введите имя или фамилию выпускника..."
+                className="w-full bg-dark-bg border border-dark-card rounded-lg px-4 py-2 text-white"
+              />
+              {searchQuery && !selectedGraduateId && getFilteredGraduatesForAccess().length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-dark-card border border-dark-card rounded-lg max-h-60 overflow-y-auto custom-scrollbar shadow-lg">
+                  {getFilteredGraduatesForAccess().slice(0, 20).map((graduate) => {
+                    const displayName = graduate.lastName && graduate.firstName
+                      ? `${graduate.lastName} ${graduate.firstName}`
+                      : graduate.username || ''
+                    return (
+                      <div
+                        key={graduate.id}
+                        onClick={() => {
+                          setSelectedGraduateId(graduate.id)
+                          setSearchQuery(displayName)
+                        }}
+                        className="px-4 py-2 hover:bg-dark-surface cursor-pointer text-white border-b border-dark-surface last:border-b-0 flex items-center gap-3"
+                      >
+                        {graduate.avatar ? (
+                          <img
+                            src={getImageUrl(graduate.avatar)}
+                            alt={displayName}
+                            className="w-8 h-8 rounded-full object-cover"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-dark-card flex items-center justify-center">
+                            <UserIcon className="h-4 w-4 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <div className="font-medium">{displayName}</div>
+                          {graduate.email && (
+                            <div className="text-xs text-gray-400">{graduate.email}</div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            {searchQuery && getFilteredGraduatesForAccess().length === 0 && graduates.length > 0 && (
+              <p className="text-xs text-gray-400 mt-1">
+                Выпускники не найдены или уже имеют доступ
+              </p>
+            )}
+            {selectedGraduateId && (
+              <div className="mt-3 flex items-center justify-between p-3 bg-dark-card rounded-lg">
+                <div className="flex items-center gap-3">
+                  {(() => {
+                    const graduate = graduates.find(g => g.id === selectedGraduateId)
+                    const displayName = graduate?.lastName && graduate?.firstName
+                      ? `${graduate.lastName} ${graduate.firstName}`
+                      : graduate?.username || ''
+                    return (
+                      <>
+                        {graduate?.avatar ? (
+                          <img
+                            src={getImageUrl(graduate.avatar)}
+                            alt={displayName}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-dark-surface flex items-center justify-center">
+                            <UserIcon className="h-5 w-5 text-gray-400" />
+                          </div>
+                        )}
+                        <div>
+                          <div className="text-white font-medium">{displayName}</div>
+                          {graduate?.email && (
+                            <div className="text-xs text-gray-400">{graduate.email}</div>
+                          )}
+                        </div>
+                      </>
+                    )
+                  })()}
+                </div>
+                <button
+                  onClick={() => handleGrantAccess(selectedGraduateId)}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  <Shield className="h-4 w-4" />
+                  Разрешить доступ
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {loading ? (
           <div className="text-center py-8 text-gray-400">Загрузка...</div>
@@ -317,7 +517,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                 <Shield className="h-12 w-12 text-gray-500 mx-auto mb-4" />
                 <p className="text-gray-400 mb-4">Нет выпускников с доступом</p>
                 <p className="text-gray-500 text-sm">
-                  Добавьте выпускника, чтобы разрешить ему видеть ваш календарь собеседований
+                  Используйте поиск выше, чтобы найти и разрешить доступ выпускнику
                 </p>
               </div>
             ) : (
@@ -475,85 +675,164 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
             )}
           </>
         ) : (
-          // Для выпускника показываем обычный список
-          accesses.length === 0 ? (
-            <div className="text-center py-8">
-              <Shield className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-              <p className="text-gray-400 mb-4">Нет компаний с доступом</p>
-              <p className="text-gray-500 text-sm">
-                Добавьте компанию, чтобы разрешить ей видеть ваш календарь собеседований
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {accesses.map((access) => {
-                const displayItem = access.employer
-                const displayName = displayItem?.companyName || displayItem?.username || ''
+          // Для выпускника показываем два отдельных списка
+          <>
+            {grantedByMe.length === 0 && grantedToMe.length === 0 ? (
+              <div className="text-center py-8">
+                <Shield className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                <p className="text-gray-400 mb-4">Нет компаний с доступом</p>
+                <p className="text-gray-500 text-sm">
+                  Компании, которым вы разрешили доступ, или которые разрешили доступ вам, появятся здесь
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Компании, которым я разрешил доступ */}
+                {grantedByMe.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-accent-cyan" />
+                      Компании, которым я разрешил доступ
+                    </h3>
+                    <div className="space-y-3">
+                      {grantedByMe.map((access) => {
+                        const displayItem = access.employer
+                        const displayName = displayItem?.companyName || displayItem?.username || ''
 
-                return (
-                  <div
-                    key={access.id}
-                    className="bg-dark-surface border border-dark-card rounded-lg p-4 flex items-center justify-between hover:border-accent-cyan/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      {displayItem?.avatar ? (
-                        <img 
-                          src={getImageUrl(displayItem.avatar)} 
-                          alt={displayName}
-                          className="w-12 h-12 rounded-lg object-cover border border-dark-card"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-dark-card flex items-center justify-center border border-dark-card">
-                          <Building2 className="h-6 w-6 text-gray-400" />
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <div className="text-white font-medium">
-                          {displayName}
-                        </div>
-                        {displayItem?.companyDescription && (
-                          <div className="text-gray-400 text-sm mt-1 line-clamp-1">
-                            {displayItem.companyDescription}
+                        return (
+                          <div
+                            key={access.id}
+                            className="bg-dark-surface border border-dark-card rounded-lg p-4 flex items-center justify-between hover:border-accent-cyan/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              {displayItem?.avatar ? (
+                                <img 
+                                  src={getImageUrl(displayItem.avatar)} 
+                                  alt={displayName}
+                                  className="w-12 h-12 rounded-lg object-cover border border-dark-card"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-lg bg-dark-card flex items-center justify-center border border-dark-card">
+                                  <Building2 className="h-6 w-6 text-gray-400" />
+                                </div>
+                              )}
+                              <div className="flex-1">
+                                <div className="text-white font-medium">
+                                  {displayName}
+                                </div>
+                                {displayItem?.companyDescription && (
+                                  <div className="text-gray-400 text-sm mt-1 line-clamp-1">
+                                    {displayItem.companyDescription}
+                                  </div>
+                                )}
+                                <div className="text-gray-500 text-xs mt-1">
+                                  Доступ предоставлен {new Date(access.createdAt).toLocaleDateString('ru-RU')}
+                                </div>
+                              </div>
+                              {access.isActive && (
+                                <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs border border-green-500/30">
+                                  Активен
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {displayItem && (
+                                <button
+                                  onClick={() => handleViewCalendar(displayItem.id, displayName)}
+                                  className="p-2 text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors"
+                                  title="Просмотреть календарь"
+                                >
+                                  <Eye className="h-5 w-5" />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteAccess(access.id, displayName)}
+                                className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Запретить доступ"
+                              >
+                                <X className="h-5 w-5" />
+                              </button>
+                            </div>
                           </div>
-                        )}
-                        <div className="text-gray-500 text-xs mt-1">
-                          Доступ предоставлен {new Date(access.createdAt).toLocaleDateString('ru-RU')}
-                        </div>
-                      </div>
-                      {access.isActive && (
-                        <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs border border-green-500/30">
-                          Активен
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {displayItem && (
-                        <button
-                          onClick={() => handleViewCalendar(displayItem.id, displayName)}
-                          className="p-2 text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors"
-                          title="Просмотреть календарь"
-                        >
-                          <Eye className="h-5 w-5" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteAccess(access.id, displayName)}
-                        className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Запретить доступ"
-                      >
-                        <X className="h-5 w-5" />
-                      </button>
+                        )
+                      })}
                     </div>
                   </div>
-                )
-              })}
-            </div>
-          )
+                )}
+
+                {/* Компании, которые разрешили доступ мне */}
+                {grantedToMe.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-accent-purple" />
+                      Компании, которые разрешили доступ мне
+                    </h3>
+                    <div className="space-y-3">
+                      {grantedToMe.map((access) => {
+                        const displayItem = access.employer
+                        const displayName = displayItem?.companyName || displayItem?.username || ''
+
+                        return (
+                          <div
+                            key={access.id}
+                            className="bg-dark-surface border border-dark-card rounded-lg p-4 flex items-center justify-between hover:border-accent-purple/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              {displayItem?.avatar ? (
+                                <img 
+                                  src={getImageUrl(displayItem.avatar)} 
+                                  alt={displayName}
+                                  className="w-12 h-12 rounded-lg object-cover border border-dark-card"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-lg bg-dark-card flex items-center justify-center border border-dark-card">
+                                  <Building2 className="h-6 w-6 text-gray-400" />
+                                </div>
+                              )}
+                              <div className="flex-1">
+                                <div className="text-white font-medium">
+                                  {displayName}
+                                </div>
+                                {displayItem?.companyDescription && (
+                                  <div className="text-gray-400 text-sm mt-1 line-clamp-1">
+                                    {displayItem.companyDescription}
+                                  </div>
+                                )}
+                                <div className="text-gray-500 text-xs mt-1">
+                                  Доступ предоставлен {new Date(access.createdAt).toLocaleDateString('ru-RU')}
+                                </div>
+                              </div>
+                              {access.isActive && (
+                                <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs border border-green-500/30">
+                                  Активен
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {displayItem && (
+                                <button
+                                  onClick={() => handleViewCalendar(displayItem.id, displayName)}
+                                  className="p-2 text-accent-purple hover:bg-accent-purple/10 rounded-lg transition-colors"
+                                  title="Просмотреть календарь"
+                                >
+                                  <Eye className="h-5 w-5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         ))}
       </Card>
 
-      {/* Модальное окно добавления */}
-      {isModalOpen && (
+      {/* Модальное окно добавления (только для выпускника) */}
+      {isModalOpen && userRole === 'graduate' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-dark-card rounded-xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div className="p-6 flex-shrink-0">

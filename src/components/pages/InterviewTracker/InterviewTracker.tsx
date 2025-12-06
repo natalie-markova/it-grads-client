@@ -20,7 +20,8 @@ import {
   Phone,
   Users,
   Shield,
-  User
+  User,
+  Eye
 } from 'lucide-react'
 import { io, Socket } from 'socket.io-client'
 import Card from '../../ui/Card'
@@ -128,6 +129,18 @@ const InterviewTracker = () => {
   const [grantedByMe, setGrantedByMe] = useState<any[]>([])
   const [grantedToMe, setGrantedToMe] = useState<any[]>([])
   const [loadingAccess, setLoadingAccess] = useState(false)
+  const [accessSearchQuery, setAccessSearchQuery] = useState<string>('')
+  const [selectedGraduateForAccess, setSelectedGraduateForAccess] = useState<number | null>(null)
+  const [accessCompanySearchQuery, setAccessCompanySearchQuery] = useState<string>('')
+  const [selectedEmployerForAccess, setSelectedEmployerForAccess] = useState<number | null>(null)
+  const [viewingCalendar, setViewingCalendar] = useState<{ isOpen: boolean; userId: number | null; userName: string }>({
+    isOpen: false,
+    userId: null,
+    userName: ''
+  })
+  const [calendarInterviews, setCalendarInterviews] = useState<any[]>([])
+  const [loadingCalendar, setLoadingCalendar] = useState(false)
+  const [viewingCalendarDate, setViewingCalendarDate] = useState<Date>(new Date())
 
   const isEmployer = user?.role === 'employer'
   const socketRef = useRef<Socket | null>(null)
@@ -158,6 +171,13 @@ const InterviewTracker = () => {
     }
   }, [user, isEmployer])
 
+  // Загружаем выпускников при открытии вкладки "Доступ" для работодателя
+  useEffect(() => {
+    if (viewMode === 'access' && isEmployer && allGraduates.length === 0) {
+      loadAllGraduates()
+    }
+  }, [viewMode, isEmployer])
+
   // WebSocket подключение для real-time обновлений
   useEffect(() => {
     if (!user) return
@@ -183,10 +203,95 @@ const InterviewTracker = () => {
       console.log('✅ Interview Tracker WebSocket подключен')
     })
 
+    // Обработчик обновлений доступа
+    socket.on('interview-tracker-access:update', (data: { type: string; access: any }) => {
+      console.log('📨 Получено обновление доступа:', data)
+      
+      const { type, access } = data
+      
+      if (type === 'deleted' || type === 'updated') {
+        // Обновляем список доступов
+        loadAccess()
+      } else if (type === 'created') {
+        // Обновляем список доступов при создании нового доступа
+        loadAccess()
+      }
+    })
+
     socket.on('interview-tracker:update', (data: { type: string; interview: Interview }) => {
       console.log('📨 Получено обновление собеседования:', data)
       
       const { type, interview } = data
+
+      // Обновляем календарь в модальном окне ПЕРЕД другими проверками
+      // Это важно для событий удаления, чтобы они обрабатывались независимо от других условий
+      if (viewingCalendar.isOpen && viewingCalendar.userId != null) {
+        const interviewUserId = interview.userId
+        // Сравниваем как числа, чтобы избежать проблем с типами (число vs строка)
+        const isViewingThisUserCalendar = interviewUserId != null && Number(interviewUserId) === Number(viewingCalendar.userId)
+        
+        console.log(`🔍 Проверка обновления календаря в модальном окне:`, {
+          isOpen: viewingCalendar.isOpen,
+          viewingUserId: viewingCalendar.userId,
+          viewingUserIdType: typeof viewingCalendar.userId,
+          interviewUserId: interviewUserId,
+          interviewUserIdType: typeof interviewUserId,
+          isViewingThisUserCalendar,
+          type,
+          interviewId: interview.id,
+          interviewData: interview
+        })
+        
+        if (isViewingThisUserCalendar) {
+          console.log(`✅ Обновление календаря в модальном окне: ${type}`, {
+            interviewId: interview.id,
+            interviewUserId: interview.userId,
+            viewingUserId: viewingCalendar.userId,
+            type
+          })
+          
+          if (type === 'created') {
+            setCalendarInterviews(prev => {
+              const exists = prev.some(i => i.id === interview.id)
+              if (exists) {
+                console.log(`⏭️ Собеседование ${interview.id} уже есть в календаре`)
+                return prev
+              }
+              console.log(`➕ Добавление собеседования ${interview.id} в календарь`)
+              return [...prev, interview].sort((a, b) => 
+                new Date(a.date + ' ' + a.time).getTime() - new Date(b.date + ' ' + b.time).getTime()
+              )
+            })
+          } else if (type === 'updated' || type === 'status-updated' || type === 'result-updated') {
+            console.log(`🔄 Обновление собеседования ${interview.id} в календаре`)
+            setCalendarInterviews(prev => prev.map(i => i.id === interview.id ? interview : i))
+          } else if (type === 'deleted') {
+            console.log(`🗑️ Удаление собеседования ${interview.id} из календаря в модальном окне`)
+            setCalendarInterviews(prev => {
+              const filtered = prev.filter(i => i.id !== interview.id)
+              console.log(`📊 Календарь после удаления: было ${prev.length}, стало ${filtered.length}`)
+              return filtered
+            })
+          }
+        } else {
+          console.log(`⚠️ Событие не для просматриваемого календаря:`, {
+            interviewUserId: interview.userId,
+            viewingUserId: viewingCalendar.userId,
+            type,
+            interviewId: interview.id,
+            comparison: `${Number(interviewUserId)} === ${Number(viewingCalendar.userId)} = ${Number(interviewUserId) === Number(viewingCalendar.userId)}`
+          })
+        }
+      } else {
+        if (viewingCalendar.isOpen) {
+          console.log(`ℹ️ Модальное окно открыто, но нет userId:`, {
+            isOpen: viewingCalendar.isOpen,
+            viewingUserId: viewingCalendar.userId,
+            interviewUserId: interview.userId,
+            type
+          })
+        }
+      }
 
       // Для выпускника: не обрабатываем записи работодателя, которые связаны с записями выпускника
       // НО: для событий удаления обрабатываем все записи, так как они могут быть удалены работодателем
@@ -251,7 +356,7 @@ const InterviewTracker = () => {
         socket.disconnect()
       }
     }
-  }, [user, t])
+  }, [user, t, viewingCalendar])
 
   const loadCandidates = async () => {
     try {
@@ -385,6 +490,10 @@ const InterviewTracker = () => {
     setLoadingAccess(true)
     try {
       const response = await $api.get('/interview-tracker/access')
+      // Загружаем работодателей при загрузке доступа для выпускника
+      if (!isEmployer && employers.length === 0) {
+        loadEmployers()
+      }
       // Для работодателя ответ содержит два списка: grantedByMe и grantedToMe
       if (isEmployer && response.data.grantedByMe && response.data.grantedToMe) {
         setGrantedByMe(response.data.grantedByMe)
@@ -456,14 +565,168 @@ const InterviewTracker = () => {
 
   const handleDeleteAccess = async (accessId: number) => {
     try {
+      // Находим запись доступа, чтобы проверить, не открыт ли календарь этого пользователя
+      const accessToDelete = isEmployer 
+        ? grantedByMe.find(a => a.id === accessId) || grantedToMe.find(a => a.id === accessId)
+        : grantedByMe.find(a => a.id === accessId) || grantedToMe.find(a => a.id === accessId)
+      
+      const targetUserId = isEmployer 
+        ? (accessToDelete?.graduate?.id || accessToDelete?.graduateId)
+        : (accessToDelete?.employer?.id || accessToDelete?.employerId)
+      
       await $api.delete(`/interview-tracker/access/${accessId}`)
       toast.success('Доступ запрещен')
+      
+      // Если открыт календарь удаленного пользователя, закрываем его
+      if (viewingCalendar.isOpen && viewingCalendar.userId === targetUserId) {
+        setViewingCalendar({ isOpen: false, userId: null, userName: '' })
+        setCalendarInterviews([])
+      }
+      
+      // Обновляем список доступов
       loadAccess()
     } catch (error: any) {
       console.error('Error deleting access:', error)
       const errorMessage = error.response?.data?.error || 'Ошибка при запрете доступа'
       toast.error(errorMessage)
     }
+  }
+
+  const handleGrantAccess = async (targetId: number | null) => {
+    if (!targetId) {
+      toast.error(isEmployer ? 'Выберите выпускника' : 'Выберите компанию')
+      return
+    }
+    
+    try {
+      console.log('Granting access to targetId:', targetId)
+      const response = await $api.post('/interview-tracker/access', { targetId })
+      console.log('Access granted successfully:', response.data)
+      toast.success('Доступ предоставлен')
+      loadAccess()
+      if (isEmployer) {
+        setSelectedGraduateForAccess(null)
+        setAccessSearchQuery('')
+      } else {
+        setSelectedEmployerForAccess(null)
+        setAccessCompanySearchQuery('')
+      }
+    } catch (error: any) {
+      console.error('Error adding access:', error)
+      console.error('Error response:', error.response?.data)
+      const errorMessage = error.response?.data?.error || error.message || 'Ошибка при предоставлении доступа'
+      toast.error(errorMessage)
+    }
+  }
+
+  const handleViewCalendar = async (userId: number, userName: string) => {
+    setViewingCalendar({ isOpen: true, userId, userName })
+    setLoadingCalendar(true)
+    try {
+      const response = await $api.get(`/interview-tracker/access/${userId}/calendar`)
+      setCalendarInterviews(response.data)
+    } catch (error: any) {
+      console.error('Error loading calendar:', error)
+      const errorMessage = error.response?.data?.error || 'Ошибка при загрузке календаря'
+      toast.error(errorMessage)
+      setViewingCalendar({ isOpen: false, userId: null, userName: '' })
+    } finally {
+      setLoadingCalendar(false)
+    }
+  }
+
+  // Фильтрация компаний для секции доступа (для выпускника)
+  const getFilteredEmployersForAccess = () => {
+    const query = accessCompanySearchQuery.toLowerCase().trim()
+    
+    if (query.length === 0) {
+      // Если запрос пустой, возвращаем всех работодателей, исключая уже добавленных
+      const addedEmployerIds = new Set(grantedByMe.map((a: any) => a.employerId).filter(Boolean))
+      return employers
+        .filter((employer: any) => !addedEmployerIds.has(employer.id))
+        .sort((a: any, b: any) => {
+          const nameA = (a.companyName || a.username || '').toLowerCase()
+          const nameB = (b.companyName || b.username || '').toLowerCase()
+          return nameA.localeCompare(nameB)
+        })
+    }
+    
+    // Получаем уже добавленные ID
+    const addedEmployerIds = new Set(grantedByMe.map((a: any) => a.employerId).filter(Boolean))
+    
+    // Исключаем уже добавленных из всех работодателей
+    let availableEmployers = employers.filter((employer: any) => !addedEmployerIds.has(employer.id))
+    
+    // Фильтруем по запросу
+    const filtered = availableEmployers.filter((employer: any) => {
+      const companyName = (employer.companyName || employer.username || '').toLowerCase()
+      // Если введена только одна буква - ищем по первой букве
+      if (query.length === 1) {
+        return companyName.length > 0 && companyName[0] === query[0]
+      }
+      // Если больше одной буквы - обычный поиск по вхождению
+      return companyName.includes(query)
+    })
+    
+    return filtered.sort((a: any, b: any) => {
+      const nameA = (a.companyName || a.username || '').toLowerCase()
+      const nameB = (b.companyName || b.username || '').toLowerCase()
+      return nameA.localeCompare(nameB)
+    })
+  }
+
+  // Фильтрация выпускников для секции доступа
+  const getFilteredGraduatesForAccess = () => {
+    const query = accessSearchQuery.toLowerCase().trim()
+    
+    if (query.length === 0) {
+      // Если запрос пустой, возвращаем всех выпускников, исключая уже добавленных
+      const addedGraduateIds = new Set(grantedByMe.map((a: any) => a.graduateId).filter(Boolean))
+      return allGraduates
+        .filter((graduate: any) => !addedGraduateIds.has(graduate.id))
+        .sort((a: any, b: any) => {
+          const lastNameA = (a.lastName || a.username || '').toLowerCase()
+          const lastNameB = (b.lastName || b.username || '').toLowerCase()
+          if (lastNameA !== lastNameB) {
+            return lastNameA.localeCompare(lastNameB)
+          }
+          const firstNameA = (a.firstName || '').toLowerCase()
+          const firstNameB = (b.firstName || '').toLowerCase()
+          return firstNameA.localeCompare(firstNameB)
+        })
+    }
+    
+    // Получаем уже добавленные ID
+    const addedGraduateIds = new Set(grantedByMe.map((a: any) => a.graduateId).filter(Boolean))
+    
+    // Исключаем уже добавленных из всех выпускников
+    let availableGraduates = allGraduates.filter((graduate: any) => !addedGraduateIds.has(graduate.id))
+    
+    // Фильтруем по запросу
+    const filtered = availableGraduates.filter((graduate: any) => {
+      const lastName = (graduate.lastName || '').toLowerCase()
+      const firstName = (graduate.firstName || '').toLowerCase()
+      const username = (graduate.username || '').toLowerCase()
+      const fullName = `${lastName} ${firstName}`.trim().toLowerCase()
+      
+      // Поиск по вхождению в фамилию, имя, username или полное имя
+      return lastName.includes(query) || 
+             firstName.includes(query) || 
+             username.includes(query) ||
+             fullName.includes(query)
+    })
+    
+    // Сортируем по фамилии, затем по имени
+    return filtered.sort((a: any, b: any) => {
+      const lastNameA = (a.lastName || a.username || '').toLowerCase()
+      const lastNameB = (b.lastName || b.username || '').toLowerCase()
+      if (lastNameA !== lastNameB) {
+        return lastNameA.localeCompare(lastNameB)
+      }
+      const firstNameA = (a.firstName || '').toLowerCase()
+      const firstNameB = (b.firstName || '').toLowerCase()
+      return firstNameA.localeCompare(firstNameB)
+    })
   }
 
   const confirmDelete = async () => {
@@ -794,6 +1057,238 @@ const InterviewTracker = () => {
                 </div>
               ) : (
                 <>
+                  {/* Блок поиска выпускников для работодателя */}
+                  {isEmployer && (
+                    <Card className="border-2 border-dark-card hover:border-accent-cyan/50 transition-all duration-300">
+                      <div className="p-4">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Поиск выпускника
+                        </label>
+                        <div className="relative z-10">
+                          <input
+                            type="text"
+                            value={accessSearchQuery || (selectedGraduateForAccess ? (() => {
+                              const graduate = allGraduates.find(g => g.id === selectedGraduateForAccess)
+                              return graduate?.lastName && graduate?.firstName
+                                ? `${graduate.lastName} ${graduate.firstName}`
+                                : graduate?.username || ''
+                            })() : '')}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              setAccessSearchQuery(value)
+                              setSelectedGraduateForAccess(null)
+                              if (value === '') {
+                                setSelectedGraduateForAccess(null)
+                              }
+                            }}
+                            placeholder="Введите имя или фамилию выпускника..."
+                            className="w-full bg-dark-surface border border-dark-card rounded-lg px-4 py-2 text-white"
+                          />
+                          {accessSearchQuery && !selectedGraduateForAccess && getFilteredGraduatesForAccess().length > 0 && (
+                            <div className="absolute z-50 w-full mt-1 bg-dark-card border border-dark-card rounded-lg max-h-60 overflow-y-auto custom-scrollbar shadow-lg">
+                              {getFilteredGraduatesForAccess().slice(0, 20).map((graduate) => {
+                                const displayName = graduate.lastName && graduate.firstName
+                                  ? `${graduate.lastName} ${graduate.firstName}`
+                                  : graduate.username || ''
+                                return (
+                                  <div
+                                    key={graduate.id}
+                                    onClick={() => {
+                                      setSelectedGraduateForAccess(graduate.id)
+                                      setAccessSearchQuery(displayName)
+                                    }}
+                                    className="px-4 py-2 hover:bg-dark-surface cursor-pointer text-white border-b border-dark-surface last:border-b-0 flex items-center gap-3"
+                                  >
+                                    {graduate.avatar ? (
+                                      <img
+                                        src={getImageUrl(graduate.avatar)}
+                                        alt={displayName}
+                                        className="w-8 h-8 rounded-full object-cover"
+                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                      />
+                                    ) : (
+                                      <div className="w-8 h-8 rounded-full bg-dark-card flex items-center justify-center">
+                                        <User className="h-4 w-4 text-gray-400" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1">
+                                      <div className="font-medium">{displayName}</div>
+                                      {graduate.email && (
+                                        <div className="text-xs text-gray-400">{graduate.email}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        {accessSearchQuery && getFilteredGraduatesForAccess().length === 0 && allGraduates.length > 0 && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            Выпускники не найдены или уже имеют доступ
+                          </p>
+                        )}
+                        {selectedGraduateForAccess && (
+                          <div className="mt-3 flex items-center justify-between p-3 bg-dark-surface rounded-lg">
+                            <div className="flex items-center gap-3">
+                              {(() => {
+                                const graduate = allGraduates.find(g => g.id === selectedGraduateForAccess)
+                                const displayName = graduate?.lastName && graduate?.firstName
+                                  ? `${graduate.lastName} ${graduate.firstName}`
+                                  : graduate?.username || ''
+                                return (
+                                  <>
+                                    {graduate?.avatar ? (
+                                      <img
+                                        src={getImageUrl(graduate.avatar)}
+                                        alt={displayName}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-10 h-10 rounded-full bg-dark-card flex items-center justify-center">
+                                        <User className="h-5 w-5 text-gray-400" />
+                                      </div>
+                                    )}
+                                    <div>
+                                      <div className="text-white font-medium">{displayName}</div>
+                                      {graduate?.email && (
+                                        <div className="text-xs text-gray-400">{graduate.email}</div>
+                                      )}
+                                    </div>
+                                  </>
+                                )
+                              })()}
+                            </div>
+                            <button
+                              onClick={() => {
+                                if (selectedGraduateForAccess) {
+                                  handleGrantAccess(selectedGraduateForAccess)
+                                } else {
+                                  toast.error('Выберите выпускника')
+                                }
+                              }}
+                              disabled={!selectedGraduateForAccess}
+                              className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Shield className="h-4 w-4" />
+                              Разрешить доступ
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Блок поиска компаний для выпускника */}
+                  {!isEmployer && (
+                    <Card className="border-2 border-dark-card hover:border-accent-cyan/50 transition-all duration-300 mb-6">
+                      <div className="p-4">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Поиск компании
+                        </label>
+                        <div className="relative z-10">
+                          <input
+                            type="text"
+                            value={accessCompanySearchQuery || (selectedEmployerForAccess ? (() => {
+                              const employer = employers.find(e => e.id === selectedEmployerForAccess)
+                              return employer?.companyName || employer?.username || ''
+                            })() : '')}
+                            onChange={(e) => {
+                              const value = e.target.value
+                              setAccessCompanySearchQuery(value)
+                              setSelectedEmployerForAccess(null)
+                              if (value === '') {
+                                setSelectedEmployerForAccess(null)
+                              }
+                            }}
+                            placeholder="Введите название компании..."
+                            className="w-full bg-dark-surface border border-dark-card rounded-lg px-4 py-2 text-white"
+                          />
+                          {accessCompanySearchQuery && !selectedEmployerForAccess && getFilteredEmployersForAccess().length > 0 && (
+                            <div className="absolute z-50 w-full mt-1 bg-dark-card border border-dark-card rounded-lg max-h-60 overflow-y-auto custom-scrollbar shadow-lg">
+                              {getFilteredEmployersForAccess().slice(0, 20).map((employer) => {
+                                const displayName = employer.companyName || employer.username || ''
+                                return (
+                                  <div
+                                    key={employer.id}
+                                    onClick={() => {
+                                      setSelectedEmployerForAccess(employer.id)
+                                      setAccessCompanySearchQuery(displayName)
+                                    }}
+                                    className="px-4 py-2 hover:bg-dark-surface cursor-pointer text-white border-b border-dark-surface last:border-b-0 flex items-center gap-3"
+                                  >
+                                    {employer.avatar ? (
+                                      <img
+                                        src={getImageUrl(employer.avatar)}
+                                        alt={displayName}
+                                        className="w-8 h-8 rounded-full object-cover"
+                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                      />
+                                    ) : (
+                                      <div className="w-8 h-8 rounded-full bg-dark-card flex items-center justify-center">
+                                        <Building2 className="h-4 w-4 text-gray-400" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1">
+                                      <div className="font-medium">{displayName}</div>
+                                      {employer.companyDescription && (
+                                        <div className="text-xs text-gray-400 line-clamp-1">{employer.companyDescription}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        {accessCompanySearchQuery && getFilteredEmployersForAccess().length === 0 && employers.length > 0 && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            Компании не найдены или уже имеют доступ
+                          </p>
+                        )}
+                        {selectedEmployerForAccess && (
+                          <div className="mt-3 flex items-center justify-between p-3 bg-dark-surface rounded-lg">
+                            <div className="flex items-center gap-3">
+                              {(() => {
+                                const employer = employers.find(e => e.id === selectedEmployerForAccess)
+                                const displayName = employer?.companyName || employer?.username || ''
+                                return (
+                                  <>
+                                    {employer?.avatar ? (
+                                      <img
+                                        src={getImageUrl(employer.avatar)}
+                                        alt={displayName}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-10 h-10 rounded-full bg-dark-card flex items-center justify-center">
+                                        <Building2 className="h-5 w-5 text-gray-400" />
+                                      </div>
+                                    )}
+                                    <div>
+                                      <div className="text-white font-medium">{displayName}</div>
+                                      {employer?.companyDescription && (
+                                        <div className="text-xs text-gray-400 line-clamp-1">{employer.companyDescription}</div>
+                                      )}
+                                    </div>
+                                  </>
+                                )
+                              })()}
+                            </div>
+                            <button
+                              onClick={() => handleGrantAccess(selectedEmployerForAccess)}
+                              disabled={!selectedEmployerForAccess}
+                              className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Shield className="h-4 w-4" />
+                              Разрешить доступ
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  )}
+
                   {/* Я разрешаю доступ */}
                   <Card className="border-2 border-dark-card hover:border-accent-cyan/50 transition-all duration-300">
                     <div>
@@ -817,19 +1312,23 @@ const InterviewTracker = () => {
                                 <div className="flex items-center gap-3">
                                   {user?.avatar ? (
                                     <img
-                                      src={user.avatar}
+                                      src={getImageUrl(user.avatar)}
                                       alt={name}
                                       className="w-10 h-10 rounded-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                        if (fallback) fallback.classList.remove('hidden');
+                                      }}
                                     />
-                                  ) : (
-                                    <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center">
-                                      {isEmployer ? (
-                                        <Users className="h-5 w-5 text-accent-cyan" />
-                                      ) : (
-                                        <Building2 className="h-5 w-5 text-accent-cyan" />
-                                      )}
-                                    </div>
-                                  )}
+                                  ) : null}
+                                  <div className={`w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center ${user?.avatar ? 'hidden' : ''}`}>
+                                    {isEmployer ? (
+                                      <Users className="h-5 w-5 text-accent-cyan" />
+                                    ) : (
+                                      <Building2 className="h-5 w-5 text-accent-cyan" />
+                                    )}
+                                  </div>
                                   <div>
                                     <div className="font-medium text-white">{name}</div>
                                     {isEmployer && user?.email && (
@@ -874,19 +1373,22 @@ const InterviewTracker = () => {
                                 <div className="flex items-center gap-3">
                                   {user?.avatar ? (
                                     <img
-                                      src={user.avatar}
+                                      src={getImageUrl(user.avatar)}
                                       alt={name}
                                       className="w-10 h-10 rounded-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                      }}
                                     />
-                                  ) : (
-                                    <div className="w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center">
-                                      {isEmployer ? (
-                                        <Users className="h-5 w-5 text-accent-cyan" />
-                                      ) : (
-                                        <Building2 className="h-5 w-5 text-accent-cyan" />
-                                      )}
-                                    </div>
-                                  )}
+                                  ) : null}
+                                  <div className={`w-10 h-10 rounded-full bg-accent-cyan/20 flex items-center justify-center ${user?.avatar ? 'hidden' : ''}`}>
+                                    {isEmployer ? (
+                                      <Users className="h-5 w-5 text-accent-cyan" />
+                                    ) : (
+                                      <Building2 className="h-5 w-5 text-accent-cyan" />
+                                    )}
+                                  </div>
                                   <div>
                                     <div className="font-medium text-white">{name}</div>
                                     {user?.email && (
@@ -894,6 +1396,15 @@ const InterviewTracker = () => {
                                     )}
                                   </div>
                                 </div>
+                                {user?.id && (
+                                  <button
+                                    onClick={() => handleViewCalendar(user.id, name)}
+                                    className="p-2 text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors"
+                                    title="Просмотреть календарь"
+                                  >
+                                    <Eye className="h-5 w-5" />
+                                  </button>
+                                )}
                               </div>
                             )
                           })}
@@ -1450,6 +1961,118 @@ const InterviewTracker = () => {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteConfirm({ isOpen: false, id: null })}
       />
+
+      {/* Модальное окно просмотра календаря */}
+      {viewingCalendar.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-card rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 flex-shrink-0 border-b border-dark-card">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-6 w-6 text-accent-cyan" />
+                  <h2 className="text-2xl font-bold text-white">
+                    Календарь собеседований: {viewingCalendar.userName}
+                  </h2>
+                </div>
+                <button
+                  onClick={() => {
+                    setViewingCalendar({ isOpen: false, userId: null, userName: '' })
+                    setCalendarInterviews([])
+                    setViewingCalendarDate(new Date())
+                  }}
+                  className="p-2 hover:bg-dark-surface rounded-lg"
+                >
+                  <X className="h-5 w-5 text-gray-400" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {loadingCalendar ? (
+                <div className="text-center py-8 text-gray-400">Загрузка календаря...</div>
+              ) : (
+                <Card className="h-full flex flex-col min-h-0">
+                  {/* Calendar Header */}
+                  <div className="flex justify-between items-center mb-6 flex-shrink-0">
+                    <button
+                      onClick={() => setViewingCalendarDate(new Date(viewingCalendarDate.getFullYear(), viewingCalendarDate.getMonth() - 1))}
+                      className="p-2 hover:bg-dark-surface rounded-lg transition-colors"
+                    >
+                      <ChevronLeft className="h-5 w-5 text-gray-400" />
+                    </button>
+                    <h2 className="text-xl font-semibold text-white capitalize">
+                      {viewingCalendarDate.toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US', { month: 'long', year: 'numeric' })}
+                    </h2>
+                    <button
+                      onClick={() => setViewingCalendarDate(new Date(viewingCalendarDate.getFullYear(), viewingCalendarDate.getMonth() + 1))}
+                      className="p-2 hover:bg-dark-surface rounded-lg transition-colors"
+                    >
+                      <ChevronRight className="h-5 w-5 text-gray-400" />
+                    </button>
+                  </div>
+
+                  {/* Calendar Grid */}
+                  <div className="grid grid-cols-7 gap-1 flex-1 min-h-0">
+                    {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => (
+                      <div key={day} className="text-center text-gray-400 text-sm py-2 font-medium">
+                        {t(`interview.tracker.calendar.${day}`)}
+                      </div>
+                    ))}
+                    {getDaysInMonth(viewingCalendarDate).map((date, index) => {
+                      const dayInterviews = calendarInterviews.filter((interview: any) => {
+                        const interviewDate = new Date(interview.date)
+                        return interviewDate.toDateString() === date.toDateString()
+                      })
+                      const isCurrentMonth = date.getMonth() === viewingCalendarDate.getMonth()
+                      const isToday = date.toDateString() === new Date().toDateString()
+                      
+                      return (
+                        <div
+                          key={index}
+                          className={`
+                            min-h-[80px] p-2 rounded-lg border
+                            ${isCurrentMonth ? 'bg-dark-surface border-dark-card' : 'bg-dark-bg border-transparent opacity-50'}
+                            ${isToday ? 'border-accent-cyan' : ''}
+                          `}
+                        >
+                          <div className={`text-sm ${isToday ? 'text-accent-cyan font-bold' : 'text-gray-400'}`}>
+                            {date.getDate()}
+                          </div>
+                          {dayInterviews.slice(0, 2).map((interview: any) => {
+                            const statusColor = interview.status === 'scheduled' 
+                              ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                              : interview.status === 'completed'
+                              ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                              : 'bg-red-500/20 text-red-400 border-red-500/30'
+                            
+                            return (
+                              <div
+                                key={interview.id}
+                                className={`
+                                  mt-1 px-2 py-1 rounded text-xs truncate cursor-pointer border
+                                  ${statusColor}
+                                `}
+                                title={`${interview.time} - ${interview.company} - ${interview.position}`}
+                              >
+                                {interview.time} {interview.company}
+                              </div>
+                            )
+                          })}
+                          {dayInterviews.length > 2 && (
+                            <div className="text-xs text-gray-400 mt-1">
+                              +{dayInterviews.length - 2} {t('interview.tracker.more')}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </Card>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1547,12 +2170,6 @@ const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultCh
               <span className="flex items-center gap-1">
                 <Users className="h-4 w-4" />
                 {interview.contactPerson}
-              </span>
-            )}
-            {interview.reminder && (
-              <span className="flex items-center gap-1 text-accent-cyan">
-                <Bell className="h-4 w-4" />
-                {t('interview.tracker.reminder') || 'Напоминание'}
               </span>
             )}
           </div>
