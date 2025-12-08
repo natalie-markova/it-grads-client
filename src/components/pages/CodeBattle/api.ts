@@ -62,6 +62,27 @@ export const startSession = async (data: {
   return response.data;
 };
 
+export const testSolution = async (sessionId: number, data: {
+  code: string;
+  language: string;
+}): Promise<{
+  success: boolean;
+  testResults: Array<{
+    passed: boolean;
+    input: unknown;
+    expected: unknown;
+    actual: unknown;
+    error?: string;
+  }>;
+  passed: number;
+  total: number;
+  executionTime: number;
+  memoryUsed: number;
+}> => {
+  const response = await api.post(`/sessions/${sessionId}/test`, data);
+  return response.data;
+};
+
 export const submitSolution = async (sessionId: number, data: {
   code: string;
   language: string;
@@ -77,6 +98,16 @@ export const getHint = async (sessionId: number): Promise<{
   remainingHints: number;
 }> => {
   const response = await api.post(`/sessions/${sessionId}/hint`);
+  return response.data;
+};
+
+export const getAiStatus = async (sessionId: number): Promise<{
+  aiSolved: boolean | null;
+  aiSolveTime: number;
+  aiTestsPassed: number;
+  status: 'solving' | 'completed' | 'failed';
+}> => {
+  const response = await api.get(`/sessions/${sessionId}/ai-status`);
   return response.data;
 };
 

@@ -44,9 +44,15 @@ export default function CodeBattleHome() {
     try {
       const [leaderboardData, dailyData, tasksData] = await Promise.all([
         getLeaderboard({ limit: 3 }).catch(() => []),
-        getDailyChallenge().catch(() => ({ task: null })),
+        getDailyChallenge().catch((err) => {
+          console.error('getDailyChallenge error:', err);
+          return { task: null };
+        }),
         getTasks({ limit: 6 }).catch(() => ({ tasks: [], pagination: { page: 1, pages: 1, total: 0, limit: 6 } }))
       ]);
+
+      console.log('Daily Challenge Data:', dailyData);
+      console.log('Daily Task:', dailyData?.task);
 
       setLeaderboard(leaderboardData || []);
       setDailyTask(dailyData?.task || null);
@@ -140,14 +146,17 @@ export default function CodeBattleHome() {
                   </div>
                 </div>
                 <div className="bg-dark-bg/50 rounded-lg p-4 mb-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">{dailyTask.title}</h3>
-                      <span className={`inline-block px-2 py-1 rounded text-xs border mt-2 ${difficultyColors[dailyTask.difficulty]}`}>
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg mb-2 truncate">{dailyTask.title}</h3>
+                      <p className="text-sm text-gray-400 mb-2 line-clamp-2">
+                        {dailyTask.category || 'General'}
+                      </p>
+                      <span className={`inline-block px-2 py-1 rounded text-xs border ${difficultyColors[dailyTask.difficulty]}`}>
                         {dailyTask.difficulty.toUpperCase()}
                       </span>
                     </div>
-                    <span className="text-2xl font-bold text-accent-gold">+{dailyTask.points * 2}</span>
+                    <span className="text-2xl font-bold text-accent-gold flex-shrink-0">+{dailyTask.points * 2}</span>
                   </div>
                 </div>
                 <button

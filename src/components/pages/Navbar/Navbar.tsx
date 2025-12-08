@@ -349,7 +349,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                     </div>
 
                     {/* Mobile menu button */}
-                    <div className="md:hidden">
+                    <div className="md:hidden ml-auto">
                         <button
                             onClick={() => setIsOpen(!isOpen)}
                             className="text-gray-300 hover:text-accent-cyan focus:outline-none"

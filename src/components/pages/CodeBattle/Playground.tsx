@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom';
-import { getTask, startSession, submitSolution, getHint, executeCode, getLanguages } from './api';
+import { getTask, startSession, testSolution, submitSolution, getHint, getLanguages, getAiStatus } from './api';
 import CodeEditor from './CodeEditor';
 import type { GameTask, GameSession, TestResult, Language, SubmitResult } from './types';
 import ReactMarkdown from 'react-markdown';
@@ -68,6 +68,12 @@ export default function Playground() {
   const [activeTab, setActiveTab] = useState<'description' | 'output' | 'results'>('description');
   const [gameStarted, setGameStarted] = useState(false);
   const [startingGame, setStartingGame] = useState(false);
+  const [aiStatus, setAiStatus] = useState<{
+    status: 'solving' | 'completed' | 'failed';
+    aiSolved: boolean | null;
+    aiSolveTime: number;
+    aiTestsPassed: number;
+  } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -88,6 +94,39 @@ export default function Playground() {
 
     return () => clearInterval(timer);
   }, [gameStarted, timeLeft > 0]);
+
+  // Poll AI status in VS AI mode
+  useEffect(() => {
+    if (!gameStarted || mode !== 'vs_ai' || !session) return;
+
+    // Stop polling if AI already finished or player already submitted
+    if (aiStatus?.status !== 'solving' && aiStatus !== null) return;
+    if (submitResult?.solved) return;
+
+    const pollAiStatus = async () => {
+      try {
+        const status = await getAiStatus(session.id);
+        setAiStatus(status);
+
+        // Show notification when AI finishes
+        if (status.status === 'completed' && status.aiSolved) {
+          toast.success(`AI решил задачу за ${status.aiSolveTime}с!`, { duration: 3000 });
+        } else if (status.status === 'failed') {
+          toast.error('AI не смог решить задачу', { duration: 3000 });
+        }
+      } catch (error) {
+        console.error('Failed to poll AI status:', error);
+      }
+    };
+
+    // Initial poll
+    pollAiStatus();
+
+    // Poll every 3 seconds
+    const interval = setInterval(pollAiStatus, 3000);
+
+    return () => clearInterval(interval);
+  }, [gameStarted, mode, session, aiStatus?.status, submitResult?.solved]);
 
   const loadData = async () => {
     if (!taskId) return;
@@ -156,27 +195,59 @@ export default function Playground() {
   };
 
   const handleRun = async () => {
-    if (!code.trim()) return;
+    if (!session || !code.trim()) {
+      toast.error('Начните игру для тестирования');
+      return;
+    }
 
     setRunning(true);
     setOutput('');
     setActiveTab('output');
 
     try {
-      const result = await executeCode({
+      // Запускаем пробное тестирование (только видимые тесты)
+      const result = await testSolution(session.id, {
         code,
-        language: selectedLanguage,
-        input: ''
+        language: selectedLanguage
       });
 
+      // Сохраняем результаты тестов для отображения (маппим к TestResult формату)
+      setTestResults(result.testResults.map(r => ({
+        ...r,
+        expectedOutput: r.expected,
+        actualOutput: r.actual,
+        time: 0,
+        memory: 0
+      })) as TestResult[]);
+
+      // Формируем вывод
+      const outputText = `Пробное тестирование (видимые тесты):\n` +
+        `Пройдено: ${result.passed}/${result.total}\n` +
+        `Время выполнения: ${result.executionTime.toFixed(2)}ms\n` +
+        `Память: ${result.memoryUsed.toFixed(2)}KB\n\n` +
+        result.testResults.map((test, idx) => {
+          if (test.passed) {
+            return `✅ Тест ${idx + 1}: Пройден`;
+          } else {
+            return `❌ Тест ${idx + 1}: Не пройден\n` +
+              `   Ввод: ${JSON.stringify(test.input)}\n` +
+              `   Ожидалось: ${JSON.stringify(test.expected)}\n` +
+              `   Получено: ${JSON.stringify(test.actual)}` +
+              (test.error ? `\n   Ошибка: ${test.error}` : '');
+          }
+        }).join('\n');
+
+      setOutput(outputText);
+
       if (result.success) {
-        setOutput(result.stdout || 'Код выполнен успешно (нет вывода)');
+        toast.success(`Все видимые тесты пройдены (${result.passed}/${result.total})`);
       } else {
-        setOutput(`Ошибка: ${result.error || result.stderr || result.status}`);
+        toast.error(`Пройдено ${result.passed} из ${result.total} видимых тестов`);
       }
     } catch (error: unknown) {
       const err = error as { message?: string };
-      setOutput(`Ошибка выполнения: ${err.message}`);
+      setOutput(`Ошибка тестирования: ${err.message}`);
+      toast.error('Ошибка при выполнении тестов');
     } finally {
       setRunning(false);
     }
@@ -201,8 +272,23 @@ export default function Playground() {
       setTestResults(result.results);
 
       if (result.solved) {
-        // Обновляем сессию
+        // Обновляем сессию и завершаем игру
         setSession((prev) => prev ? { ...prev, solved: true, status: 'completed' } : null);
+        setGameStarted(false);
+        setTimeLeft(0);
+
+        // Показываем результат
+        if (mode === 'vs_ai' && result.beatAi !== undefined) {
+          if (result.beatAi) {
+            toast.success('🎉 Поздравляем! Вы победили AI!', { duration: 5000 });
+          } else {
+            toast.error('AI оказался быстрее. Попробуйте ещё раз!', { duration: 5000 });
+          }
+        } else {
+          toast.success('🎉 Задача решена успешно!', { duration: 5000 });
+        }
+      } else {
+        toast.error('Некоторые тесты не прошли. Попробуйте ещё раз!', { duration: 3000 });
       }
     } catch (error: unknown) {
       const err = error as { message?: string };
@@ -273,15 +359,15 @@ export default function Playground() {
 
           <div className="max-w-2xl mx-auto">
             {/* Task Info Card */}
-            <div className="bg-dark-card border border-dark-surface rounded-xl p-8 mb-8">
+            <div className="bg-dark-card border border-dark-surface rounded-xl p-8 mb-8 overflow-hidden">
               <div className="flex items-start justify-between mb-4">
-                <h1 className="text-3xl font-bold">{task.title}</h1>
-                <span className={`px-3 py-1 rounded text-sm border ${difficultyColors[task.difficulty]}`}>
+                <h1 className="text-3xl font-bold break-words">{task.title}</h1>
+                <span className={`px-3 py-1 rounded text-sm border flex-shrink-0 ${difficultyColors[task.difficulty]}`}>
                   {task.difficulty.toUpperCase()}
                 </span>
               </div>
 
-              <div className="prose prose-invert max-w-none mb-6">
+              <div className="prose prose-invert max-w-none mb-6 overflow-hidden break-words">
                 <ReactMarkdown>{task.description}</ReactMarkdown>
               </div>
 
@@ -353,7 +439,7 @@ export default function Playground() {
                       <div className={`font-bold ${selectedAiDifficulty === 'easy' ? 'text-green-400' : 'text-white'}`}>
                         Easy
                       </div>
-                      <div className="text-xs text-gray-400 mt-1">Llama 8B</div>
+                      <div className="text-xs text-gray-400 mt-1">YandexGPT Lite</div>
                       <div className="text-xs text-gray-500">+15 / -10 рейтинга</div>
                     </button>
                     <button
@@ -368,7 +454,7 @@ export default function Playground() {
                       <div className={`font-bold ${selectedAiDifficulty === 'medium' ? 'text-yellow-400' : 'text-white'}`}>
                         Medium
                       </div>
-                      <div className="text-xs text-gray-400 mt-1">Llama 70B</div>
+                      <div className="text-xs text-gray-400 mt-1">YandexGPT</div>
                       <div className="text-xs text-gray-500">+30 / -20 рейтинга</div>
                     </button>
                     <button
@@ -383,7 +469,7 @@ export default function Playground() {
                       <div className={`font-bold ${selectedAiDifficulty === 'hard' ? 'text-red-400' : 'text-white'}`}>
                         Hard
                       </div>
-                      <div className="text-xs text-gray-400 mt-1">Llama 70B Pro</div>
+                      <div className="text-xs text-gray-400 mt-1">YandexGPT Pro</div>
                       <div className="text-xs text-gray-500">+45 / -30 рейтинга</div>
                     </button>
                   </div>
@@ -483,6 +569,31 @@ export default function Playground() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* AI Status Indicator */}
+            {mode === 'vs_ai' && aiStatus && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-dark-card rounded-lg border border-dark-surface">
+                {aiStatus.status === 'solving' ? (
+                  <>
+                    <div className="relative flex items-center">
+                      <span className="text-lg animate-pulse">🤖</span>
+                      <div className="absolute -right-1 -top-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></div>
+                    </div>
+                    <span className="text-sm text-yellow-400 animate-pulse">AI думает...</span>
+                  </>
+                ) : aiStatus.status === 'completed' ? (
+                  <>
+                    <span className="text-lg">✅</span>
+                    <span className="text-sm text-green-400">AI решил за {aiStatus.aiSolveTime}с</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-lg">❌</span>
+                    <span className="text-sm text-red-400">AI не решил</span>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Timer */}
             <div className={`font-mono text-lg ${timeLeft < 60 ? 'text-red-400' : 'text-gray-300'}`}>
               ⏱ {formatTime(timeLeft)}
@@ -533,17 +644,17 @@ export default function Playground() {
           {/* Tab Content */}
           <div className="flex-1 overflow-auto p-4 custom-scrollbar">
             {activeTab === 'description' && (
-              <div className="prose prose-invert max-w-none">
+              <div className="prose prose-invert max-w-none overflow-hidden">
                 {/* Заголовок и сложность задачи */}
-                <div className="flex items-start justify-between mb-4 not-prose">
-                  <h2 className="text-xl font-bold">{task.title}</h2>
-                  <span className={`px-2 py-1 rounded text-xs border ${difficultyColors[task.difficulty]}`}>
+                <div className="flex items-start justify-between gap-4 mb-4 not-prose">
+                  <h2 className="text-xl font-bold break-words flex-1 min-w-0">{task.title}</h2>
+                  <span className={`px-2 py-1 rounded text-xs border flex-shrink-0 ${difficultyColors[task.difficulty]}`}>
                     {task.difficulty.toUpperCase()}
                   </span>
                 </div>
 
                 {/* Описание задачи */}
-                <div className="mb-6">
+                <div className="mb-6 overflow-hidden break-words">
                   <ReactMarkdown>{task.description || 'Описание задачи недоступно'}</ReactMarkdown>
                 </div>
 
@@ -644,7 +755,7 @@ export default function Playground() {
                                   {submitResult.beatAi ? 'Вы победили AI!' : 'AI победил'}
                                 </h4>
                                 <p className="text-xs text-gray-500 mt-1">
-                                  Реальный AI ({selectedAiDifficulty === 'hard' ? 'Llama 3.1 70B' : selectedAiDifficulty === 'medium' ? 'Llama 3.1 70B' : 'Llama 3.1 8B'})
+                                  Реальный AI ({selectedAiDifficulty === 'hard' ? 'YandexGPT Pro' : selectedAiDifficulty === 'medium' ? 'YandexGPT' : 'YandexGPT Lite'})
                                 </p>
                               </div>
                             </div>

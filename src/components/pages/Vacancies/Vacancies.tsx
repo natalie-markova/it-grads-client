@@ -92,6 +92,27 @@ const Vacancies = () => {
     });
   };
 
+  const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Разрешаем пустую строку для очистки поля
+    if (value === '') {
+      setFormData({
+        ...formData,
+        [e.target.name]: ''
+      });
+      return;
+    }
+    // Проверяем, что значение - целое положительное число
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue >= 0 && Number.isInteger(numValue)) {
+      setFormData({
+        ...formData,
+        [e.target.name]: value
+      });
+    }
+    // Если значение невалидно (отрицательное или дробное), просто игнорируем его
+  };
+
   const handleCreateVacancy = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -298,7 +319,9 @@ const Vacancies = () => {
                     type="number"
                     name="salary"
                     value={formData.salary}
-                    onChange={handleInputChange}
+                    onChange={handleNumberInputChange}
+                    min="0"
+                    step="1"
                     className="w-full px-4 py-2 bg-dark-bg border border-dark-card rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>

@@ -58,7 +58,9 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <div className="flex gap-3">
             <button
               onClick={onConfirm}
-              className={`${buttonStyles[variant]} px-4 py-2 rounded-lg font-medium transition-colors flex-1`}
+              className={variant === 'danger' 
+                ? 'btn-primary flex-1' 
+                : `${buttonStyles[variant]} px-4 py-2 rounded-lg font-medium transition-colors flex-1`}
             >
               {confirmText}
             </button>
@@ -76,4 +78,6 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 };
 
 export default ConfirmModal;
+
+
 

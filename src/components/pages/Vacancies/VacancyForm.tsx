@@ -14,6 +14,31 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
   const [skills, setSkills] = useState<string[]>(vacancy?.skills || []);
   const [skillInput, setSkillInput] = useState('');
 
+  const handleNumberInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Блокируем ввод минуса, точки и запятой
+    if (e.key === '-' || e.key === '.' || e.key === ',' || e.key === 'e' || e.key === 'E' || e.key === '+') {
+      e.preventDefault();
+    }
+  };
+
+  const handleNumberInputInput = (e: React.FormEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const value = input.value;
+    
+    // Разрешаем пустую строку
+    if (value === '') {
+      return;
+    }
+    
+    // Проверяем, что значение - целое положительное число
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue < 0 || !Number.isInteger(numValue)) {
+      // Если значение невалидно, очищаем поле или оставляем только цифры
+      const validValue = value.replace(/[^0-9]/g, '');
+      input.value = validValue;
+    }
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -170,6 +195,10 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
               id="salary"
               name="salary"
               defaultValue={vacancy?.salary}
+              onKeyDown={handleNumberInputKeyDown}
+              onInput={handleNumberInputInput}
+              min="0"
+              step="1"
               className="input-field [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="Например: 150000"
             />

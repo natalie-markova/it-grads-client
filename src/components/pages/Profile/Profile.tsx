@@ -458,96 +458,27 @@ const GraduateProfile = () => {
       setProfile({...loadedProfile})
     } catch (error: any) {
       console.error('Error loading profile:', error)
-      if (error.response?.status === 404) {
-        // Если профиль не найден, загружаем примерные данные для демонстрации
+      // При ошибке загрузки показываем пустой профиль для заполнения
+      // Не показываем демо-данные, чтобы пользователь заполнил свои
+      if (!profile) {
         setProfile({
-          photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-          lastName: 'Иванов',
-          firstName: 'Алексей',
-          middleName: 'Сергеевич',
-          birthDate: '1998-05-15',
-          city: 'Москва',
-          education: 'МГУ им. М.В. Ломоносова, Факультет вычислительной математики и кибернетики, Специалист по прикладной математике и информатике (2016-2021)',
-          experience: 'Frontend Developer в ООО "ТехноСофт" (2021-2023)\n• Разработка пользовательских интерфейсов на React и TypeScript\n• Оптимизация производительности приложений\n• Работа в команде по методологии Agile\n\nСтажер в IT-компании "СтартАп" (2020-2021)\n• Изучение современных технологий веб-разработки\n• Участие в разработке внутренних проектов',
-          about: 'Увлеченный разработчик с опытом создания современных веб-приложений. Специализируюсь на React, TypeScript и Node.js. Постоянно изучаю новые технологии и стремлюсь к профессиональному росту. Имею опыт работы в команде и готов к новым вызовам.',
-          email: user.email || 'alexey.ivanov@example.com',
-          phone: '+7 (999) 123-45-67',
-          github: 'https://github.com/alexey-ivanov',
-          linkedin: 'https://linkedin.com/in/alexey-ivanov',
-          portfolio: 'https://alexey-ivanov.dev',
-          skills: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'HTML/CSS', 'Git', 'Redux', 'Next.js', 'MongoDB', 'PostgreSQL', 'Docker', 'AWS'],
-          projects: [
-            {
-              id: '1',
-              name: 'E-commerce платформа',
-              description: 'Полнофункциональная платформа для онлайн-торговли с корзиной, оплатой и админ-панелью. Реализована система рекомендаций на основе машинного обучения.',
-              technologies: ['React', 'TypeScript', 'Node.js', 'MongoDB', 'Stripe API'],
-              link: 'https://ecommerce-demo.example.com',
-              githubLink: 'https://github.com/alexey-ivanov/ecommerce-platform'
-            },
-            {
-              id: '2',
-              name: 'Система управления задачами',
-              description: 'Коллаборативное приложение для управления проектами с real-time обновлениями, уведомлениями и аналитикой.',
-              technologies: ['React', 'Socket.io', 'Express', 'PostgreSQL', 'Redis'],
-              link: 'https://taskmanager-demo.example.com',
-              githubLink: 'https://github.com/alexey-ivanov/task-manager'
-            },
-            {
-              id: '3',
-              name: 'Погодное приложение',
-              description: 'Мобильное веб-приложение для прогноза погоды с красивой визуализацией и интеграцией с несколькими API.',
-              technologies: ['React', 'TypeScript', 'Chart.js', 'Weather API'],
-              githubLink: 'https://github.com/alexey-ivanov/weather-app'
-            }
-          ]
+          photo: '',
+          lastName: '',
+          firstName: '',
+          middleName: '',
+          birthDate: '',
+          city: '',
+          education: '',
+          experience: '',
+          about: '',
+          email: user?.email || '',
+          phone: '',
+          github: '',
+          linkedin: '',
+          portfolio: '',
+          skills: [],
+          projects: []
         })
-      } else {
-        // В случае другой ошибки также загружаем примерные данные
-        if (!profile) {
-          setProfile({
-            photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-            lastName: 'Иванов',
-            firstName: 'Алексей',
-            middleName: 'Сергеевич',
-            birthDate: '1998-05-15',
-            city: 'Москва',
-            education: 'МГУ им. М.В. Ломоносова, Факультет вычислительной математики и кибернетики, Специалист по прикладной математике и информатике (2016-2021)',
-            experience: 'Frontend Developer в ООО "ТехноСофт" (2021-2023)\n• Разработка пользовательских интерфейсов на React и TypeScript\n• Оптимизация производительности приложений\n• Работа в команде по методологии Agile\n\nСтажер в IT-компании "СтартАп" (2020-2021)\n• Изучение современных технологий веб-разработки\n• Участие в разработке внутренних проектов',
-            about: 'Увлеченный разработчик с опытом создания современных веб-приложений. Специализируюсь на React, TypeScript и Node.js. Постоянно изучаю новые технологии и стремлюсь к профессиональному росту. Имею опыт работы в команде и готов к новым вызовам.',
-            email: user?.email || 'alexey.ivanov@example.com',
-            phone: '+7 (999) 123-45-67',
-            github: 'https://github.com/alexey-ivanov',
-            linkedin: 'https://linkedin.com/in/alexey-ivanov',
-            portfolio: 'https://alexey-ivanov.dev',
-            skills: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'HTML/CSS', 'Git', 'Redux', 'Next.js', 'MongoDB', 'PostgreSQL', 'Docker', 'AWS'],
-            projects: [
-              {
-                id: '1',
-                name: 'E-commerce платформа',
-                description: 'Полнофункциональная платформа для онлайн-торговли с корзиной, оплатой и админ-панелью. Реализована система рекомендаций на основе машинного обучения.',
-                technologies: ['React', 'TypeScript', 'Node.js', 'MongoDB', 'Stripe API'],
-                link: 'https://ecommerce-demo.example.com',
-                githubLink: 'https://github.com/alexey-ivanov/ecommerce-platform'
-              },
-              {
-                id: '2',
-                name: 'Система управления задачами',
-                description: 'Коллаборативное приложение для управления проектами с real-time обновлениями, уведомлениями и аналитикой.',
-                technologies: ['React', 'Socket.io', 'Express', 'PostgreSQL', 'Redis'],
-                link: 'https://taskmanager-demo.example.com',
-                githubLink: 'https://github.com/alexey-ivanov/task-manager'
-              },
-              {
-                id: '3',
-                name: 'Погодное приложение',
-                description: 'Мобильное веб-приложение для прогноза погоды с красивой визуализацией и интеграцией с несколькими API.',
-                technologies: ['React', 'TypeScript', 'Chart.js', 'Weather API'],
-                githubLink: 'https://github.com/alexey-ivanov/weather-app'
-              }
-            ]
-          })
-        }
       }
     }
   }
