@@ -1,6 +1,5 @@
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
-import Main from './components/pages/Main/Main';
 import Login from './components/pages/Login/Login';
 import Registration from './components/pages/Registration/Registration';
 import Home from './components/pages/Home/Home';
@@ -35,6 +34,7 @@ import VacancyDetail from './components/pages/Vacancies/VacancyDetail';
 import ResumeForm from './components/pages/Resume/ResumeForm';
 import InterviewTracker from './components/pages/InterviewTracker/InterviewTracker';
 import { CodeBattleHome, TaskList, Playground, Leaderboard, PvPBattle } from './components/pages/CodeBattle';
+import { PositionSelector, PlanDashboard } from './components/pages/DevelopmentPlan';
 
 const router = createBrowserRouter([
   {
@@ -56,13 +56,6 @@ const router = createBrowserRouter([
       {
         path: "/login",
         element: <Login />
-      },
-      {
-        path: "/main",
-        element:
-        <ProtectedRoute>
-          <Main />
-        </ProtectedRoute>,
       },
       {
         path: "/interview",
@@ -214,6 +207,21 @@ const router = createBrowserRouter([
       {
         path: "/codebattle/vs-ai",
         element: <TaskList />,
+      },
+      // Development Plan
+      {
+        path: "/development-plan",
+        element:
+        <ProtectedRoute>
+          <PlanDashboard />
+        </ProtectedRoute>,
+      },
+      {
+        path: "/development-plan/select",
+        element:
+        <ProtectedRoute>
+          <PositionSelector />
+        </ProtectedRoute>,
       },
 
     ]}

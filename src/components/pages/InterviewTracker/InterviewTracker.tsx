@@ -26,6 +26,7 @@ import { type OutletContext } from '../../../types'
 import toast from 'react-hot-toast'
 import { $api } from '../../../utils/axios.instance'
 import ConfirmModal from '../../ui/ConfirmModal'
+import { useParmaEvents } from '../../mascot'
 
 interface Interview {
   id: number
@@ -103,6 +104,7 @@ const InterviewTracker = () => {
   const navigate = useNavigate()
   const { user } = useOutletContext<OutletContext>()
   const { t, i18n } = useTranslation()
+  const { onInterviewScheduled } = useParmaEvents()
   const [interviews, setInterviews] = useState<Interview[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingInterview, setEditingInterview] = useState<Interview | null>(null)
@@ -162,6 +164,7 @@ const InterviewTracker = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const isNewInterview = !editingInterview
 
     try {
       if (isEmployer) {
@@ -187,6 +190,12 @@ const InterviewTracker = () => {
           toast.success(t('interview.tracker.messages.added'))
         }
       }
+
+      // Уведомляем маскота о создании нового собеседования
+      if (isNewInterview) {
+        onInterviewScheduled()
+      }
+
       loadInterviews()
       closeModal()
     } catch (error: any) {

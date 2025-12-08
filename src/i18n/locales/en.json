@@ -31,6 +31,8 @@
     "achievements": "achievements",
     "filled": "filled",
     "passed": "passed",
+    "sessions": "sessions",
+    "progress": "progress",
     "averageProgress": "average progress",
     "never": "Never",
     "justNow": "Just now",
@@ -100,6 +102,49 @@
       "basic": "Basic",
       "beginner": "Beginner",
       "notDefined": "Not defined"
+    },
+    "tooltip": {
+      "overallLevel": "Overall Level",
+      "overallDesc": "Average score across all categories based on your activity",
+      "contributingSources": "Data Sources",
+      "dataCollectedFrom": "Data collected from",
+      "points": "points",
+      "activeCategories": "Active categories",
+      "profileCompleteness": "Completeness"
+    },
+    "tooltips": {
+      "programming": "Programming skills: languages, frameworks, design patterns",
+      "algorithms": "Algorithmic thinking: data structures, complexity, optimization",
+      "databases": "Database skills: SQL/NoSQL, schema design, query optimization",
+      "cloud": "Cloud technologies: AWS, GCP, Azure, containerization, microservices",
+      "devops": "DevOps practices: CI/CD, monitoring, infrastructure as code",
+      "testing": "Testing: unit/integration/e2e tests, TDD, automation",
+      "networking": "Networking: protocols, security, debugging",
+      "security": "Information security: data protection, authentication, encryption",
+      "ai": "Machine learning and AI: models, data processing, neural networks",
+      "dataScience": "Data analysis: statistics, visualization, business analytics",
+      "management": "Management: planning, coordination, teamwork",
+      "uiux": "UI/UX design: prototyping, usability, user experience",
+      "mobile": "Mobile development: iOS, Android, cross-platform solutions",
+      "communication": "Communication skills: presentation, negotiation, stress resistance"
+    },
+    "sourceDetails": {
+      "solved": "Tasks solved",
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard",
+      "rating": "Rating",
+      "completeness": "Completeness",
+      "technologies": "Technologies",
+      "level": "Level",
+      "sessions": "Sessions",
+      "avgScore": "Average score",
+      "communication": "Communication",
+      "started": "Started",
+      "completed": "Completed",
+      "avgProgress": "Average progress",
+      "answered": "Answers",
+      "correctRate": "Correct"
     }
   },
   "graduates": {
@@ -149,9 +194,10 @@
   },
   "navbar": {
     "skillsRadar": "Skills Radar",
-    "interviews": "Interview Preparation",
+    "interviews": "Interview Prep",
     "vacancies": "Vacancies",
-    "roadmap": "Career Roadmap",
+    "roadmap": "Development Roadmap",
+    "developmentPlan": "Career Manager",
     "interviewTracker": "Interview Tracker",
     "candidates": "Candidates",
     "candidatesMap": "Candidates Map",
@@ -160,7 +206,8 @@
     "login": "Login",
     "register": "Register",
     "messages": "Messages",
-    "language": "Language"
+    "language": "Language",
+    "darkZones": "Trainer"
   },
   "auth": {
     "login": "Login",
@@ -908,6 +955,75 @@
       "techWriter": "Technical Writer"
     }
   },
+  "developmentPlan": {
+    "title": "Development Plan",
+    "subtitle": "Your personalized career development path",
+    "selectPosition": "Select Target Position",
+    "selectPositionDesc": "Choose a specialization to create a development plan",
+    "recommendedPositions": "Recommended Positions",
+    "allPositions": "All Positions",
+    "currentMatch": "Current Match",
+    "skillGap": "Skill Gap",
+    "requiredRoadmaps": "Required Roadmaps",
+    "codebattleReqs": "CodeBattle Requirements",
+    "minRating": "Min Rating",
+    "minSolved": "Min Tasks Solved",
+    "createPlan": "Create Plan",
+    "viewGap": "View Gap Analysis",
+    "planDashboard": "Plan Dashboard",
+    "overallProgress": "Overall Progress",
+    "currentStep": "Current Step",
+    "skillProgress": "Skill Progress",
+    "steps": "Steps",
+    "stepCompleted": "Completed",
+    "stepInProgress": "In Progress",
+    "stepLocked": "Locked",
+    "stepPending": "Pending",
+    "recommendedTasks": "Recommended Tasks",
+    "noRecommendedTasks": "No recommended tasks for current step",
+    "pausePlan": "Pause Plan",
+    "resumePlan": "Resume Plan",
+    "abandonPlan": "Abandon Plan",
+    "abandonConfirm": "Are you sure you want to abandon this plan? You can create a new plan later.",
+    "noPlan": "No Active Plan",
+    "noPlanDesc": "Create a development plan to track your progress toward your career goals",
+    "createNewPlan": "Create New Plan",
+    "estimatedWeeks": "Estimated {{weeks}} weeks",
+    "targetPosition": "Target Position",
+    "planStatus": {
+      "active": "Active",
+      "paused": "Paused",
+      "completed": "Completed",
+      "abandoned": "Abandoned"
+    },
+    "stepTypes": {
+      "codebattle": "CodeBattle",
+      "roadmap": "Roadmap",
+      "interview": "Interview Practice"
+    },
+    "categories": {
+      "frontend": "Frontend",
+      "backend": "Backend",
+      "fullstack": "Full Stack",
+      "data": "Data & ML",
+      "devops": "DevOps",
+      "mobile": "Mobile",
+      "qa": "QA",
+      "security": "Security"
+    },
+    "levels": {
+      "junior": "Junior",
+      "middle": "Middle",
+      "senior": "Senior",
+      "lead": "Lead"
+    },
+    "errors": {
+      "loadError": "Failed to load development plan",
+      "createError": "Failed to create plan",
+      "syncError": "Failed to sync plan",
+      "positionsError": "Failed to load positions"
+    }
+  },
   "errors": {
     "required": "Required field",
     "invalidEmail": "Invalid email",
@@ -919,5 +1035,123 @@
     "unauthorized": "Authorization required",
     "forbidden": "Access denied",
     "notFound": "Page not found"
+  },
+  "parma": {
+    "greeting": "Hi! 👋",
+    "greetingWithName": "Hi, {{name}}! 👋",
+    "welcomeBack": "Welcome back! 😊",
+    "thinking": "Hmm... 🤔",
+    "celebration": "Great job! 🎉",
+    "encouragement": "Don't give up, you can do it! 💪",
+    "codebattle": {
+      "matchStart": "Good luck! 🎮",
+      "thinkHard": "Take your time... 🤔",
+      "compileError": "Check your syntax! 👀",
+      "compileErrorLine": "Check line {{line}} 👀",
+      "testFailed": "Almost! Check edge cases 🔍",
+      "allTestsPassed": "All tests passed! 🎉",
+      "victory": "Victory! Well done! 🏆",
+      "victoryRating": "Victory! +{{rating}} rating! 🏆",
+      "defeat": "You'll get it next time! 💪",
+      "waiting": "Finding opponent... ⏳"
+    },
+    "interview": {
+      "start": "Starting interview! Good luck! 🎤",
+      "goodAnswer": "Great answer! 👏",
+      "canImprove": "Good, but could be expanded 📝",
+      "weakAnswer": "Try to elaborate more 💡",
+      "silent": "Take your time to think 🤔",
+      "passed": "Interview passed! 🎉",
+      "passedScore": "Interview passed! Score: {{score}}% 🎉"
+    },
+    "progress": {
+      "stepComplete": "Step completed! 🎯",
+      "stepCompleteNamed": "\"{{step}}\" completed! 🎯",
+      "roadmapComplete": "Roadmap completed! Amazing! 🏆",
+      "roadmapCompleteNamed": "{{name}} completed! Amazing! 🏆",
+      "planCreated": "Plan created! Let's go! 🚀",
+      "achievement": "New achievement! 🏅",
+      "achievementNamed": "New achievement: {{name}}! 🏅",
+      "ratingUp": "+{{points}} rating! 📈"
+    },
+    "system": {
+      "networkError": "Network issues... 📡",
+      "networkRestored": "Connection restored! 🌐",
+      "loading": "Loading... ⏳",
+      "loadingWhat": "Loading {{what}}... ⏳",
+      "loadingComplete": "Done! ✅"
+    },
+    "settings": {
+      "title": "Parma Settings",
+      "size": "Size",
+      "position": "Position",
+      "left": "Left",
+      "right": "Right",
+      "tips": "Tips",
+      "disable": "Disable Parma"
+    }
+  },
+  "parmaTour": {
+    "skip": "Skip tour",
+    "next": "Next",
+    "finish": "Done",
+    "startTour": "Start tour",
+    "complete": "Tour complete! Good luck! 🎉",
+    "graduate": {
+      "welcome": {
+        "title": "Welcome!",
+        "text": "Hi! I'm Parma, your helper on IT-Grads platform! Let me show you around."
+      },
+      "profile": {
+        "title": "Your Profile",
+        "text": "Here you can fill in your resume, add skills and experience. The more complete your profile — the better your chances of finding a job!"
+      },
+      "roadmap": {
+        "title": "Development Roadmaps",
+        "text": "Choose a direction and follow the roadmap. I'll help you every step of the way!"
+      },
+      "codebattle": {
+        "title": "CodeBattle",
+        "text": "Practice programming and compete with others! Solve tasks and increase your rating."
+      },
+      "interview": {
+        "title": "AI Interview",
+        "text": "Prepare for interviews with artificial intelligence! It will ask you questions and give feedback."
+      },
+      "jobs": {
+        "title": "Job Vacancies",
+        "text": "Here you'll find job postings from employers. Apply and find your dream job!"
+      },
+      "complete": {
+        "title": "Done!",
+        "text": "Now you know the basics! If you need help — I'm always here. Good luck with your job search! 🐕"
+      }
+    },
+    "employer": {
+      "welcome": {
+        "title": "Welcome!",
+        "text": "Hello! I'm Parma, I'll help you get started on IT-Grads platform. Let's explore the main features."
+      },
+      "profile": {
+        "title": "Company Profile",
+        "text": "Fill in your company information. This will help candidates learn more about you."
+      },
+      "candidates": {
+        "title": "Candidate Search",
+        "text": "Here you'll find graduates with the skills you need. Use filters for precise search."
+      },
+      "vacancies": {
+        "title": "Vacancy Management",
+        "text": "Create vacancies and receive applications from motivated candidates."
+      },
+      "messenger": {
+        "title": "Messenger",
+        "text": "Communicate with candidates directly through the built-in messenger."
+      },
+      "complete": {
+        "title": "Done!",
+        "text": "Now you're ready to go! If you have questions — I'm always here. Good luck finding talent! 🐕"
+      }
+    }
   }
 }

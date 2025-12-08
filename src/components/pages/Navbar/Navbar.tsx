@@ -20,7 +20,10 @@ const languages = [
 const Navbar = ({ user, setUser }: NavbarProps) => {
     const [isOpen, setIsOpen] = useState(false)
     const [isLangOpen, setIsLangOpen] = useState(false)
+    const [isDarkZonesOpen, setIsDarkZonesOpen] = useState(false)
+    const [isMobileDarkZonesOpen, setIsMobileDarkZonesOpen] = useState(false)
     const langDropdownRef = useRef<HTMLDivElement>(null)
+    const darkZonesDropdownRef = useRef<HTMLDivElement>(null)
     const location = useLocation()
     const navigate = useNavigate()
     const { t, i18n } = useTranslation()
@@ -39,6 +42,9 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
         const handleClickOutside = (event: MouseEvent) => {
             if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
                 setIsLangOpen(false);
+            }
+            if (darkZonesDropdownRef.current && !darkZonesDropdownRef.current.contains(event.target as Node)) {
+                setIsDarkZonesOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -115,16 +121,23 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
   }
 
     const baseNavLinks = [
-        { path: '/interview', label: t('navbar.interviews') },
         { path: '/jobs', label: t('navbar.vacancies') },
+    ]
+
+    // Ссылки для выпадающего меню "Области тьмы"
+    const darkZonesLinks = [
+        { path: '/interview', label: t('navbar.interviews') },
+        { path: '/roadmap', label: t('navbar.roadmap') },
+        { path: '/development-plan', label: t('navbar.developmentPlan') },
     ]
 
     const graduateNavLinks = [
         ...baseNavLinks,
         { path: '/interview/tracker', label: t('navbar.interviewTracker') },
-        { path: '/roadmap', label: t('navbar.roadmap') },
-        { path: '/codebattle', label: 'Code Battle' },
     ]
+
+    // Code Battle отдельно (после Областей тьмы)
+    const codeBattleLink = { path: '/codebattle', label: 'Code Battle' }
 
     const employerNavLinks = [
         { path: '/candidates', label: t('navbar.candidates') },
@@ -181,6 +194,55 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                                 {link.label}
                             </Link>
                         ))}
+
+                        {/* Выпадающее меню "Области тьмы" для выпускников */}
+                        {userType === 'graduate' && (
+                            <div className="relative" ref={darkZonesDropdownRef}>
+                                <button
+                                    onClick={() => setIsDarkZonesOpen(!isDarkZonesOpen)}
+                                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-1 ${
+                                        darkZonesLinks.some(link => isActive(link.path))
+                                            ? 'text-accent-cyan bg-dark-card'
+                                            : 'text-gray-300 hover:text-accent-cyan hover:bg-dark-card'
+                                    }`}
+                                >
+                                    <span>{t('navbar.darkZones', 'Области тьмы')}</span>
+                                    <ChevronDown className={`h-4 w-4 transition-transform ${isDarkZonesOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                {isDarkZonesOpen && (
+                                    <div className="absolute top-full left-0 mt-1 w-48 bg-dark-surface border border-dark-card rounded-lg shadow-lg overflow-hidden z-50">
+                                        {darkZonesLinks.map((link) => (
+                                            <Link
+                                                key={link.path}
+                                                to={link.path}
+                                                onClick={() => setIsDarkZonesOpen(false)}
+                                                className={`block px-4 py-2.5 text-sm transition-colors ${
+                                                    isActive(link.path)
+                                                        ? 'bg-accent-cyan/20 text-accent-cyan'
+                                                        : 'text-gray-300 hover:bg-dark-card hover:text-white'
+                                                }`}
+                                            >
+                                                {link.label}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Code Battle (справа от Областей тьмы) */}
+                        {userType === 'graduate' && (
+                            <Link
+                                to={codeBattleLink.path}
+                                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                                    isActive(codeBattleLink.path)
+                                        ? 'text-accent-cyan bg-dark-card'
+                                        : 'text-gray-300 hover:text-accent-cyan hover:bg-dark-card'
+                                }`}
+                            >
+                                {codeBattleLink.label}
+                            </Link>
+                        )}
                     </div>
 
                     {/* Auth Buttons */}
@@ -316,6 +378,60 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                                 {link.label}
                             </Link>
                         ))}
+
+                        {/* Области тьмы для выпускников (мобильная версия) */}
+                        {userType === 'graduate' && (
+                            <div>
+                                <button
+                                    onClick={() => setIsMobileDarkZonesOpen(!isMobileDarkZonesOpen)}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-base font-medium ${
+                                        darkZonesLinks.some(link => isActive(link.path))
+                                            ? 'text-accent-cyan bg-dark-card'
+                                            : 'text-gray-300 hover:text-accent-cyan hover:bg-dark-card'
+                                    }`}
+                                >
+                                    <span>{t('navbar.darkZones', 'Области тьмы')}</span>
+                                    <ChevronDown className={`h-4 w-4 transition-transform ${isMobileDarkZonesOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                {isMobileDarkZonesOpen && (
+                                    <div className="ml-4 mt-1 space-y-1 border-l-2 border-dark-card pl-3">
+                                        {darkZonesLinks.map((link) => (
+                                            <Link
+                                                key={link.path}
+                                                to={link.path}
+                                                onClick={() => {
+                                                    setIsOpen(false);
+                                                    setIsMobileDarkZonesOpen(false);
+                                                }}
+                                                className={`block px-3 py-2 rounded-md text-sm font-medium ${
+                                                    isActive(link.path)
+                                                        ? 'text-accent-cyan bg-dark-card'
+                                                        : 'text-gray-300 hover:text-accent-cyan hover:bg-dark-card'
+                                                }`}
+                                            >
+                                                {link.label}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Code Battle для выпускников (мобильная версия) */}
+                        {userType === 'graduate' && (
+                            <Link
+                                to={codeBattleLink.path}
+                                onClick={() => setIsOpen(false)}
+                                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                                    isActive(codeBattleLink.path)
+                                        ? 'text-accent-cyan bg-dark-card'
+                                        : 'text-gray-300 hover:text-accent-cyan hover:bg-dark-card'
+                                }`}
+                            >
+                                {codeBattleLink.label}
+                            </Link>
+                        )}
+
                         <div className="pt-4 space-y-2">
                             {user && userType ? (
                                 <>

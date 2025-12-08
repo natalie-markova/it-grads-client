@@ -135,6 +135,75 @@ const SOURCE_ICONS: Record<string, string> = {
   quiz: '❓',
 }
 
+// Описания категорий для тултипов
+const CATEGORY_DESCRIPTIONS: Record<string, { descKey: string; sourcesKeys: string[] }> = {
+  programming: {
+    descKey: 'autoRadar.tooltips.programming',
+    sourcesKeys: ['codebattle', 'resume', 'aiInterview']
+  },
+  algorithms: {
+    descKey: 'autoRadar.tooltips.algorithms',
+    sourcesKeys: ['codebattle', 'quiz']
+  },
+  databases: {
+    descKey: 'autoRadar.tooltips.databases',
+    sourcesKeys: ['resume', 'aiInterview', 'roadmap']
+  },
+  cloud: {
+    descKey: 'autoRadar.tooltips.cloud',
+    sourcesKeys: ['resume', 'roadmap']
+  },
+  devops: {
+    descKey: 'autoRadar.tooltips.devops',
+    sourcesKeys: ['resume', 'roadmap', 'aiInterview']
+  },
+  testing: {
+    descKey: 'autoRadar.tooltips.testing',
+    sourcesKeys: ['codebattle', 'resume', 'roadmap']
+  },
+  networking: {
+    descKey: 'autoRadar.tooltips.networking',
+    sourcesKeys: ['resume', 'roadmap']
+  },
+  security: {
+    descKey: 'autoRadar.tooltips.security',
+    sourcesKeys: ['resume', 'roadmap', 'aiInterview']
+  },
+  ai_ml: {
+    descKey: 'autoRadar.tooltips.ai',
+    sourcesKeys: ['resume', 'roadmap', 'aiInterview']
+  },
+  data_science: {
+    descKey: 'autoRadar.tooltips.dataScience',
+    sourcesKeys: ['resume', 'roadmap']
+  },
+  management: {
+    descKey: 'autoRadar.tooltips.management',
+    sourcesKeys: ['resume', 'audioInterview']
+  },
+  ui_ux: {
+    descKey: 'autoRadar.tooltips.uiux',
+    sourcesKeys: ['resume', 'roadmap']
+  },
+  mobile: {
+    descKey: 'autoRadar.tooltips.mobile',
+    sourcesKeys: ['resume', 'roadmap', 'aiInterview']
+  },
+  communication: {
+    descKey: 'autoRadar.tooltips.communication',
+    sourcesKeys: ['audioInterview']
+  },
+}
+
+interface TooltipData {
+  x: number
+  y: number
+  category: string | null
+  isCenter: boolean
+  sectorX: number // Координата центра сектора на canvas
+  sectorY: number
+}
+
 const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
   userId,
   compact = false,
@@ -145,9 +214,12 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
   const [loading, setLoading] = useState(true)
   const [recalculating, setRecalculating] = useState(false)
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
+  const [expandedSource, setExpandedSource] = useState<string | null>(null) // category:source
   const [showRecommendations, setShowRecommendations] = useState(true)
   const [showAchievements, setShowAchievements] = useState(false)
+  const [tooltip, setTooltip] = useState<TooltipData | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     loadRadar()
@@ -317,7 +389,7 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
     if (value >= 50) return t('autoRadar.levels.intermediate')
     if (value >= 30) return t('autoRadar.levels.basic')
     if (value >= 10) return t('autoRadar.levels.beginner')
-    return t('autoRadar.levels.notDefined')
+    return '' // Не показываем "не определён"
   }
 
   const getSkillLevelColor = (value: number): string => {
@@ -340,6 +412,230 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
     if (diffMins < 60) return t('common.minutesAgo', { count: diffMins })
     if (diffMins < 1440) return t('common.hoursAgo', { count: Math.floor(diffMins / 60) })
     return date.toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')
+  }
+
+  // Получить детали источника для категории с расчётом баллов
+  const getSourceDetails = (source: string, category: string, sourcePoints: number) => {
+    if (!data) return null
+
+    const details: { label: string; value: string | number; points?: number }[] = []
+
+    switch (source) {
+      case 'codebattle':
+        const cb = data.sources.codebattle
+        if (cb.totalSolved > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.solved'), value: cb.totalSolved, points: Math.round(sourcePoints * 0.4) })
+        }
+        if (cb.easySolved > 0) {
+          details.push({ label: `  • ${t('autoRadar.sourceDetails.easy')}`, value: cb.easySolved, points: cb.easySolved * 2 })
+        }
+        if (cb.mediumSolved > 0) {
+          details.push({ label: `  • ${t('autoRadar.sourceDetails.medium')}`, value: cb.mediumSolved, points: cb.mediumSolved * 5 })
+        }
+        if (cb.hardSolved > 0) {
+          details.push({ label: `  • ${t('autoRadar.sourceDetails.hard')}`, value: cb.hardSolved, points: cb.hardSolved * 10 })
+        }
+        if (cb.rating > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.rating'), value: cb.rating, points: Math.round(sourcePoints * 0.3) })
+        }
+        break
+      case 'resume':
+        const res = data.sources.resume
+        if (res.completeness > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.completeness'), value: `${res.completeness}%`, points: Math.round(res.completeness * 0.3) })
+        }
+        if (res.technologies.length > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.technologies'), value: res.technologies.length, points: res.technologies.length * 2 })
+        }
+        if (res.level) {
+          details.push({ label: t('autoRadar.sourceDetails.level'), value: res.level })
+        }
+        break
+      case 'aiInterview':
+        const ai = data.sources.aiInterview
+        if (ai.sessionsCompleted > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.sessions'), value: ai.sessionsCompleted, points: ai.sessionsCompleted * 5 })
+        }
+        if (ai.avgScore > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.avgScore'), value: `${Math.round(ai.avgScore)}%`, points: Math.round(ai.avgScore * 0.5) })
+        }
+        break
+      case 'audioInterview':
+        const audio = data.sources.audioInterview
+        if (audio.sessionsCompleted > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.sessions'), value: audio.sessionsCompleted, points: audio.sessionsCompleted * 5 })
+        }
+        if (audio.avgScore > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.avgScore'), value: `${Math.round(audio.avgScore)}%`, points: Math.round(audio.avgScore * 0.3) })
+        }
+        if (audio.communicationScore > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.communication'), value: `${Math.round(audio.communicationScore)}%`, points: Math.round(audio.communicationScore * 0.2) })
+        }
+        break
+      case 'roadmap':
+        const rm = data.sources.roadmap
+        if (rm.totalStarted > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.started'), value: rm.totalStarted, points: rm.totalStarted * 3 })
+        }
+        if (rm.totalCompleted > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.completed'), value: rm.totalCompleted, points: rm.totalCompleted * 10 })
+        }
+        if (rm.avgProgress > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.avgProgress'), value: `${rm.avgProgress}%`, points: Math.round(rm.avgProgress * 0.3) })
+        }
+        break
+      case 'quiz':
+        const q = data.sources.quiz
+        if (q.totalAnswered > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.answered'), value: q.totalAnswered, points: Math.round(q.totalAnswered * 0.5) })
+        }
+        if (q.correctRate > 0) {
+          details.push({ label: t('autoRadar.sourceDetails.correctRate'), value: `${Math.round(q.correctRate)}%`, points: Math.round(q.correctRate * 0.3) })
+        }
+        break
+    }
+
+    return details
+  }
+
+  // Обработчик движения мыши по canvas
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current
+    if (!canvas || !data) return
+
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    const x = (e.clientX - rect.left) * scaleX
+    const y = (e.clientY - rect.top) * scaleY
+
+    const centerX = canvas.width / 2
+    const centerY = canvas.height / 2
+    const outerRadius = Math.min(centerX, centerY) - 60
+    const innerRadius = outerRadius * 0.25
+
+    // Расстояние от центра
+    const dx = x - centerX
+    const dy = y - centerY
+    const distance = Math.sqrt(dx * dx + dy * dy)
+
+    // Координаты относительно canvas (в пикселях canvas, потом переведём в проценты для позиционирования)
+    const canvasDisplayWidth = rect.width
+    const canvasDisplayHeight = rect.height
+
+    // Проверяем центр
+    if (distance <= innerRadius) {
+      // Координаты центра относительно canvas контейнера
+      setTooltip({
+        x: e.clientX,
+        y: e.clientY,
+        category: null,
+        isCenter: true,
+        sectorX: canvasDisplayWidth / 2, // относительно canvas
+        sectorY: canvasDisplayHeight / 2
+      })
+      return
+    }
+
+    // Проверяем секторы
+    if (distance <= outerRadius) {
+      let angle = Math.atan2(dy, dx) + Math.PI / 2
+      if (angle < 0) angle += 2 * Math.PI
+
+      const numCategories = RADAR_CATEGORIES.length
+      const angleStep = (2 * Math.PI) / numCategories
+      const categoryIndex = Math.floor(angle / angleStep)
+
+      if (categoryIndex >= 0 && categoryIndex < numCategories) {
+        // Вычисляем центр сектора
+        const midAngle = (categoryIndex + 0.5) * angleStep - Math.PI / 2
+        const value = data.radar[RADAR_CATEGORIES[categoryIndex].key] || 0
+        const normalizedValue = Math.max(0.1, value / 100)
+        const sectorRadius = innerRadius + (outerRadius - innerRadius) * normalizedValue * 0.7
+
+        // Координаты относительно canvas контейнера (не экрана!)
+        const screenScale = rect.width / canvas.width
+        const localCenterX = canvasDisplayWidth / 2
+        const localCenterY = canvasDisplayHeight / 2
+        const sectorLocalX = localCenterX + Math.cos(midAngle) * sectorRadius * screenScale
+        const sectorLocalY = localCenterY + Math.sin(midAngle) * sectorRadius * screenScale
+
+        setTooltip({
+          x: e.clientX,
+          y: e.clientY,
+          category: RADAR_CATEGORIES[categoryIndex].key,
+          isCenter: false,
+          sectorX: sectorLocalX,
+          sectorY: sectorLocalY
+        })
+        return
+      }
+    }
+
+    setTooltip(null)
+  }
+
+  const handleCanvasMouseLeave = () => {
+    setTooltip(null)
+  }
+
+  // Получить данные для тултипа
+  const getTooltipContent = () => {
+    if (!tooltip || !data) return null
+
+    if (tooltip.isCenter) {
+      // Тултип для центра - общий уровень
+      const totalAverage = Object.values(data.radar).reduce((a, b) => a + b, 0) / Object.keys(data.radar).length
+      const activeCategories = Object.entries(data.radar).filter(([_, v]) => v > 0)
+
+      return {
+        title: t('autoRadar.tooltip.overallLevel'),
+        value: Math.round(totalAverage),
+        description: t('autoRadar.tooltip.overallDesc'),
+        sources: [
+          { icon: '🎮', name: t('autoRadar.sources.codeBattle'), value: data.sources.codebattle.totalSolved, unit: t('autoRadar.tasksSolved') },
+          { icon: '🤖', name: t('autoRadar.sources.aiInterview'), value: data.sources.aiInterview.sessionsCompleted, unit: t('common.sessions') },
+          { icon: '🎙️', name: t('autoRadar.sources.audioInterview'), value: data.sources.audioInterview.sessionsCompleted, unit: t('common.sessions') },
+          { icon: '🗺️', name: t('autoRadar.sources.roadmap'), value: `${data.sources.roadmap.avgProgress}%`, unit: t('common.progress') },
+          { icon: '📄', name: t('autoRadar.sources.resume'), value: `${data.sources.resume.completeness}%`, unit: t('common.filled') },
+        ].filter(s => s.value !== 0 && s.value !== '0%'),
+        stats: [
+          { label: t('autoRadar.tooltip.activeCategories'), value: activeCategories.length },
+          { label: t('autoRadar.tooltip.profileCompleteness'), value: `${data.completeness}%` },
+        ]
+      }
+    }
+
+    if (tooltip.category) {
+      const category = RADAR_CATEGORIES.find(c => c.key === tooltip.category)
+      const categoryDesc = CATEGORY_DESCRIPTIONS[tooltip.category]
+      const value = data.radar[tooltip.category] || 0
+      const breakdown = data.breakdown[tooltip.category] || {}
+
+      const sources = Object.entries(breakdown)
+        .filter(([_, v]) => v > 0)
+        .map(([source, value]) => ({
+          icon: SOURCE_ICONS[source] || '📌',
+          name: SOURCE_NAME_KEYS[source] ? t(SOURCE_NAME_KEYS[source]) : source,
+          value: Math.round(value),
+          unit: t('autoRadar.tooltip.points')
+        }))
+
+      return {
+        title: category ? t(category.nameKey) : tooltip.category,
+        icon: category?.icon,
+        value: Math.round(value),
+        level: getSkillLevel(value),
+        description: categoryDesc ? t(categoryDesc.descKey) : '',
+        sources,
+        expectedSources: categoryDesc?.sourcesKeys.map(key => ({
+          icon: SOURCE_ICONS[key] || '📌',
+          name: SOURCE_NAME_KEYS[key] ? t(SOURCE_NAME_KEYS[key]) : key
+        })) || []
+      }
+    }
+
+    return null
   }
 
   if (loading) {
@@ -410,13 +706,113 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Radar Chart */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center relative" ref={containerRef}>
             <canvas
               ref={canvasRef}
               width={500}
               height={500}
-              className="max-w-full h-auto"
+              className="max-w-full h-auto cursor-pointer"
+              onMouseMove={handleCanvasMouseMove}
+              onMouseLeave={handleCanvasMouseLeave}
             />
+
+            {/* Tooltip прямо над секцией - absolute относительно контейнера радара */}
+            {tooltip && (() => {
+              const content = getTooltipContent()
+              if (!content) return null
+
+              // Получаем цвет категории
+              const categoryColor = tooltip.category
+                ? RADAR_CATEGORIES.find(c => c.key === tooltip.category)?.color || '#00a8c4'
+                : '#00a8c4'
+
+              // Тултип над точкой, позиционирование относительно контейнера
+              const tooltipWidth = 220
+
+              return (
+                <div
+                  className="absolute z-50 pointer-events-none"
+                  style={{
+                    left: Math.max(0, tooltip.sectorX - tooltipWidth / 2),
+                    top: tooltip.sectorY - 10,
+                    width: tooltipWidth,
+                    transform: 'translateY(-100%)',
+                  }}
+                >
+                    <div
+                      className="bg-dark-card/95 backdrop-blur-sm border rounded-lg p-2.5 shadow-xl"
+                      style={{ borderColor: categoryColor + '80' }}
+                    >
+                      {/* Header компактный */}
+                      <div className="flex items-center gap-1.5 mb-1.5 pb-1.5 border-b border-gray-700/50">
+                        {'icon' in content && content.icon && (
+                          <span className="text-base">{content.icon}</span>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-white font-semibold text-xs truncate">{content.title}</h4>
+                          {'level' in content && content.level && (
+                            <p className={`text-[10px] ${getSkillLevelColor(content.value)}`}>
+                              {content.level}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="text-base font-bold" style={{ color: categoryColor }}>{content.value}</span>
+                          <span className="text-gray-500 text-[10px]">/100</span>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      {content.description && (
+                        <p className="text-gray-400 text-[10px] mb-1.5 line-clamp-2">{content.description}</p>
+                      )}
+
+                      {/* Sources компактно */}
+                      {content.sources && content.sources.length > 0 && (
+                        <div className="space-y-px">
+                          {content.sources.slice(0, 3).map((source, idx) => (
+                            <div key={idx} className="flex items-center justify-between text-[10px]">
+                              <span className="text-gray-400 flex items-center gap-0.5">
+                                <span>{source.icon}</span>
+                                {source.name}
+                              </span>
+                              <span style={{ color: categoryColor }} className="font-medium">
+                                {source.value}
+                              </span>
+                            </div>
+                          ))}
+                          {content.sources.length > 3 && (
+                            <p className="text-gray-500 text-[10px]">+{content.sources.length - 3} ещё...</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Expected sources */}
+                      {'expectedSources' in content && content.sources?.length === 0 && content.expectedSources && content.expectedSources.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {content.expectedSources.slice(0, 3).map((source, idx) => (
+                            <span key={idx} className="text-gray-500 text-xs">
+                              {source.icon}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Stats для центра */}
+                      {'stats' in content && content.stats && (
+                        <div className="flex justify-around pt-1.5 border-t border-gray-700/50 mt-1.5">
+                          {content.stats.map((stat, idx) => (
+                            <div key={idx} className="text-center">
+                              <p style={{ color: categoryColor }} className="font-bold text-xs">{stat.value}</p>
+                              <p className="text-gray-500 text-[10px]">{stat.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+            })()}
           </div>
 
           {/* Categories list */}
@@ -439,9 +835,11 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
                       <span className="text-xl">{category.icon}</span>
                       <div className="text-left">
                         <p className="text-white font-medium">{t(category.nameKey)}</p>
-                        <p className={`text-sm ${getSkillLevelColor(value)}`}>
-                          {getSkillLevel(value)}
-                        </p>
+                        {getSkillLevel(value) && (
+                          <p className={`text-sm ${getSkillLevelColor(value)}`}>
+                            {getSkillLevel(value)}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -466,18 +864,46 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
                       <div className="space-y-1">
                         {Object.entries(breakdown)
                           .filter(([_, v]) => v > 0)
-                          .map(([source, value]) => (
-                            <div
-                              key={source}
-                              className="flex items-center justify-between text-sm"
-                            >
-                              <span className="text-gray-400 flex items-center gap-2">
-                                <span>{SOURCE_ICONS[source] || '📌'}</span>
-                                {SOURCE_NAME_KEYS[source] ? t(SOURCE_NAME_KEYS[source]) : source}
-                              </span>
-                              <span className="text-accent-cyan">{Math.round(value)}</span>
-                            </div>
-                          ))}
+                          .map(([source, sourceValue]) => {
+                            const sourceKey = `${category.key}:${source}`
+                            const isSourceExpanded = expandedSource === sourceKey
+                            const details = getSourceDetails(source, category.key, sourceValue)
+
+                            return (
+                              <div key={source}>
+                                <button
+                                  onClick={() => setExpandedSource(isSourceExpanded ? null : sourceKey)}
+                                  className="w-full flex items-center justify-between text-sm py-1 px-2 rounded hover:bg-dark-card/50 transition-colors"
+                                >
+                                  <span className="text-gray-400 flex items-center gap-2">
+                                    <span>{SOURCE_ICONS[source] || '📌'}</span>
+                                    {SOURCE_NAME_KEYS[source] ? t(SOURCE_NAME_KEYS[source]) : source}
+                                    {details && details.length > 0 && (
+                                      <ChevronDown className={`h-3 w-3 transition-transform ${isSourceExpanded ? 'rotate-180' : ''}`} />
+                                    )}
+                                  </span>
+                                  <span className="text-accent-cyan font-medium">+{Math.round(sourceValue)} {t('autoRadar.tooltip.points')}</span>
+                                </button>
+
+                                {/* Детали источника с баллами */}
+                                {isSourceExpanded && details && details.length > 0 && (
+                                  <div className="ml-6 mt-1 mb-2 p-2 bg-dark-card/50 rounded-lg space-y-1.5 border-l-2 border-accent-cyan/30">
+                                    {details.map((detail, idx) => (
+                                      <div key={idx} className="flex items-center justify-between text-xs">
+                                        <span className="text-gray-400">{detail.label}</span>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-gray-300">{detail.value}</span>
+                                          {detail.points !== undefined && (
+                                            <span className="text-accent-cyan text-[10px]">+{detail.points}</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
                         {Object.values(breakdown).every(v => v === 0) && (
                           <p className="text-gray-500 text-sm italic">
                             {t('autoRadar.noData')}
