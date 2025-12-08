@@ -224,30 +224,32 @@ export default function VSAITaskList() {
             <div className="text-4xl mb-4">🔍</div>
             <p>Задачи не найдены</p>
           </div>
-        ) : (
-          <>
-            <div className="mb-4 text-gray-400 text-sm">
-              Найдено: {pagination.total} задач
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {tasks.map((task) => (
+        ) : (() => {
+            const filteredTasks = tasks.filter(task => task.externalSource !== 'codeforces');
+            return filteredTasks.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">
+                <div className="text-4xl mb-4">🔍</div>
+                <p>Задачи не найдены</p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-4 text-gray-400 text-sm">
+                  Найдено: {filteredTasks.length} задач
+                </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredTasks.map((task) => (
                 <div
                   key={task.id}
                   onClick={() => handleTaskClick(task.id)}
                   className="bg-dark-card border border-dark-surface rounded-xl p-6 cursor-pointer hover:border-accent-blue/50 hover:shadow-glow-cyan transition-all group"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-lg group-hover:text-accent-blue transition-colors">
+                  <div className="flex items-start justify-between mb-3 gap-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg group-hover:text-accent-blue transition-colors break-words">
                         {task.title}
                       </h3>
-                      {task.externalSource === 'codeforces' && (
-                        <span className="px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded text-[10px] font-medium">
-                          CF
-                        </span>
-                      )}
                     </div>
-                    <span className={`px-2 py-1 rounded text-xs border ${difficultyColors[task.difficulty]}`}>
+                    <span className={`px-2 py-1 rounded text-xs border flex-shrink-0 ${difficultyColors[task.difficulty]}`}>
                       {task.difficulty}
                     </span>
                   </div>
@@ -284,30 +286,10 @@ export default function VSAITaskList() {
               ))}
             </div>
 
-            {/* Pagination */}
-            {pagination.pages > 1 && (
-              <div className="flex justify-center gap-2 mt-8">
-                {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => {
-                      const params = new URLSearchParams(searchParams);
-                      params.set('page', page.toString());
-                      setSearchParams(params);
-                    }}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                      page === pagination.page
-                        ? 'bg-accent-cyan text-dark-bg'
-                        : 'bg-dark-card text-gray-400 hover:bg-dark-surface'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+              </>
+            );
+          })()
+        }
       </div>
     </div>
   );
