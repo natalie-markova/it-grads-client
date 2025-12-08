@@ -6,6 +6,7 @@ import { Outlet } from "react-router-dom";
 import { type User, type OutletContext } from "./types";
 import { Toaster } from "react-hot-toast";
 import ScrollToTop from "./components/common/ScrollToTop/ScrollToTop";
+import { ParmaProvider, Parma, ParmaTourOverlay, ParmaRouteWatcher } from "./components/mascot";
 
 const App = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -97,37 +98,46 @@ const App = () => {
   const contextValue: OutletContext = { user, setUser };
   
   return (
-    <div className="min-h-screen flex flex-col bg-dark-bg">
-      <ScrollToTop />
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#1f2937',
-            color: '#fff',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-          },
-          success: {
-            iconTheme: {
-              primary: '#10b981',
-              secondary: '#fff',
+    <ParmaProvider>
+      <div className="min-h-screen flex flex-col bg-dark-bg">
+        <ScrollToTop />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#1f2937',
+              color: '#fff',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
             },
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+            success: {
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#fff',
+              },
             },
-          },
-        }}
-      />
-      <Navbar user={user} setUser={setUser}/> 
-      <main className="flex-grow">
-        <Outlet context={contextValue}/>
-      </main>
-      <Footer user={user} />
-    </div>
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
+        <Navbar user={user} setUser={setUser}/>
+        <main className="flex-grow">
+          <Outlet context={contextValue}/>
+        </main>
+        <Footer user={user} />
+
+        {/* Маскот Парма */}
+        <Parma />
+        <ParmaRouteWatcher />
+
+        {/* UI тура (глобальный, не зависит от страницы) */}
+        <ParmaTourOverlay />
+      </div>
+    </ParmaProvider>
   );
 };
 

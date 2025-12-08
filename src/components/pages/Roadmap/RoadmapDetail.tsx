@@ -18,6 +18,7 @@ import toast from 'react-hot-toast';
 import type { OutletContext } from '../../../types';
 import { useTranslation } from 'react-i18next';
 import ConfirmModal from '../../ui/ConfirmModal';
+import { useParmaEvents } from '../../mascot';
 
 interface LearningStep {
   title: string;
@@ -57,6 +58,17 @@ interface ProgressData {
   completedAt: string | null;
 }
 
+// Конвертация названия roadmap в slug для URL
+const toSlug = (title: string): string => {
+  return title
+    .toLowerCase()
+    .replace(/\s+/g, '-')           // пробелы в дефисы
+    .replace(/[.]/g, '')            // удаляем точки (Vue.js -> vuejs)
+    .replace(/[^a-z0-9а-яё-]/g, '') // оставляем только буквы, цифры, дефисы
+    .replace(/-+/g, '-')            // множественные дефисы в один
+    .replace(/^-|-$/g, '');         // убираем дефисы в начале/конце
+};
+
 const RoadmapDetail = () => {
   const { t, i18n } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
@@ -70,6 +82,9 @@ const RoadmapDetail = () => {
 
   const { user } = useOutletContext<OutletContext>();
   const isAuthenticated = !!user;
+
+  // Mascot events
+  const { onRoadmapProgress, onRoadmapComplete } = useParmaEvents();
 
   useEffect(() => {
     if (slug) {
@@ -122,7 +137,7 @@ const RoadmapDetail = () => {
   };
 
   const saveProgress = async () => {
-    if (!slug || !isAuthenticated) {
+    if (!slug || !isAuthenticated || !roadmap) {
       toast.error(t('roadmap.loginToSave'));
       return;
     }
@@ -135,6 +150,16 @@ const RoadmapDetail = () => {
       setSavedProgress(response.data.progress);
       setHasUnsavedChanges(false);
       toast.success(t('roadmap.progressSaved'));
+
+      // Вызываем события маскота
+      const newProgress = (completedSteps.size / roadmap.learningPath.length) * 100;
+      if (newProgress === 100) {
+        // Roadmap полностью завершён!
+        onRoadmapComplete(roadmap.title);
+      } else {
+        // Прогресс по roadmap
+        onRoadmapProgress(newProgress, roadmap.title);
+      }
     } catch (error) {
       console.error('Error saving progress:', error);
       toast.error(t('roadmap.errorSaving'));
@@ -501,7 +526,7 @@ const RoadmapDetail = () => {
                   {roadmap.relatedRoadmaps.map((related, index) => (
                     <Link
                       key={index}
-                      to={`/roadmap/${related}`}
+                      to={`/roadmap/${toSlug(related)}`}
                       className="block p-3 bg-dark-surface rounded-lg hover:bg-dark-bg transition-colors text-accent-cyan hover:text-accent-green text-sm border border-dark-card hover:border-accent-cyan"
                     >
                       {related}

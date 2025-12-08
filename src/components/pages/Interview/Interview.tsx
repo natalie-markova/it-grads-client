@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Play, CheckCircle, XCircle, RotateCcw, ArrowRight, Trophy, Target, TrendingUp, Home } from 'lucide-react'
 import Section from '../../ui/Section'
 import Card from '../../ui/Card'
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
+import { $api } from '../../../utils/axios.instance'
+import { useParmaEvents } from '../../mascot'
 
 interface Question {
   id: number
@@ -1192,6 +1194,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 const Interview = () => {
   const navigate = useNavigate()
   useScrollAnimation()
+  const { onTrainerSuccess, onTrainerFail } = useParmaEvents()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
@@ -1202,6 +1205,8 @@ const Interview = () => {
   const [category, setCategory] = useState<string>('')
   const [userAnswers, setUserAnswers] = useState<{questionId: number, correct: boolean}[]>([])
   const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>([])
+  const [isSaving, setIsSaving] = useState(false)
+  const startTimeRef = useRef<number>(0)
 
   const categories = Array.from(new Set(questions.map(q => q.category)))
   const currentQuestion = shuffledQuestions[currentQuestionIndex]
@@ -1219,6 +1224,32 @@ const Interview = () => {
     setSelectedAnswer(null)
     setShowExplanation(false)
     setUserAnswers([])
+    startTimeRef.current = Date.now()
+  }
+
+  // Сохранение результатов практики на сервер
+  const savePracticeResults = async (finalScore: number, answers: {questionId: number, correct: boolean}[]) => {
+    try {
+      setIsSaving(true)
+      const duration = Math.round((Date.now() - startTimeRef.current) / 1000) // в секундах
+      const percentage = Math.round((finalScore / shuffledQuestions.length) * 100)
+
+      await $api.post('/interviews/practice/complete', {
+        category,
+        totalQuestions: shuffledQuestions.length,
+        correctAnswers: finalScore,
+        percentage,
+        answers: answers.map(a => ({
+          questionId: a.questionId,
+          isCorrect: a.correct
+        })),
+        duration
+      })
+    } catch (error) {
+      console.error('Failed to save practice results:', error)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleAnswer = (answerIndex: number) => {
@@ -1242,7 +1273,19 @@ const Interview = () => {
       setSelectedAnswer(null)
       setShowExplanation(false)
     } else {
-      // Тест завершён - показываем результаты
+      // Тест завершён - сохраняем результаты и показываем их
+      const finalAnswers = [...userAnswers]
+      const finalScore = finalAnswers.filter(a => a.correct).length
+      const percentage = Math.round((finalScore / shuffledQuestions.length) * 100)
+
+      // Уведомляем маскота о результате
+      if (percentage >= 70) {
+        onTrainerSuccess(percentage, 'practice')
+      } else {
+        onTrainerFail(percentage)
+      }
+
+      savePracticeResults(finalScore, finalAnswers)
       setIsFinished(true)
     }
   }

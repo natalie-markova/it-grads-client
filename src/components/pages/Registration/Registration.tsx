@@ -207,7 +207,8 @@ function Registration() {
                 setAccessToken(loginResponse.data.accessToken)
                 setUser(loginResponse.data.user)
                 const userRole = loginResponse.data.user?.role || 'graduate'
-                navigate(`/profile/${userRole}`);
+                // Добавляем параметр tour=start для запуска тура Пармы
+                navigate(`/profile/${userRole}?tour=start`);
             }
         })
         .catch(error => {

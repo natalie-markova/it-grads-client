@@ -238,8 +238,8 @@ export default function InterviewResultsPage() {
               <RotateCcw className="h-5 w-5" />
               Пройти новое интервью
             </button>
-            <button 
-              onClick={() => navigate('/main')}
+            <button
+              onClick={() => navigate('/')}
               className="btn-secondary flex items-center justify-center gap-2"
             >
               <Home className="h-5 w-5" />
