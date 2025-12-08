@@ -34,7 +34,7 @@ import AudioInterview from './components/pages/AudioInterview/AudioInterview';
 import VacancyDetail from './components/pages/Vacancies/VacancyDetail';
 import ResumeForm from './components/pages/Resume/ResumeForm';
 import InterviewTracker from './components/pages/InterviewTracker/InterviewTracker';
-import { CodeBattleHome, TaskList, Playground, Leaderboard, PvPBattle } from './components/pages/CodeBattle';
+import { CodeBattleHome, TaskList, VSAITaskList, Playground, Leaderboard, PvPBattle } from './components/pages/CodeBattle';
 
 const router = createBrowserRouter([
   {
@@ -213,7 +213,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/codebattle/vs-ai",
-        element: <TaskList />,
+        element: <VSAITaskList />,
       },
 
     ]}
