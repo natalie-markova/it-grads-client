@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom';
 import { getTask, startSession, testSolution, submitSolution, getHint, getLanguages, getAiStatus } from './api';
 import CodeEditor from './CodeEditor';
@@ -68,12 +68,15 @@ export default function Playground() {
   const [activeTab, setActiveTab] = useState<'description' | 'output' | 'results'>('description');
   const [gameStarted, setGameStarted] = useState(false);
   const [startingGame, setStartingGame] = useState(false);
+  const [gameFinished, setGameFinished] = useState(false);
   const [aiStatus, setAiStatus] = useState<{
     status: 'solving' | 'completed' | 'failed';
     aiSolved: boolean | null;
     aiSolveTime: number;
     aiTestsPassed: number;
   } | null>(null);
+
+  const timeExpiredRef = useRef(false);
 
   useEffect(() => {
     loadData();
@@ -86,6 +89,9 @@ export default function Playground() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
+          // Отмечаем что время истекло
+          timeExpiredRef.current = true;
+          toast.error('⏱ Время истекло! Отправляем ваше решение...', { duration: 3000 });
           return 0;
         }
         return prev - 1;
@@ -94,6 +100,14 @@ export default function Playground() {
 
     return () => clearInterval(timer);
   }, [gameStarted, timeLeft > 0]);
+
+  // Автоматическая отправка при истечении времени
+  useEffect(() => {
+    if (timeExpiredRef.current && !submitting && code.trim() && session) {
+      timeExpiredRef.current = false;
+      handleSubmit();
+    }
+  }, [timeLeft]);
 
   // Poll AI status in VS AI mode
   useEffect(() => {
@@ -271,11 +285,14 @@ export default function Playground() {
       setSubmitResult(result);
       setTestResults(result.results);
 
+      // Завершаем игру и показываем экран результатов
+      setGameStarted(false);
+      setGameFinished(true);
+      setTimeLeft(0);
+
       if (result.solved) {
-        // Обновляем сессию и завершаем игру
+        // Обновляем сессию
         setSession((prev) => prev ? { ...prev, solved: true, status: 'completed' } : null);
-        setGameStarted(false);
-        setTimeLeft(0);
 
         // Показываем результат
         if (mode === 'vs_ai' && result.beatAi !== undefined) {
@@ -344,6 +361,190 @@ export default function Playground() {
     );
   }
 
+  // Экран результатов после завершения игры
+  if (gameFinished && submitResult) {
+    return (
+      <div className="min-h-screen bg-dark-bg text-white">
+        <div className="container mx-auto px-4 py-12">
+          <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="text-6xl mb-4">
+                {submitResult.solved ? '🎉' : '💪'}
+              </div>
+              <h1 className="text-4xl font-bold mb-2">
+                {submitResult.solved ? 'Задача решена!' : 'Хорошая попытка!'}
+              </h1>
+              <p className="text-gray-400">
+                {submitResult.solved
+                  ? 'Поздравляем с успешным решением задачи!'
+                  : 'Не сдавайтесь, попробуйте другую задачу или эту же снова'}
+              </p>
+            </div>
+
+            {/* Results Card */}
+            <div className="bg-dark-card border border-dark-surface rounded-xl p-8 mb-6">
+              {/* Summary */}
+              <div className={`p-6 rounded-lg mb-6 ${submitResult.solved ? 'bg-green-500/20 border border-green-500/30' : 'bg-red-500/20 border border-red-500/30'}`}>
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="text-4xl">{submitResult.solved ? '✅' : '❌'}</span>
+                  <div>
+                    <h3 className="font-bold text-2xl">
+                      {submitResult.solved ? 'Все тесты пройдены!' : 'Не все тесты пройдены'}
+                    </h3>
+                    <p className="text-lg text-gray-300">
+                      Пройдено {submitResult.testsPassed} из {submitResult.totalTests} тестов
+                    </p>
+                  </div>
+                </div>
+
+                {submitResult.solved && (
+                  <div className="flex gap-6 text-lg">
+                    <span>⏱ Время: {submitResult.timeSpent}с</span>
+                    <span className="text-accent-cyan">+{submitResult.pointsEarned} очков</span>
+                  </div>
+                )}
+              </div>
+
+              {/* VS AI Result */}
+              {mode === 'vs_ai' && submitResult.beatAi !== undefined && (
+                <div className={`p-6 rounded-lg mb-6 ${submitResult.beatAi ? 'bg-green-500/20 border border-green-500/50' : 'bg-red-500/20 border border-red-500/50'}`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <span className="text-4xl">{submitResult.beatAi ? '🏆' : '🤖'}</span>
+                      <div>
+                        <h4 className={`text-2xl font-bold ${submitResult.beatAi ? 'text-green-400' : 'text-red-400'}`}>
+                          {submitResult.beatAi ? 'Вы победили AI!' : 'AI победил'}
+                        </h4>
+                        <p className="text-sm text-gray-400 mt-1">
+                          Реальный AI ({selectedAiDifficulty === 'hard' ? 'YandexGPT Pro' : selectedAiDifficulty === 'medium' ? 'YandexGPT' : 'YandexGPT Lite'})
+                        </p>
+                      </div>
+                    </div>
+                    {submitResult.playerRating && (
+                      <div className="text-right">
+                        <div className={`text-2xl font-bold ${submitResult.beatAi ? 'text-green-400' : 'text-red-400'}`}>
+                          {submitResult.beatAi ? '+' : ''}{submitResult.beatAi ? (15 * (selectedAiDifficulty === 'hard' ? 3 : selectedAiDifficulty === 'medium' ? 2 : 1)) : -(10 * (selectedAiDifficulty === 'hard' ? 3 : selectedAiDifficulty === 'medium' ? 2 : 1))} рейтинга
+                        </div>
+                        <div className="text-sm text-gray-400">
+                          Текущий: {submitResult.playerRating.rating}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Comparison Table */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-dark-surface/50 rounded-lg p-4">
+                      <div className="text-gray-400 mb-3 font-medium">Вы</div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Решено:</span>
+                          <span className={submitResult.solved ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>
+                            {submitResult.solved ? 'Да' : 'Нет'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Тесты:</span>
+                          <span className="font-bold">{submitResult.testsPassed}/{submitResult.totalTests}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Время:</span>
+                          <span className="font-bold">{submitResult.timeSpent}с</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-dark-surface/50 rounded-lg p-4">
+                      <div className="text-gray-400 mb-3 font-medium">AI ({selectedAiDifficulty})</div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Решено:</span>
+                          <span className={submitResult.aiSolved ? 'text-green-400 font-bold' : submitResult.aiSolved === null ? 'text-yellow-400 font-bold' : 'text-red-400 font-bold'}>
+                            {submitResult.aiSolved === null ? 'Думает...' : submitResult.aiSolved ? 'Да' : 'Нет'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Тесты:</span>
+                          <span className="font-bold">{submitResult.aiTestsPassed ?? '?'}/{submitResult.totalTests}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Время:</span>
+                          <span className="font-bold">{submitResult.aiSolveTime ? `${submitResult.aiSolveTime}с` : 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Test Results Details */}
+              <div>
+                <h3 className="font-bold text-xl mb-4">Детали тестирования</h3>
+                <div className="space-y-3">
+                  {testResults.map((result, i) => (
+                    <div
+                      key={i}
+                      className={`p-4 rounded-lg border ${result.passed ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'}`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl">{result.passed ? '✓' : '✗'}</span>
+                        <span className="font-medium">Тест {i + 1}</span>
+                        {result.isHidden && <span className="text-xs text-gray-500">(скрытый)</span>}
+                      </div>
+                      {!result.isHidden && (
+                        <div className="text-sm space-y-1 text-gray-300">
+                          <div><span className="text-gray-500">Input:</span> {JSON.stringify(result.input)}</div>
+                          <div><span className="text-gray-500">Expected:</span> {JSON.stringify(result.expectedOutput)}</div>
+                          <div><span className="text-gray-500">Output:</span> {result.actualOutput}</div>
+                          {result.error && <div className="text-red-400">Error: {result.error}</div>}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => navigate('/codebattle')}
+                className="px-6 py-3 bg-dark-card hover:bg-dark-surface border border-dark-surface hover:border-accent-cyan/50 rounded-lg text-lg font-medium transition-all flex items-center gap-2"
+              >
+                <span>📋</span>
+                <span>Все задачи</span>
+              </button>
+              {mode === 'vs_ai' && (
+                <button
+                  onClick={() => navigate('/codebattle/vs-ai')}
+                  className="px-6 py-3 bg-dark-card hover:bg-dark-surface border border-dark-surface hover:border-accent-blue/50 rounded-lg text-lg font-medium transition-all flex items-center gap-2"
+                >
+                  <span>🤖</span>
+                  <span>Другой VS AI</span>
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setGameFinished(false);
+                  setSubmitResult(null);
+                  setTestResults([]);
+                  setHints([]);
+                  setShowHints(false);
+                  setAiStatus(null);
+                  setSession(null);
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-accent-cyan to-accent-blue hover:from-accent-cyan/90 hover:to-accent-blue/90 rounded-lg text-lg font-bold transition-all flex items-center gap-2"
+              >
+                <span>🔄</span>
+                <span>Попробовать снова</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Экран подготовки к игре
   if (!gameStarted) {
     return (
@@ -370,20 +571,6 @@ export default function Playground() {
               <div className="prose prose-invert max-w-none mb-6 overflow-hidden break-words">
                 <ReactMarkdown>{task.description}</ReactMarkdown>
               </div>
-
-              {/* Link to Codeforces if external task */}
-              {task.externalUrl && (
-                <div className="mb-6">
-                  <a
-                    href={task.externalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
-                  >
-                    Источник: Codeforces ↗
-                  </a>
-                </div>
-              )}
 
               <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-6">
                 <div className="flex items-center gap-2">
@@ -658,20 +845,6 @@ export default function Playground() {
                   <ReactMarkdown>{task.description || 'Описание задачи недоступно'}</ReactMarkdown>
                 </div>
 
-                {/* Link to Codeforces */}
-                {task.externalUrl && (
-                  <div className="mb-6 not-prose">
-                    <a
-                      href={task.externalUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
-                    >
-                      Источник: Codeforces ↗
-                    </a>
-                  </div>
-                )}
-
                 {/* Примеры тестов */}
                 <div className="mt-6 not-prose">
                   <h4 className="text-sm font-semibold text-gray-400 mb-2">Примеры тестов:</h4>
@@ -901,10 +1074,10 @@ export default function Playground() {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={submitting || !code.trim() || submitResult?.solved}
+                disabled={submitting || !code.trim() || timeLeft === 0}
                 className="px-6 py-2 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {submitting ? '⏳ Проверка...' : submitResult?.solved ? '✓ Решено' : '📤 Отправить'}
+                {submitting ? '⏳ Проверка...' : timeLeft === 0 ? '⏱ Время истекло' : '📤 Отправить'}
               </button>
             </div>
           </div>
