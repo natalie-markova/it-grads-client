@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getTasks, getLanguages } from './api';
 import type { GameTask, Language } from './types';
 
@@ -28,6 +29,7 @@ const formatLanguage = (lang: string): string => {
 export default function TaskList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useTranslation();
 
   const [tasks, setTasks] = useState<GameTask[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -100,9 +102,9 @@ export default function TaskList() {
               className="px-4 py-2 bg-dark-card hover:bg-dark-bg border border-dark-bg hover:border-accent-cyan/50 rounded-lg text-sm text-gray-400 hover:text-accent-cyan transition-all flex items-center gap-2"
             >
               <span>←</span>
-              <span>Назад</span>
+              <span>{t('codeBattle.taskList.back')}</span>
             </button>
-            <h1 className="text-2xl font-bold">Все задачи</h1>
+            <h1 className="text-2xl font-bold">{t('codeBattle.taskList.title')}</h1>
           </div>
 
           {/* Filters */}
@@ -112,7 +114,7 @@ export default function TaskList() {
               onChange={(e) => handleFilterChange('difficulty', e.target.value)}
               className="bg-dark-card border border-dark-surface rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:border-transparent"
             >
-              <option value="">Все сложности</option>
+              <option value="">{t('codeBattle.taskList.allDifficulties')}</option>
               <option value="easy">Easy</option>
               <option value="medium">Medium</option>
               <option value="hard">Hard</option>
@@ -123,7 +125,7 @@ export default function TaskList() {
               onChange={(e) => handleFilterChange('category', e.target.value)}
               className="bg-dark-card border border-dark-surface rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:border-transparent"
             >
-              <option value="">Все категории</option>
+              <option value="">{t('codeBattle.taskList.allCategories')}</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}
@@ -136,7 +138,7 @@ export default function TaskList() {
               onChange={(e) => handleFilterChange('language', e.target.value)}
               className="bg-dark-card border border-dark-surface rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:border-transparent"
             >
-              <option value="">Все языки</option>
+              <option value="">{t('codeBattle.taskList.allLanguages')}</option>
               {languages.map((lang) => (
                 <option key={lang.id} value={lang.id}>
                   {lang.name}
@@ -152,7 +154,7 @@ export default function TaskList() {
                 }}
                 className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 rounded-lg text-sm text-red-400 transition-all"
               >
-                Сбросить фильтры
+                {t('codeBattle.taskList.resetFilters')}
               </button>
             )}
           </div>
@@ -168,12 +170,12 @@ export default function TaskList() {
         ) : tasks.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <div className="text-4xl mb-4">🔍</div>
-            <p>Задачи не найдены</p>
+            <p>{t('codeBattle.taskList.noTasks')}</p>
           </div>
         ) : (
           <>
             <div className="mb-4 text-gray-400 text-sm">
-              Найдено: {pagination.total} задач
+              {t('codeBattle.taskList.found', { count: pagination.total })}
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {tasks.map((task) => (
@@ -208,14 +210,14 @@ export default function TaskList() {
 
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center gap-4">
-                      <span>⏱ {Math.floor(task.timeLimit / 60)} мин</span>
+                      <span>⏱ {Math.floor(task.timeLimit / 60)} {t('codeBattle.taskList.minutes')}</span>
                       <span>✓ {task.solvedCount}</span>
                     </div>
                     <span className="text-accent-cyan font-medium">+{task.points} pts</span>
                   </div>
 
                   <div className="mt-3 pt-3 border-t border-dark-surface">
-                    <div className="text-xs text-gray-500 mb-1">Доступные языки:</div>
+                    <div className="text-xs text-gray-500 mb-1">{t('codeBattle.taskList.availableLanguages')}</div>
                     <div className="text-xs text-gray-400">
                       {task.languages.slice(0, 5).map((lang) => formatLanguage(lang)).join(', ')}
                       {task.languages.length > 5 && ` +${task.languages.length - 5}`}

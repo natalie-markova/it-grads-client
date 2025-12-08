@@ -53,7 +53,7 @@ const POSITION_KEYS = [
 ];
 
 const AudioInterview = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState<'setup' | 'interview' | 'feedback'>('setup');
   const [session, setSession] = useState<InterviewSession | null>(null);
@@ -92,7 +92,8 @@ const AudioInterview = () => {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = 'ru-RU';
+      // Устанавливаем язык распознавания в зависимости от языка приложения
+      recognitionRef.current.lang = i18n.language === 'en' ? 'en-US' : 'ru-RU';
       recognitionRef.current.maxAlternatives = 1; // Уменьшаем для стабильности
 
       // Храним финальный текст отдельно
@@ -188,10 +189,12 @@ const AudioInterview = () => {
     try {
       // Передаём гендер в зависимости от выбранной персоны
       const gender = personaGender[persona] || 'male';
+      // Определяем язык для TTS
+      const lang = i18n.language === 'en' ? 'en' : 'ru';
 
       // Если у нас уже есть выбранный голос для этой сессии - используем его
       // Иначе передаём только gender для первого вызова
-      const requestData: { text: string; gender?: string; voiceId?: string } = { text };
+      const requestData: { text: string; gender?: string; voiceId?: string; lang?: string } = { text, lang };
 
       if (voiceIdRef.current) {
         // Используем сохранённый голос для консистентности в рамках сессии
@@ -226,7 +229,7 @@ const AudioInterview = () => {
       setIsSpeaking(false);
       toast.error(t('audioInterview.ttsError'));
     }
-  }, [audioEnabled, t, persona]);
+  }, [audioEnabled, t, persona, i18n.language]);
 
   const startListening = () => {
     if (!recognitionRef.current) {
@@ -258,7 +261,8 @@ const AudioInterview = () => {
 
       const response = await $api.post('/interviews/audio', {
         interviewerPersona: persona,
-        position: t(`audioInterview.positions.${position}`)
+        position: t(`audioInterview.positions.${position}`),
+        lang: i18n.language === 'en' ? 'en' : 'ru'
       });
 
       setSession(response.data.session);

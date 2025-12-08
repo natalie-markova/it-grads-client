@@ -100,12 +100,12 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
     if (file) {
       // Проверяем тип файла
       if (!file.type.startsWith('image/')) {
-        toast.error('Пожалуйста, выберите файл изображения')
+        toast.error(t('profile.errors.selectImage'))
         return
       }
       // Проверяем размер файла (5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Размер файла не должен превышать 5MB')
+        toast.error(t('profile.errors.fileTooLarge'))
         return
       }
       setPhotoFile(file)
@@ -146,20 +146,20 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
       // Обновляем превью с правильным URL
       setPhotoPreview(getImageUrl(photoUrl))
       setPhotoFile(null)
-      toast.success('Фото успешно загружено')
+      toast.success(t('profile.success.photoUploaded'))
     } catch (error: any) {
       console.error('Error uploading photo:', error)
       
       // Более детальная обработка ошибок
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        toast.error('Ошибка подключения к серверу. Проверьте, что сервер запущен.')
+        toast.error(t('profile.errors.serverConnection'))
       } else if (error.response) {
         // Сервер ответил с ошибкой
-        const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Ошибка при загрузке фото'
+        const errorMessage = error.response?.data?.error || error.response?.data?.message || t('profile.errors.uploadError')
         toast.error(errorMessage)
       } else {
         // Другая ошибка
-        const errorMessage = error.message || 'Ошибка при загрузке фото'
+        const errorMessage = error.message || t('profile.errors.uploadError')
         toast.error(errorMessage)
       }
     } finally {
@@ -204,7 +204,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
                   setFormData({ ...formData, photo: '' })
                 }}
                 className="absolute top-1 right-1 p-1 bg-black/50 hover:bg-black/70 rounded-full transition-all cursor-default"
-                title="Удалить фото"
+                title={t('profile.tooltips.deletePhoto')}
               >
                 <X className="h-4 w-4 text-red-500" />
               </button>
@@ -498,8 +498,8 @@ const GraduateProfile = () => {
         const data = await response.json()
         setApplications(data.map((app: any) => ({
           id: app.id.toString(),
-          jobTitle: app.vacancy?.title || 'Вакансия удалена',
-          company: app.vacancy?.companyName || app.vacancy?.employer?.companyName || app.vacancy?.employer?.username || 'Неизвестная компания',
+          jobTitle: app.vacancy?.title || t('profile.vacancyDeleted'),
+          company: app.vacancy?.companyName || app.vacancy?.employer?.companyName || app.vacancy?.employer?.username || t('profile.unknownCompany'),
           appliedDate: new Date(app.createdAt).toLocaleDateString('ru-RU', {
             year: 'numeric',
             month: 'long',
@@ -548,14 +548,14 @@ const GraduateProfile = () => {
       })
       if (response.ok) {
         setFavorites(favorites.filter(fav => fav.id !== vacancyId))
-        toast.success('Вакансия удалена из избранного')
+        toast.success(t('profile.success.removedFromFavorites'))
       } else {
         const data = await response.json()
-        toast.error(data.error || 'Ошибка при удалении из избранного')
+        toast.error(data.error || t('profile.errors.removeFavoriteError'))
       }
     } catch (error) {
       console.error('Error removing favorite:', error)
-      toast.error('Ошибка при удалении из избранного')
+      toast.error(t('profile.errors.removeFavoriteError'))
     }
   }
 
@@ -641,15 +641,15 @@ const GraduateProfile = () => {
       setProfile({...updatedProfile})
       setIsEditingProfile(false)
       
-      toast.success('Профиль успешно обновлен')
-      
+      toast.success(t('profile.success.profileUpdated'))
+
       // Прокручиваем страницу к верху
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }, 100)
     } catch (error: any) {
       console.error('Error saving profile:', error)
-      const errorMessage = error.response?.data?.message || error.message || 'Ошибка при сохранении профиля'
+      const errorMessage = error.response?.data?.message || error.message || t('profile.errors.saveError')
       toast.error(errorMessage)
     }
   }
@@ -658,18 +658,18 @@ const GraduateProfile = () => {
     if (!user) return
     setConfirmModal({
       isOpen: true,
-      title: 'Удаление профиля',
-      message: 'Вы уверены, что хотите удалить профиль? Это действие нельзя отменить.',
+      title: t('profile.confirmDelete.profileTitle'),
+      message: t('profile.confirmDelete.profileMessage'),
       variant: 'danger',
       onConfirm: async () => {
         try {
           await $api.delete('/user/profile')
           setProfile(null)
-          toast.success('Профиль успешно удален')
+          toast.success(t('profile.success.profileDeleted'))
           navigate('/login')
         } catch (error: any) {
           console.error('Error deleting profile:', error)
-          const errorMessage = error.response?.data?.message || error.message || 'Ошибка при удалении профиля'
+          const errorMessage = error.response?.data?.message || error.message || t('profile.errors.deleteError')
           toast.error(errorMessage)
         } finally {
           setConfirmModal({ ...confirmModal, isOpen: false })
@@ -692,14 +692,14 @@ const GraduateProfile = () => {
       })
       if (response.ok) {
         setApplications(applications.filter(app => app.id !== id))
-        toast.success('Отклик удален')
+        toast.success(t('profile.success.applicationDeleted'))
       } else {
         const data = await response.json()
-        toast.error(data.error || 'Ошибка при удалении отклика')
+        toast.error(data.error || t('profile.errors.deleteApplicationError'))
       }
     } catch (error) {
       console.error('Error deleting application:', error)
-      toast.error('Ошибка при удалении отклика')
+      toast.error(t('profile.errors.deleteApplicationError'))
     }
   }
 
@@ -707,17 +707,17 @@ const GraduateProfile = () => {
     if (!user) return
     setConfirmModal({
       isOpen: true,
-      title: 'Удаление резюме',
-      message: 'Вы уверены, что хотите удалить это резюме? Это действие нельзя отменить.',
+      title: t('profile.confirmDelete.resumeTitle'),
+      message: t('profile.confirmDelete.resumeMessage'),
       variant: 'danger',
       onConfirm: async () => {
         try {
           await $api.delete(`/resumes/${id}`)
           setResumes(resumes.filter(resume => resume.id !== id))
-          toast.success('Резюме удалено')
+          toast.success(t('profile.success.resumeDeleted'))
         } catch (error: any) {
           console.error('Error deleting resume:', error)
-          toast.error(error.response?.data?.message || 'Ошибка при удалении резюме')
+          toast.error(error.response?.data?.message || t('profile.errors.deleteResumeError'))
         } finally {
           setConfirmModal({ ...confirmModal, isOpen: false })
         }
@@ -1198,14 +1198,14 @@ const GraduateProfile = () => {
                       <button
                         onClick={() => navigate(`/resume/${resume.id}`)}
                         className="p-2 text-accent-cyan hover:bg-dark-surface rounded-lg transition-colors"
-                        title="Редактировать резюме"
+                        title={t('profile.tooltips.editResume')}
                       >
                         <Edit className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => handleDeleteResume(resume.id)}
                         className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
-                        title="Удалить резюме"
+                        title={t('profile.tooltips.deleteResume')}
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>
@@ -1241,7 +1241,7 @@ const GraduateProfile = () => {
                         <p className="text-gray-400 text-sm mb-1">📍 {fav.location}</p>
                       )}
                       {fav.salary && (
-                        <p className="text-gray-400 text-sm mb-1">💰 {fav.salary.toLocaleString()} руб.</p>
+                        <p className="text-gray-400 text-sm mb-1">💰 {fav.salary.toLocaleString()} {t('common.rub')}</p>
                       )}
                       {fav.description && (
                         <p className="text-gray-300 text-sm mt-2 whitespace-pre-wrap">{fav.description}</p>
@@ -1264,7 +1264,7 @@ const GraduateProfile = () => {
                       <button
                         onClick={() => handleRemoveFavorite(fav.id)}
                         className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
-                        title="Удалить из избранного"
+                        title={t('profile.tooltips.removeFromFavorites')}
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>
@@ -1319,7 +1319,7 @@ const GraduateProfile = () => {
                       <button
                         onClick={() => handleDeleteApplication(app.id)}
                         className="p-2 text-red-400 hover:bg-dark-surface rounded-lg transition-colors"
-                        title="Удалить отклик"
+                        title={t('profile.tooltips.deleteApplication')}
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>
@@ -1343,8 +1343,8 @@ const GraduateProfile = () => {
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}
         message={confirmModal.message}
-        confirmText="Подтвердить"
-        cancelText="Отмена"
+        confirmText={t('common.confirm')}
+        cancelText={t('common.cancel')}
         variant={confirmModal.variant}
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal({ ...confirmModal, isOpen: false })}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useOutletContext } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Search, Filter, X, MapPin, DollarSign, Briefcase, Heart, Check, MessageSquare } from 'lucide-react'
 import Card from './ui/Card'
 import FilterWizard, { type FilterData } from './FilterWizard'
@@ -46,6 +47,7 @@ interface JobsListProps {
 
 const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, appliedIds = new Set() }: JobsListProps) => {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { user } = useOutletContext<OutletContext>()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedJob, setSelectedJob] = useState<string | null>(null)
@@ -225,24 +227,24 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
 
   const handleStartChat = async (employerId: number) => {
     if (!user) {
-      toast.error('Войдите в систему, чтобы написать сообщение')
+      toast.error(t('vacancies.chat.loginRequired'))
       navigate('/login')
       return
     }
 
     if (user.role !== 'graduate') {
-      toast.error('Только выпускники могут писать работодателям')
+      toast.error(t('vacancies.chat.graduateOnly'))
       return
     }
 
     setIsCreatingChat(true)
     try {
       const chat = await chatAPI.createChat(employerId)
-      toast.success('Чат создан!')
+      toast.success(t('vacancies.success.chatCreated'))
       navigate(`/messenger/${chat.id}`)
     } catch (error) {
       console.error('Error creating chat:', error)
-      toast.error('Ошибка при создании чата')
+      toast.error(t('vacancies.chat.chatError'))
     } finally {
       setIsCreatingChat(false)
     }
@@ -260,7 +262,7 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Поиск вакансий..."
+              placeholder={t('vacancies.search')}
               className="input-field pl-10"
             />
           </div>
@@ -269,7 +271,7 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
             className="btn-secondary flex items-center justify-center gap-2"
           >
             <Filter className="h-5 w-5" />
-            Фильтры
+            {t('vacancies.filters')}
           </button>
         </div>
 
@@ -287,15 +289,15 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
           filters.salary) && (
           <div className="mt-4 pt-4 border-t border-dark-surface">
             <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-gray-400 text-sm">Активные фильтры:</span>
+              <span className="text-gray-400 text-sm">{t('vacancies.filterLabels.activeFilters')}</span>
               {filters.employmentType.length > 0 && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Тип занятости ({filters.employmentType.length})
+                  {t('vacancies.filterLabels.employmentType')} ({filters.employmentType.length})
                 </span>
               )}
               {filters.workFormat.length > 0 && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Формат ({filters.workFormat.length})
+                  {t('vacancies.filterLabels.format')} ({filters.workFormat.length})
                 </span>
               )}
               {filters.region && (
@@ -305,47 +307,41 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
               )}
               {filters.experience && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  {filters.experience === 'no-experience' ? 'Нет опыта' :
-                   filters.experience === 'junior' ? 'Junior (до 2-х лет)' :
-                   filters.experience === 'middle' ? 'Middle (от 2 до 5 лет)' :
-                   filters.experience === 'senior' ? 'Senior (более 5 лет)' :
-                   filters.experience === 'lead' ? 'Team Lead/Tech Lead' : filters.experience}
+                  {filters.experience === 'no-experience' ? t('vacancies.levels.noExperience') :
+                   filters.experience === 'junior' ? t('vacancies.levels.juniorFull') :
+                   filters.experience === 'middle' ? t('vacancies.levels.middleFull') :
+                   filters.experience === 'senior' ? t('vacancies.levels.seniorFull') :
+                   filters.experience === 'lead' ? t('vacancies.levels.teamLead') : filters.experience}
                 </span>
               )}
               {filters.salary && !filters.salaryUnlimited && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Зарплата: {filters.salary}
+                  {t('vacancies.filterLabels.salary')} {filters.salary}
                 </span>
               )}
               {filters.technology.length > 0 && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Технологии ({filters.technology.length})
+                  {t('vacancies.filterLabels.technologies')} ({filters.technology.length})
                 </span>
               )}
               {filters.programmingLanguages.length > 0 && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Языки ({filters.programmingLanguages.length})
+                  {t('vacancies.filterLabels.languages')} ({filters.programmingLanguages.length})
                 </span>
               )}
               {filters.additionalSkills.length > 0 && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  Навыки ({filters.additionalSkills.length})
+                  {t('vacancies.filterLabels.skills')} ({filters.additionalSkills.length})
                 </span>
               )}
               {filters.englishLevel && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  {filters.englishLevel === 'basic' ? 'Английский: Базовый' :
-                   filters.englishLevel === 'intermediate' ? 'Английский: Средний' :
-                   filters.englishLevel === 'advanced' ? 'Английский: Продвинутый' :
-                   filters.englishLevel === 'fluent' ? 'Английский: Свободное владение' : 'Английский'}
+                  {t('vacancies.filterLabels.english')}: {t(`vacancies.english.${filters.englishLevel}`)}
                 </span>
               )}
               {filters.companySize && (
                 <span className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full">
-                  {filters.companySize === 'startup' ? 'Стартапы (<10)' :
-                   filters.companySize === 'small' ? 'Небольшие (10-50)' :
-                   filters.companySize === 'medium' ? 'Средние (50-200)' :
-                   filters.companySize === 'large' ? 'Большие (>200)' : 'Размер компании'}
+                  {t(`vacancies.companySizes.${filters.companySize}Short`)}
                 </span>
               )}
               {filters.industry && (
@@ -357,7 +353,7 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                 onClick={clearFilters}
                 className="text-gray-400 hover:text-accent-cyan text-sm transition-colors"
               >
-                Сбросить все
+                {t('vacancies.filterLabels.clearAll')}
               </button>
             </div>
           </div>
@@ -387,22 +383,22 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                         job.matchScore >= 40 ? 'bg-yellow-500/20 text-yellow-400' :
                         'bg-gray-500/20 text-gray-400'
                       }`}>
-                        {job.matchScore}% совпадение
+                        {job.matchScore}% {t('vacancies.labels.match')}
                       </span>
                     )}
                     {job.matchReason === 'skills_and_roadmap' && (
                       <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full">
-                        Навыки + Карта
+                        {t('vacancies.labels.skillsAndMap')}
                       </span>
                     )}
                     {job.matchReason === 'roadmap' && (
                       <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">
-                        По карте специальностей
+                        {t('vacancies.labels.byRoadmap')}
                       </span>
                     )}
                     {job.matchReason === 'learning_path' && (
                       <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded-full">
-                        По пути обучения
+                        {t('vacancies.labels.byLearningPath')}
                       </span>
                     )}
                   </div>
@@ -427,7 +423,7 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                     <div className="mb-3 space-y-2">
                       {job.matchingSkills && job.matchingSkills.length > 0 && (
                         <div>
-                          <p className="text-xs text-gray-400 mb-1">Ваши навыки:</p>
+                          <p className="text-xs text-gray-400 mb-1">{t('vacancies.labels.yourSkills')}:</p>
                           <div className="flex gap-1 flex-wrap">
                             {job.matchingSkills.slice(0, 5).map((skill, idx) => (
                               <span key={idx} className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">
@@ -444,7 +440,7 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                       )}
                       {job.learningPathSkills && job.learningPathSkills.length > 0 && (
                         <div>
-                          <p className="text-xs text-gray-400 mb-1">Изучаете сейчас:</p>
+                          <p className="text-xs text-gray-400 mb-1">{t('vacancies.labels.learningNow')}:</p>
                           <div className="flex gap-1 flex-wrap">
                             {job.learningPathSkills.slice(0, 4).map((skill, idx) => (
                               <span key={idx} className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded">
@@ -463,17 +459,17 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                   ) : null}
                   <div className="flex gap-2 mt-4 flex-wrap">
                     <span className="px-2 py-1 bg-dark-surface text-accent-cyan text-xs rounded">
-                      {job.type === 'full-time' ? 'Полный день' :
-                       job.type === 'part-time' ? 'Частичная занятость' :
-                       job.type === 'remote' ? 'Удаленно' :
-                       job.type === 'hybrid' ? 'Гибрид' :
-                       job.type === 'internship' ? 'Стажировка' : 'Фриланс'}
+                      {job.type === 'full-time' ? t('vacancies.types.fullTime') :
+                       job.type === 'part-time' ? t('vacancies.types.partTime') :
+                       job.type === 'remote' ? t('vacancies.types.remote') :
+                       job.type === 'hybrid' ? t('vacancies.types.hybrid') :
+                       job.type === 'internship' ? t('vacancies.types.internship') : t('vacancies.types.freelance')}
                     </span>
                     <span className="px-2 py-1 bg-dark-surface text-accent-cyan text-xs rounded">
-                      {job.experience === 'no-experience' ? 'Нет опыта' :
-                       job.experience === 'junior' ? 'Junior' :
-                       job.experience === 'middle' ? 'Middle' :
-                       job.experience === 'senior' ? 'Senior' : 'Lead'}
+                      {job.experience === 'no-experience' ? t('vacancies.levels.noExperience') :
+                       job.experience === 'junior' ? t('vacancies.levels.junior') :
+                       job.experience === 'middle' ? t('vacancies.levels.middle') :
+                       job.experience === 'senior' ? t('vacancies.levels.senior') : t('vacancies.levels.lead')}
                     </span>
                   </div>
                 </div>
@@ -490,10 +486,10 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                             ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
                             : 'bg-dark-surface text-gray-400 hover:bg-dark-card hover:text-accent-cyan'
                         }`}
-                        title={favoriteIds.has(parseInt(job.id, 10)) ? 'Удалить из избранного' : 'Добавить в избранное'}
+                        title={favoriteIds.has(parseInt(job.id, 10)) ? t('vacancies.noResults.removeFromFavorites') : t('vacancies.noResults.addToFavorites')}
                       >
-                        <Heart 
-                          className={`h-5 w-5 ${favoriteIds.has(parseInt(job.id, 10)) ? 'fill-current' : ''}`} 
+                        <Heart
+                          className={`h-5 w-5 ${favoriteIds.has(parseInt(job.id, 10)) ? 'fill-current' : ''}`}
                         />
                       </button>
                     )}
@@ -501,21 +497,21 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                       onClick={() => setSelectedJob(job.id)}
                       className="btn-secondary text-sm whitespace-nowrap flex-1"
                     >
-                      Подробнее
+                      {t('vacancies.details')}
                     </button>
                   </div>
                   {onApply && user && user.role === 'graduate' && (
                     appliedIds.has(parseInt(job.id, 10)) ? (
                       <div className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg text-sm whitespace-nowrap flex items-center gap-2 justify-center border border-green-500/30">
                         <Check className="h-4 w-4" />
-                        <span>Вы откликнулись</span>
+                        <span>{t('vacancies.applied')}</span>
                       </div>
                     ) : (
                       <button
                         onClick={() => handleApply(job.id)}
                         className="btn-primary text-sm whitespace-nowrap"
                       >
-                        Откликнуться
+                        {t('vacancies.apply')}
                       </button>
                     )
                   )}
@@ -526,9 +522,9 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
         ) : (
           <Card>
             <p className="text-gray-300 text-center py-8">
-              {jobs.length === 0 && filteredJobs.length === 0 
-                ? 'Вакансии не найдены. Заполните резюме, профиль или радар навыков для получения рекомендаций.'
-                : 'Вакансии не найдены'}
+              {jobs.length === 0 && filteredJobs.length === 0
+                ? t('vacancies.noResults.emptyWithHint')
+                : t('vacancies.noResults.empty')}
             </p>
           </Card>
         )}
@@ -573,35 +569,35 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
               <div className="grid grid-cols-2 gap-4 pb-4 border-b border-dark-surface">
                 {selectedJobData.salary && (
                   <div>
-                    <label className="text-gray-400 text-sm font-medium mb-1 block">Зарплата</label>
+                    <label className="text-gray-400 text-sm font-medium mb-1 block">{t('vacancies.salary')}</label>
                     <p className="text-white text-lg font-semibold text-accent-cyan">{selectedJobData.salary}</p>
                   </div>
                 )}
                 <div>
-                  <label className="text-gray-400 text-sm font-medium mb-1 block">Тип работы</label>
+                  <label className="text-gray-400 text-sm font-medium mb-1 block">{t('vacancies.modal.jobType')}</label>
                   <p className="text-white">
-                    {selectedJobData.type === 'full-time' ? 'Полный день' : 
-                     selectedJobData.type === 'part-time' ? 'Частичная занятость' :
-                     selectedJobData.type === 'remote' ? 'Удаленно' : 
-                     selectedJobData.type === 'hybrid' ? 'Гибрид' :
-                     selectedJobData.type === 'internship' ? 'Стажировка' : 'Фриланс'}
+                    {selectedJobData.type === 'full-time' ? t('vacancies.types.fullTime') :
+                     selectedJobData.type === 'part-time' ? t('vacancies.types.partTime') :
+                     selectedJobData.type === 'remote' ? t('vacancies.types.remote') :
+                     selectedJobData.type === 'hybrid' ? t('vacancies.types.hybrid') :
+                     selectedJobData.type === 'internship' ? t('vacancies.types.internship') : t('vacancies.types.freelance')}
                   </p>
                 </div>
                 <div>
-                  <label className="text-gray-400 text-sm font-medium mb-1 block">Опыт</label>
+                  <label className="text-gray-400 text-sm font-medium mb-1 block">{t('vacancies.experience')}</label>
                   <p className="text-white">
-                    {selectedJobData.experience === 'no-experience' ? 'Нет опыта' :
-                     selectedJobData.experience === 'junior' ? 'Junior (до 2-х лет)' :
-                     selectedJobData.experience === 'middle' ? 'Middle (от 2 до 5 лет)' : 
-                     selectedJobData.experience === 'senior' ? 'Senior (более 5 лет)' : 'Lead'}
+                    {selectedJobData.experience === 'no-experience' ? t('vacancies.levels.noExperience') :
+                     selectedJobData.experience === 'junior' ? t('vacancies.levels.juniorFull') :
+                     selectedJobData.experience === 'middle' ? t('vacancies.levels.middleFull') :
+                     selectedJobData.experience === 'senior' ? t('vacancies.levels.seniorFull') : t('vacancies.levels.lead')}
                   </p>
                 </div>
                 {selectedJobData.workFormat && (
                   <div>
-                    <label className="text-gray-400 text-sm font-medium mb-1 block">Формат работы</label>
+                    <label className="text-gray-400 text-sm font-medium mb-1 block">{t('vacancies.modal.workFormat')}</label>
                     <p className="text-white">
-                      {selectedJobData.workFormat === 'office' ? 'Офис' :
-                       selectedJobData.workFormat === 'hybrid' ? 'Гибрид' : 'Удаленно'}
+                      {selectedJobData.workFormat === 'office' ? t('vacancies.workFormats.office') :
+                       selectedJobData.workFormat === 'hybrid' ? t('vacancies.workFormats.hybrid') : t('vacancies.workFormats.remote')}
                     </p>
                   </div>
                 )}
@@ -612,15 +608,15 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                (selectedJobData.programmingLanguages && selectedJobData.programmingLanguages.length > 0) ||
                (selectedJobData.additionalSkills && selectedJobData.additionalSkills.length > 0) ? (
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-3">Требуемые навыки</h3>
+                  <h3 className="text-lg font-semibold text-white mb-3">{t('vacancies.modal.requiredSkills')}</h3>
                   <div className="space-y-3">
                     {selectedJobData.technology && selectedJobData.technology.length > 0 && (
                       <div>
-                        <label className="text-gray-400 text-sm font-medium mb-2 block">Технологии</label>
+                        <label className="text-gray-400 text-sm font-medium mb-2 block">{t('vacancies.modal.technologies')}</label>
                         <div className="flex flex-wrap gap-2">
                           {selectedJobData.technology.map((tech, idx) => (
-                            <span 
-                              key={idx} 
+                            <span
+                              key={idx}
                               className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full"
                             >
                               {tech}
@@ -631,11 +627,11 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                     )}
                     {selectedJobData.programmingLanguages && selectedJobData.programmingLanguages.length > 0 && (
                       <div>
-                        <label className="text-gray-400 text-sm font-medium mb-2 block">Языки программирования</label>
+                        <label className="text-gray-400 text-sm font-medium mb-2 block">{t('vacancies.modal.programmingLanguages')}</label>
                         <div className="flex flex-wrap gap-2">
                           {selectedJobData.programmingLanguages.map((lang, idx) => (
-                            <span 
-                              key={idx} 
+                            <span
+                              key={idx}
                               className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full"
                             >
                               {lang}
@@ -646,11 +642,11 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                     )}
                     {selectedJobData.additionalSkills && selectedJobData.additionalSkills.length > 0 && (
                       <div>
-                        <label className="text-gray-400 text-sm font-medium mb-2 block">Дополнительные навыки</label>
+                        <label className="text-gray-400 text-sm font-medium mb-2 block">{t('vacancies.modal.additionalSkills')}</label>
                         <div className="flex flex-wrap gap-2">
                           {selectedJobData.additionalSkills.map((skill, idx) => (
-                            <span 
-                              key={idx} 
+                            <span
+                              key={idx}
                               className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full"
                             >
                               {skill}
@@ -670,13 +666,13 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                   {selectedJobData.matchedRoadmap && (
                     <div className="flex items-center gap-2 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
                       <span className="text-purple-400 text-sm">
-                        Соответствует вашей карте специальности: <strong>{selectedJobData.matchedRoadmap}</strong>
+                        {t('vacancies.modal.matchesRoadmap')}: <strong>{selectedJobData.matchedRoadmap}</strong>
                       </span>
                     </div>
                   )}
                   {selectedJobData.matchingSkills && selectedJobData.matchingSkills.length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-3">Ваши подтвержденные навыки</h3>
+                      <h3 className="text-lg font-semibold text-white mb-3">{t('vacancies.modal.yourVerifiedSkills')}</h3>
                       <div className="flex flex-wrap gap-2">
                         {selectedJobData.matchingSkills.map((skill, idx) => (
                           <span
@@ -691,8 +687,8 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                   )}
                   {selectedJobData.learningPathSkills && selectedJobData.learningPathSkills.length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-3">Навыки из пути обучения</h3>
-                      <p className="text-gray-400 text-sm mb-2">Эти навыки входят в ваш план обучения по карте специальностей</p>
+                      <h3 className="text-lg font-semibold text-white mb-3">{t('vacancies.modal.learningPathSkills')}</h3>
+                      <p className="text-gray-400 text-sm mb-2">{t('vacancies.modal.learningPathSkillsDesc')}</p>
                       <div className="flex flex-wrap gap-2">
                         {selectedJobData.learningPathSkills.map((skill, idx) => (
                           <span
@@ -713,27 +709,23 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                 <div className="grid grid-cols-2 gap-4">
                   {selectedJobData.englishLevel && (
                     <div>
-                      <label className="text-gray-400 text-sm font-medium mb-1 block">Уровень английского</label>
+                      <label className="text-gray-400 text-sm font-medium mb-1 block">{t('vacancies.modal.englishLevel')}</label>
                       <p className="text-white">
-                        {selectedJobData.englishLevel === 'basic' ? 'Базовый' :
-                         selectedJobData.englishLevel === 'intermediate' ? 'Средний' :
-                         selectedJobData.englishLevel === 'advanced' ? 'Продвинутый' : 'Свободное владение'}
+                        {t(`vacancies.english.${selectedJobData.englishLevel}`)}
                       </p>
                     </div>
                   )}
                   {selectedJobData.companySize && (
                     <div>
-                      <label className="text-gray-400 text-sm font-medium mb-1 block">Размер компании</label>
+                      <label className="text-gray-400 text-sm font-medium mb-1 block">{t('vacancies.modal.companySize')}</label>
                       <p className="text-white">
-                        {selectedJobData.companySize === 'startup' ? 'Стартап (<10)' :
-                         selectedJobData.companySize === 'small' ? 'Небольшая (10-50)' :
-                         selectedJobData.companySize === 'medium' ? 'Средняя (50-200)' : 'Большая (>200)'}
+                        {t(`vacancies.companySizes.${selectedJobData.companySize}`)}
                       </p>
                     </div>
                   )}
                   {selectedJobData.industry && (
                     <div className="col-span-2">
-                      <label className="text-gray-400 text-sm font-medium mb-1 block">Отрасль</label>
+                      <label className="text-gray-400 text-sm font-medium mb-1 block">{t('vacancies.modal.industry')}</label>
                       <p className="text-white">{selectedJobData.industry}</p>
                     </div>
                   )}
@@ -742,14 +734,14 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
 
               {/* Описание */}
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Описание</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">{t('vacancies.modal.description')}</h3>
                 <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{selectedJobData.description}</p>
               </div>
 
               {/* Требования */}
               {selectedJobData.requirements && (
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Требования</h3>
+                  <h3 className="text-lg font-semibold text-white mb-2">{t('vacancies.modal.requirements')}</h3>
                   <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{selectedJobData.requirements}</p>
                 </div>
               )}
@@ -764,10 +756,10 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                         ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
                         : 'bg-dark-surface text-gray-400 hover:bg-dark-card hover:text-accent-cyan'
                     }`}
-                    title={favoriteIds.has(parseInt(selectedJobData.id, 10)) ? 'Удалить из избранного' : 'Добавить в избранное'}
+                    title={favoriteIds.has(parseInt(selectedJobData.id, 10)) ? t('vacancies.noResults.removeFromFavorites') : t('vacancies.noResults.addToFavorites')}
                   >
-                    <Heart 
-                      className={`h-5 w-5 ${favoriteIds.has(parseInt(selectedJobData.id, 10)) ? 'fill-current' : ''}`} 
+                    <Heart
+                      className={`h-5 w-5 ${favoriteIds.has(parseInt(selectedJobData.id, 10)) ? 'fill-current' : ''}`}
                     />
                   </button>
                 )}
@@ -779,21 +771,21 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                       className="btn-secondary flex items-center gap-2 disabled:opacity-50"
                     >
                       <MessageSquare className="h-4 w-4" />
-                      {isCreatingChat ? 'Создание...' : 'Написать'}
+                      {isCreatingChat ? t('vacancies.chat.creating') : t('vacancies.chat.write')}
                     </button>
                   )}
                   {onApply && user && user.role === 'graduate' && (
                     appliedIds.has(parseInt(selectedJobData.id, 10)) ? (
                       <div className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg text-sm whitespace-nowrap flex items-center gap-2 justify-center border border-green-500/30">
                         <Check className="h-4 w-4" />
-                        <span>Вы откликнулись</span>
+                        <span>{t('vacancies.applied')}</span>
                       </div>
                     ) : (
                       <button
                         onClick={() => handleApply(selectedJobData.id)}
                         className="btn-primary"
                       >
-                        Откликнуться
+                        {t('vacancies.apply')}
                       </button>
                     )
                   )}
@@ -801,7 +793,7 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                     onClick={() => setSelectedJob(null)}
                     className="btn-secondary"
                   >
-                    Закрыть
+                    {t('vacancies.modal.close')}
                   </button>
                 </div>
               </div>

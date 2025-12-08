@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Search, MapPin, Briefcase, Filter, Award, GraduationCap, Globe, Code, MessageSquare, Map, Users, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Card from '../../ui/Card';
 import Section from '../../ui/Section';
@@ -28,6 +29,7 @@ interface Resume {
 
 const Candidates = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useOutletContext<OutletContext>();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,24 +130,24 @@ const Candidates = () => {
 
   const handleStartChat = async (candidateId: number) => {
     if (!user) {
-      toast.error('Войдите в систему, чтобы написать сообщение');
+      toast.error(t('candidates.errors.loginRequired'));
       navigate('/login');
       return;
     }
 
     if (user.role !== 'employer') {
-      toast.error('Только работодатели могут писать кандидатам');
+      toast.error(t('candidates.errors.employerOnly'));
       return;
     }
 
     setCreatingChatFor(candidateId);
     try {
       const chat = await chatAPI.createChat(candidateId);
-      toast.success('Чат создан!');
+      toast.success(t('candidates.success.chatCreated'));
       navigate(`/messenger/${chat.id}`);
     } catch (error) {
       console.error('Error creating chat:', error);
-      toast.error('Ошибка при создании чата');
+      toast.error(t('candidates.errors.chatError'));
     } finally {
       setCreatingChatFor(null);
     }
@@ -159,9 +161,9 @@ const Candidates = () => {
     try {
       const response = await $api.get(`/resumes/user/${userId}`);
       const userResumes = response.data;
-      
+
       if (userResumes.length === 0) {
-        toast.error('У пользователя нет резюме');
+        toast.error(t('candidates.errors.noResumes'));
         return;
       }
 
@@ -170,7 +172,7 @@ const Candidates = () => {
       setShowResumeModal(true);
     } catch (error: any) {
       console.error('Error loading user resumes:', error);
-      toast.error('Ошибка при загрузке резюме');
+      toast.error(t('candidates.errors.loadError'));
     }
   };
 
@@ -219,9 +221,9 @@ const Candidates = () => {
           <div className="mb-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-4xl font-bold text-white mb-2">Кандидаты</h1>
+                <h1 className="text-4xl font-bold text-white mb-2">{t('candidates.title')}</h1>
                 <p className="text-gray-300 text-lg">
-                  Просмотрите резюме специалистов и найдите подходящих кандидатов
+                  {t('candidates.subtitle')}
                 </p>
               </div>
               <button
@@ -229,7 +231,7 @@ const Candidates = () => {
                 className="btn-primary flex items-center gap-2 whitespace-nowrap"
               >
                 <Map className="h-5 w-5" />
-                Карта соискателей
+                {t('candidates.candidatesMap')}
               </button>
             </div>
           </div>
@@ -239,22 +241,22 @@ const Candidates = () => {
             <Card className="text-center py-4">
               <Users className="h-8 w-8 text-accent-cyan mx-auto mb-2" />
               <p className="text-2xl font-bold text-white">{stats.total}</p>
-              <p className="text-sm text-gray-400">Всего кандидатов</p>
+              <p className="text-sm text-gray-400">{t('candidates.stats.total')}</p>
             </Card>
             <Card className="text-center py-4">
               <Filter className="h-8 w-8 text-accent-cyan mx-auto mb-2" />
               <p className="text-2xl font-bold text-white">{stats.filtered}</p>
-              <p className="text-sm text-gray-400">По фильтрам</p>
+              <p className="text-sm text-gray-400">{t('candidates.stats.filtered')}</p>
             </Card>
             <Card className="text-center py-4">
               <MapPin className="h-8 w-8 text-accent-cyan mx-auto mb-2" />
               <p className="text-2xl font-bold text-white">{stats.locations}</p>
-              <p className="text-sm text-gray-400">Городов</p>
+              <p className="text-sm text-gray-400">{t('candidates.stats.cities')}</p>
             </Card>
             <Card className="text-center py-4">
               <Code className="h-8 w-8 text-accent-cyan mx-auto mb-2" />
               <p className="text-2xl font-bold text-white">{filterOptions.skills.length}</p>
-              <p className="text-sm text-gray-400">Навыков</p>
+              <p className="text-sm text-gray-400">{t('candidates.stats.skills')}</p>
             </Card>
           </div>
 
@@ -266,7 +268,7 @@ const Candidates = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Поиск по навыкам, городам, имени..."
+                    placeholder={t('candidates.search.placeholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-dark-surface border border-dark-card rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-accent-cyan"
@@ -277,7 +279,7 @@ const Candidates = () => {
                   className={`btn-secondary flex items-center gap-2 ${showFilters ? 'border-accent-cyan text-accent-cyan' : ''}`}
                 >
                   <Filter className="h-4 w-4" />
-                  Фильтры
+                  {t('candidates.search.filters')}
                   {hasActiveFilters && (
                     <span className="bg-accent-cyan text-dark-bg text-xs px-2 py-0.5 rounded-full">
                       {selectedSkills.length + (selectedLevel ? 1 : 0) + (selectedLocation ? 1 : 0)}
@@ -292,13 +294,13 @@ const Candidates = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Уровень */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Уровень</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.level')}</label>
                       <select
                         value={selectedLevel}
                         onChange={(e) => setSelectedLevel(e.target.value)}
                         className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan"
                       >
-                        <option value="">Все уровни</option>
+                        <option value="">{t('candidates.filters.allLevels')}</option>
                         <option value="junior">Junior</option>
                         <option value="middle">Middle</option>
                         <option value="senior">Senior</option>
@@ -308,13 +310,13 @@ const Candidates = () => {
 
                     {/* Локация */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Город</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.city')}</label>
                       <select
                         value={selectedLocation}
                         onChange={(e) => setSelectedLocation(e.target.value)}
                         className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan"
                       >
-                        <option value="">Все города</option>
+                        <option value="">{t('candidates.filters.allCities')}</option>
                         {filterOptions.locations.map(loc => (
                           <option key={loc} value={loc}>{loc}</option>
                         ))}
@@ -323,10 +325,10 @@ const Candidates = () => {
 
                     {/* Зарплата от */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Зарплата от</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.salaryFrom')}</label>
                       <input
                         type="number"
-                        placeholder="мин. ₽"
+                        placeholder={t('candidates.filters.minPlaceholder')}
                         value={salaryRange.min || ''}
                         onChange={(e) => setSalaryRange(prev => ({ ...prev, min: e.target.value ? Number(e.target.value) : null }))}
                         className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -335,10 +337,10 @@ const Candidates = () => {
 
                     {/* Зарплата до */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Зарплата до</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.salaryTo')}</label>
                       <input
                         type="number"
-                        placeholder="макс. ₽"
+                        placeholder={t('candidates.filters.maxPlaceholder')}
                         value={salaryRange.max || ''}
                         onChange={(e) => setSalaryRange(prev => ({ ...prev, max: e.target.value ? Number(e.target.value) : null }))}
                         className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -348,7 +350,7 @@ const Candidates = () => {
 
                   {/* Навыки */}
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Навыки</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.skills')}</label>
                     <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-dark-surface rounded-lg">
                       {filterOptions.skills.map(skill => (
                         <button
@@ -369,7 +371,7 @@ const Candidates = () => {
                   {/* Выбранные навыки */}
                   {selectedSkills.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <span className="text-sm text-gray-400">Выбрано:</span>
+                      <span className="text-sm text-gray-400">{t('candidates.filters.selected')}</span>
                       {selectedSkills.map(skill => (
                         <span
                           key={skill}
@@ -390,7 +392,7 @@ const Candidates = () => {
                       onClick={clearFilters}
                       className="mt-4 text-accent-cyan hover:text-accent-cyan/80 text-sm"
                     >
-                      Сбросить все фильтры
+                      {t('candidates.filters.clearAll')}
                     </button>
                   )}
                 </div>
@@ -403,21 +405,21 @@ const Candidates = () => {
             <Card>
               <div className="text-center py-12">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent-cyan"></div>
-                <p className="text-gray-300 mt-4">Загрузка резюме...</p>
+                <p className="text-gray-300 mt-4">{t('candidates.loading')}</p>
               </div>
             </Card>
           ) : filteredResumes.length === 0 ? (
             <Card>
               <div className="text-center py-12">
                 <Users className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-300 text-lg">Кандидаты не найдены</p>
-                <p className="text-gray-500 mt-2">Попробуйте изменить параметры поиска</p>
+                <p className="text-gray-300 text-lg">{t('candidates.noResults')}</p>
+                <p className="text-gray-500 mt-2">{t('candidates.noResultsHint')}</p>
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
                     className="mt-4 text-accent-cyan hover:text-accent-cyan/80"
                   >
-                    Сбросить фильтры
+                    {t('candidates.filters.reset')}
                   </button>
                 )}
               </div>
@@ -462,7 +464,7 @@ const Candidates = () => {
                       <div>
                         <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                           <Award className="h-5 w-5 text-accent-cyan" />
-                          Опыт работы
+                          {t('candidates.experience')}
                         </h4>
                         <p className="text-gray-300 whitespace-pre-wrap line-clamp-2">{resume.experience}</p>
                       </div>
@@ -472,7 +474,7 @@ const Candidates = () => {
                       <div>
                         <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                           <GraduationCap className="h-5 w-5 text-accent-cyan" />
-                          Образование
+                          {t('candidates.education')}
                         </h4>
                         <p className="text-gray-300 whitespace-pre-wrap line-clamp-2">{resume.education}</p>
                       </div>
@@ -482,7 +484,7 @@ const Candidates = () => {
                       <div>
                         <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                           <Globe className="h-5 w-5 text-accent-cyan" />
-                          Портфолио
+                          {t('candidates.portfolio')}
                         </h4>
                         <a
                           href={resume.portfolio}
@@ -499,7 +501,7 @@ const Candidates = () => {
                       <div>
                         <h4 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                           <Code className="h-5 w-5 text-accent-cyan" />
-                          Навыки
+                          {t('candidates.skillsTitle')}
                         </h4>
                         <div className="flex flex-wrap gap-2">
                           {resume.skillsArray.map((skill, index) => (
@@ -519,11 +521,11 @@ const Candidates = () => {
                     )}
 
                     <div className="flex gap-3 pt-4 border-t border-dark-card">
-                      <button 
+                      <button
                         onClick={() => handleViewResumes(resume.user?.id || resume.userId || 0)}
                         className="btn-primary text-sm"
                       >
-                        Посмотреть резюме
+                        {t('candidates.viewResume')}
                       </button>
                       {user && user.role === 'employer' && (
                         <button
@@ -532,7 +534,7 @@ const Candidates = () => {
                           className="btn-secondary text-sm flex items-center gap-2 disabled:opacity-50"
                         >
                           <MessageSquare className="h-4 w-4" />
-                          {creatingChatFor === (resume.user?.id || resume.userId) ? 'Создание...' : 'Написать'}
+                          {creatingChatFor === (resume.user?.id || resume.userId) ? t('candidates.creatingChat') : t('candidates.writeMessage')}
                         </button>
                       )}
                     </div>
@@ -561,7 +563,7 @@ const Candidates = () => {
                     {viewingResumes[currentResumeIndex].title}
                   </h2>
                   <p className="text-gray-400">
-                    {viewingResumes[currentResumeIndex].user?.username || 'Кандидат'}
+                    {viewingResumes[currentResumeIndex].user?.username || t('candidates.modal.candidate')}
                   </p>
                 </div>
                 <button
@@ -576,7 +578,7 @@ const Candidates = () => {
               {viewingResumes.length > 1 && (
                 <div className="mb-6 pb-4 border-b border-dark-card">
                   <div className="text-sm text-gray-400">
-                    Резюме {currentResumeIndex + 1} из {viewingResumes.length}
+                    {t('candidates.modal.resumeCount', { current: currentResumeIndex + 1, total: viewingResumes.length })}
                   </div>
                 </div>
               )}
@@ -586,7 +588,7 @@ const Candidates = () => {
                 {/* Описание */}
                 {viewingResumes[currentResumeIndex].description && (
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-3">Описание</h3>
+                    <h3 className="text-xl font-semibold text-white mb-3">{t('candidates.modal.description')}</h3>
                     <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
                       {viewingResumes[currentResumeIndex].description}
                     </p>
@@ -617,7 +619,7 @@ const Candidates = () => {
                 {/* Навыки */}
                 {viewingResumes[currentResumeIndex].skillsArray && viewingResumes[currentResumeIndex].skillsArray.length > 0 && (
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-3">Навыки</h3>
+                    <h3 className="text-xl font-semibold text-white mb-3">{t('candidates.skillsTitle')}</h3>
                     <div className="flex flex-wrap gap-2">
                       {viewingResumes[currentResumeIndex].skillsArray.map((skill, i) => (
                         <span
@@ -636,7 +638,7 @@ const Candidates = () => {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                       <Award className="h-5 w-5 text-accent-cyan" />
-                      Опыт работы
+                      {t('candidates.experience')}
                     </h3>
                     <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
                       {viewingResumes[currentResumeIndex].experience}
@@ -649,7 +651,7 @@ const Candidates = () => {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                       <GraduationCap className="h-5 w-5 text-accent-cyan" />
-                      Образование
+                      {t('candidates.education')}
                     </h3>
                     <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
                       {viewingResumes[currentResumeIndex].education}
@@ -662,7 +664,7 @@ const Candidates = () => {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                       <Globe className="h-5 w-5 text-accent-cyan" />
-                      Портфолио
+                      {t('candidates.portfolio')}
                     </h3>
                     <a
                       href={viewingResumes[currentResumeIndex].portfolio}
@@ -684,7 +686,7 @@ const Candidates = () => {
                         className="btn-primary flex items-center gap-2"
                       >
                         <ChevronLeft className="h-4 w-4" />
-                        Предыдущее резюме
+                        {t('candidates.navigation.prevResume')}
                       </button>
                     )}
                     {viewingResumes.length > 1 && currentResumeIndex < viewingResumes.length - 1 && (
@@ -692,7 +694,7 @@ const Candidates = () => {
                         onClick={handleNextResume}
                         className="btn-primary flex items-center gap-2"
                       >
-                        Следующее резюме
+                        {t('candidates.navigation.nextResume')}
                         <ChevronRight className="h-4 w-4" />
                       </button>
                     )}
@@ -708,7 +710,7 @@ const Candidates = () => {
                         className="btn-primary flex items-center gap-2"
                       >
                         <MessageSquare className="h-4 w-4" />
-                        Написать сообщение
+                        {t('candidates.navigation.sendMessage')}
                       </button>
                     )}
                   </div>
