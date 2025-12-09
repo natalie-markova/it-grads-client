@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Mail, ArrowLeft } from 'lucide-react';
-import api from '../../../api/axios';
+import { $api } from '../../../utils/axios.instance';
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -20,7 +20,7 @@ const ForgotPassword: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await api.post('/api/auth/forgot-password', { email });
+      const response = await $api.post('/api/auth/forgot-password', { email });
       toast.success(response.data.message || 'Письмо с инструкциями отправлено');
       setIsSubmitted(true);
     } catch (error: any) {

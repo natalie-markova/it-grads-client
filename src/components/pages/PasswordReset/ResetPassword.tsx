@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Lock, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
-import api from '../../../api/axios';
+import { $api } from '../../../utils/axios.instance';
 
 const ResetPassword: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -38,7 +38,7 @@ const ResetPassword: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await api.post(`/api/auth/reset-password/${token}`, { password });
+      const response = await $api.post(`/api/auth/reset-password/${token}`, { password });
       toast.success(response.data.message || 'Пароль успешно изменён');
       setIsSuccess(true);
 

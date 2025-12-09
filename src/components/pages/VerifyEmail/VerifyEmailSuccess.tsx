@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle, XCircle } from 'lucide-react';
-import axios from 'axios';
+import { $api } from '../../../utils/axios.instance';
 
 const VerifyEmailSuccess: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -12,7 +12,7 @@ const VerifyEmailSuccess: React.FC = () => {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        const response = await axios.get(`/api/auth/verify-email/${token}`);
+        const response = await $api.get(`/api/auth/verify-email/${token}`);
 
         if (response.data.user) {
           // Обновляем данные пользователя в localStorage
