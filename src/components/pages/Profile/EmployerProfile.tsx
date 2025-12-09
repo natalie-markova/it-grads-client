@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
-import { Edit, Building2, Globe, MapPin, Users, Briefcase, Check, X, User as UserIcon, RefreshCw, Eye, ChevronLeft, ChevronRight, MessageSquare, Award, GraduationCap } from 'lucide-react';
+import { Edit, Trash2, Building2, Globe, MapPin, Users, Briefcase, Check, X, User as UserIcon, RefreshCw, Eye, ChevronLeft, ChevronRight, MessageSquare, Award, GraduationCap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { OutletContext } from '../../../types';
-import { $api } from '../../../utils/axios.instance';
+import { $api, clearAccessToken } from '../../../utils/axios.instance';
 import { chatAPI } from '../../../utils/chat.api';
 import toast from 'react-hot-toast';
 import VacanciesManagement from '../Vacancies/VacanciesManagement';
 import Card from '../../ui/Card';
 import EmployerProfileNav from './EmployerProfileNav';
 import ChangePassword from './ChangePassword';
+import ConfirmModal from '../../ui/ConfirmModal';
 import { getImageUrl } from '../../../utils/image.utils';
 
 
@@ -72,7 +73,7 @@ interface Application {
 const EmployerProfile = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useOutletContext<OutletContext>();
+  const { user, setUser } = useOutletContext<OutletContext>();
   const [profile, setProfile] = useState<EmployerProfileData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -83,6 +84,19 @@ const EmployerProfile = () => {
   const [viewingResumes, setViewingResumes] = useState<Resume[]>([]);
   const [currentResumeIndex, setCurrentResumeIndex] = useState<number>(0);
   const [showResumeModal, setShowResumeModal] = useState<boolean>(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    variant: 'info'
+  });
 
   const [formData, setFormData] = useState<EmployerProfileData>({
     companyName: '',
@@ -304,6 +318,35 @@ const EmployerProfile = () => {
     }
   }
 
+  const handleDeleteProfile = async () => {
+    if (!user) return
+    setConfirmModal({
+      isOpen: true,
+      title: t('profile.confirmDelete.profileTitle'),
+      message: t('profile.confirmDelete.profileMessage'),
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await $api.delete('/user/profile')
+          // Очищаем токен авторизации
+          clearAccessToken()
+          // Сбрасываем состояние пользователя
+          setUser(null)
+          setProfile(null)
+          toast.success(t('profile.success.profileDeleted'))
+          // Переходим на главную страницу
+          navigate('/')
+        } catch (error: any) {
+          console.error('Error deleting profile:', error)
+          const errorMessage = error.response?.data?.message || error.message || t('profile.errors.deleteError')
+          toast.error(errorMessage)
+        } finally {
+          setConfirmModal({ ...confirmModal, isOpen: false })
+        }
+      }
+    })
+  }
+
   const handleUpdateApplicationStatus = async (applicationId: number, status: 'accepted' | 'rejected') => {
     try {
       await $api.put(`/applications/${applicationId}/status`, { status });
@@ -390,12 +433,22 @@ const EmployerProfile = () => {
           <div className="bg-dark-surface rounded-lg p-8 border border-dark-card">
           <div className="flex justify-between items-start mb-8">
             <h1 className="text-3xl font-bold text-white">{t('employerProfile.title')}</h1>
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className="p-2 text-accent-cyan hover:bg-dark-card rounded-lg transition-colors"
-            >
-              <Edit className="h-5 w-5" />
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="p-2 text-accent-cyan hover:bg-dark-card rounded-lg transition-colors"
+                title={t('employerProfile.editProfile')}
+              >
+                <Edit className="h-5 w-5" />
+              </button>
+              <button
+                onClick={handleDeleteProfile}
+                className="p-2 text-red-400 hover:bg-dark-card rounded-lg transition-colors"
+                title={t('profile.deleteProfile')}
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           {isEditing ? (
@@ -994,6 +1047,18 @@ const EmployerProfile = () => {
           </div>
         </div>
       )}
+
+      {/* Модальное окно подтверждения */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={t('common.confirm')}
+        cancelText={t('common.cancel')}
+        variant={confirmModal.variant}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+      />
     </div>
   );
 };

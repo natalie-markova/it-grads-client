@@ -7,7 +7,7 @@ import { useScrollAnimation } from '../../../hooks/useScrollAnimation'
 import { type OutletContext } from '../../../types'
 import toast from 'react-hot-toast'
 import ResumeForm from '../Resume/ResumeForm'
-import { $api } from '../../../utils/axios.instance'
+import { $api, clearAccessToken } from '../../../utils/axios.instance'
 import GraduateProfileNav from './GraduateProfileNav'
 import { useTranslation } from 'react-i18next'
 import AutoSkillsRadar from '../../AutoSkillsRadar'
@@ -382,7 +382,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
 const GraduateProfile = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { user } = useOutletContext<OutletContext>()
+  const { user, setUser } = useOutletContext<OutletContext>()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [confirmModal, setConfirmModal] = useState<{
@@ -668,9 +668,14 @@ const GraduateProfile = () => {
       onConfirm: async () => {
         try {
           await $api.delete('/user/profile')
+          // Очищаем токен авторизации
+          clearAccessToken()
+          // Сбрасываем состояние пользователя
+          setUser(null)
           setProfile(null)
           toast.success(t('profile.success.profileDeleted'))
-          navigate('/login')
+          // Переходим на главную страницу
+          navigate('/')
         } catch (error: any) {
           console.error('Error deleting profile:', error)
           const errorMessage = error.response?.data?.message || error.message || t('profile.errors.deleteError')
