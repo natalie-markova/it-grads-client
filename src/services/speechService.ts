@@ -17,10 +17,106 @@ class SpeechService {
   private audioContext: AudioContext | null = null;
   private currentAudio: HTMLAudioElement | null = null;
   private audioCache: Map<string, string> = new Map();
+  private voicesLoaded: boolean = false;
+  private voicesLoadedPromise: Promise<void> | null = null;
+  private cachedFemaleVoices: Map<string, SpeechSynthesisVoice | null> = new Map();
 
   constructor() {
     this.apiKey = import.meta.env.VITE_YANDEX_SPEECHKIT_API_KEY || null;
     this.folderId = import.meta.env.VITE_YANDEX_FOLDER_ID || null;
+    this.preloadVoices();
+  }
+
+  /**
+   * Предзагрузка голосов Web Speech API
+   */
+  private preloadVoices(): void {
+    if (!('speechSynthesis' in window)) {
+      this.voicesLoaded = true;
+      return;
+    }
+
+    this.voicesLoadedPromise = new Promise<void>((resolve) => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        this.voicesLoaded = true;
+        this.cacheVoices(voices);
+        resolve();
+        return;
+      }
+
+      // Голоса загружаются асинхронно
+      const onVoicesChanged = () => {
+        const loadedVoices = window.speechSynthesis.getVoices();
+        if (loadedVoices.length > 0) {
+          this.voicesLoaded = true;
+          this.cacheVoices(loadedVoices);
+          window.speechSynthesis.onvoiceschanged = null;
+          resolve();
+        }
+      };
+
+      window.speechSynthesis.onvoiceschanged = onVoicesChanged;
+
+      // Таймаут на случай, если голоса так и не загрузятся
+      setTimeout(() => {
+        if (!this.voicesLoaded) {
+          this.voicesLoaded = true;
+          resolve();
+        }
+      }, 3000);
+    });
+  }
+
+  /**
+   * Кеширование женских голосов для каждого языка
+   */
+  private cacheVoices(voices: SpeechSynthesisVoice[]): void {
+    // Кешируем женские голоса для русского и английского
+    this.cachedFemaleVoices.set('ru', this.findFemaleVoice(voices, 'ru'));
+    this.cachedFemaleVoices.set('en', this.findFemaleVoice(voices, 'en'));
+  }
+
+  /**
+   * Поиск женского голоса для указанного языка
+   */
+  private findFemaleVoice(voices: SpeechSynthesisVoice[], langCode: string): SpeechSynthesisVoice | null {
+    const femaleNames = langCode === 'ru'
+      ? ['Milena', 'Irina', 'Алёна', 'Алена', 'Мария', 'Катерина', 'Oksana', 'Tatyana']
+      : ['Samantha', 'Victoria', 'Karen', 'Moira', 'Tessa', 'Fiona', 'Veena', 'Zira', 'Hazel', 'Susan'];
+
+    // Ищем женский голос по имени
+    let femaleVoice = voices.find(v =>
+      v.lang.startsWith(langCode) &&
+      femaleNames.some(name => v.name.includes(name))
+    );
+
+    // Если не нашли по имени, ищем по ключевым словам
+    if (!femaleVoice) {
+      femaleVoice = voices.find(v =>
+        v.lang.startsWith(langCode) &&
+        (v.name.toLowerCase().includes('female') ||
+         v.name.toLowerCase().includes('woman') ||
+         v.name.toLowerCase().includes('girl'))
+      );
+    }
+
+    // Если всё ещё не нашли, просто берём первый голос с нужным языком
+    if (!femaleVoice) {
+      femaleVoice = voices.find(v => v.lang.startsWith(langCode));
+    }
+
+    return femaleVoice || null;
+  }
+
+  /**
+   * Ожидание загрузки голосов
+   */
+  private async waitForVoices(): Promise<void> {
+    if (this.voicesLoaded) return;
+    if (this.voicesLoadedPromise) {
+      await this.voicesLoadedPromise;
+    }
   }
 
   /**
@@ -115,30 +211,35 @@ class SpeechService {
   /**
    * Fallback: Web Speech API
    */
-  private speakWithWebSpeech(text: string, lang: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!('speechSynthesis' in window)) {
-        console.warn('Web Speech API не поддерживается');
-        resolve();
-        return;
-      }
+  private async speakWithWebSpeech(text: string, lang: string): Promise<void> {
+    if (!('speechSynthesis' in window)) {
+      console.warn('Web Speech API не поддерживается');
+      return;
+    }
 
+    // Ждём загрузки голосов перед первым использованием
+    await this.waitForVoices();
+
+    return new Promise((resolve, reject) => {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang;
       utterance.rate = 1.0;
       utterance.pitch = 1.2; // Чуть выше для более дружелюбного тона
 
-      // Выбираем женский голос
-      const voices = window.speechSynthesis.getVoices();
-      const femaleVoice = voices.find(v =>
-        v.lang.startsWith(lang.split('-')[0]) &&
-        (v.name.toLowerCase().includes('female') ||
-         v.name.toLowerCase().includes('woman') ||
-         v.name.includes('Milena') ||
-         v.name.includes('Irina'))
-      );
-      if (femaleVoice) {
-        utterance.voice = femaleVoice;
+      // Используем закешированный женский голос
+      const langCode = lang.split('-')[0];
+      const cachedVoice = this.cachedFemaleVoices.get(langCode);
+
+      if (cachedVoice) {
+        utterance.voice = cachedVoice;
+      } else {
+        // Попробуем найти голос, если кеш пуст
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = this.findFemaleVoice(voices, langCode);
+        if (femaleVoice) {
+          utterance.voice = femaleVoice;
+          this.cachedFemaleVoices.set(langCode, femaleVoice);
+        }
       }
 
       utterance.onend = () => resolve();
