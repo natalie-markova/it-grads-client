@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { Edit, Building2, Globe, MapPin, Users, Briefcase, Check, X, User as UserIcon, RefreshCw, Eye, ChevronLeft, ChevronRight, MessageSquare, Award, GraduationCap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { OutletContext } from '../../../types';
 import { $api } from '../../../utils/axios.instance';
 import { chatAPI } from '../../../utils/chat.api';
@@ -69,6 +70,7 @@ interface Application {
 }
 
 const EmployerProfile = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useOutletContext<OutletContext>();
   const [profile, setProfile] = useState<EmployerProfileData | null>(null);
@@ -145,19 +147,41 @@ const EmployerProfile = () => {
     if (!user) return
 
     try {
-      // Убеждаемся, что если аватар был загружен или введен через URL, он включен в данные для сохранения
-      let avatarToSave = formData.avatar || ''
-      
-      // Если avatarPreview это data URL (превью загруженного файла), не сохраняем его
-      // Используем только если это не data URL
-      if (avatarPreview && !avatarPreview.startsWith('data:') && !formData.avatar) {
-        avatarToSave = avatarPreview
+      // Логика сохранения аватара:
+      // 1. Если пользователь загрузил новый аватар - используем его (formData.avatar)
+      // 2. Если аватар есть в текущем профиле - сохраняем его
+      // 3. Никогда не отправляем пустое значение, чтобы не затереть существующий аватар на сервере
+
+      // Определяем аватар для сохранения (игнорируем data URL превью)
+      let avatarToSave: string | undefined = undefined
+
+      if (formData.avatar && formData.avatar.trim() !== '' && !formData.avatar.startsWith('data:')) {
+        // Новый аватар загружен (URL от сервера)
+        avatarToSave = formData.avatar
+      } else if (profile?.avatar && profile.avatar.trim() !== '') {
+        // Сохраняем существующий аватар
+        avatarToSave = profile.avatar
       }
-      
-      const dataToSave = {
-        ...formData,
-        avatar: avatarToSave
+      // Если avatarToSave остался undefined - поле avatar не отправляем
+
+      // Формируем данные, не включая avatar если его нет
+      const dataToSave: Record<string, unknown> = {
+        companyName: formData.companyName,
+        companyDescription: formData.companyDescription,
+        companyWebsite: formData.companyWebsite,
+        companyAddress: formData.companyAddress,
+        companySize: formData.companySize,
+        industry: formData.industry,
+        phone: formData.phone,
+        email: formData.email,
       }
+
+      // Добавляем avatar только если он определён
+      if (avatarToSave !== undefined) {
+        dataToSave.avatar = avatarToSave
+      }
+
+      console.log('Saving employer profile, avatar:', avatarToSave)
 
       const response = await $api.put('/user/profile', dataToSave)
       // Обновляем профиль из ответа сервера, чтобы получить актуальные данные
@@ -181,21 +205,19 @@ const EmployerProfile = () => {
         setFormData(formData)
       }
       setIsEditing(false)
-      toast.success('Профиль обновлен')
+      toast.success(t('employerProfile.profileUpdated'))
     } catch (error: any) {
       console.error('Error saving profile:', error)
       
       // Обработка различных типов ошибок
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        toast.error('Ошибка подключения к серверу. Проверьте, что сервер запущен.')
+        toast.error(t('employerProfile.connectionError'))
       } else if (error.response?.status === 401) {
-        // Ошибка авторизации - не разлогиниваем автоматически, показываем сообщение
-        toast.error('Ошибка авторизации. Пожалуйста, войдите заново.')
-        // Не делаем автоматический редирект, чтобы пользователь мог увидеть ошибку
+        toast.error(t('employerProfile.authError'))
       } else if (error.response?.status === 403) {
-        toast.error('Недостаточно прав для выполнения этого действия.')
+        toast.error(t('employerProfile.permissionError'))
       } else {
-        const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Ошибка при сохранении профиля'
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || t('employerProfile.saveError')
         toast.error(errorMessage)
       }
       // Не закрываем форму редактирования при ошибке, чтобы пользователь мог исправить данные
@@ -214,12 +236,12 @@ const EmployerProfile = () => {
     if (file) {
       // Проверяем тип файла
       if (!file.type.startsWith('image/')) {
-        toast.error('Пожалуйста, выберите файл изображения')
+        toast.error(t('employerProfile.selectImageFile'))
         return
       }
       // Проверяем размер файла (5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Размер файла не должен превышать 5MB')
+        toast.error(t('employerProfile.fileSizeLimit'))
         return
       }
       setAvatarFile(file)
@@ -252,20 +274,18 @@ const EmployerProfile = () => {
       }))
       setAvatarPreview(getImageUrl(avatarUrl))
       setAvatarFile(null)
-      toast.success('Аватар успешно загружен')
+      toast.success(t('employerProfile.avatarUploaded'))
     } catch (error: any) {
       console.error('Error uploading avatar:', error)
-      
+
       // Более детальная обработка ошибок
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        toast.error('Ошибка подключения к серверу. Проверьте, что сервер запущен.')
+        toast.error(t('employerProfile.connectionError'))
       } else if (error.response) {
-        // Сервер ответил с ошибкой
-        const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Ошибка при загрузке аватара'
+        const errorMessage = error.response?.data?.error || error.response?.data?.message || t('employerProfile.uploadError')
         toast.error(errorMessage)
       } else {
-        // Другая ошибка
-        const errorMessage = error.message || 'Ошибка при загрузке аватара'
+        const errorMessage = error.message || t('employerProfile.uploadError')
         toast.error(errorMessage)
       }
     } finally {
@@ -287,11 +307,11 @@ const EmployerProfile = () => {
   const handleUpdateApplicationStatus = async (applicationId: number, status: 'accepted' | 'rejected') => {
     try {
       await $api.put(`/applications/${applicationId}/status`, { status });
-      toast.success(`Отклик ${status === 'accepted' ? 'принят' : 'отклонен'}`);
+      toast.success(status === 'accepted' ? t('employerProfile.applicationAccepted') : t('employerProfile.applicationRejected'));
       loadApplications();
     } catch (error: any) {
       console.error('Error updating application status:', error);
-      toast.error(error.response?.data?.error || 'Ошибка при обновлении статуса отклика');
+      toast.error(error.response?.data?.error || t('employerProfile.statusUpdateError'));
     }
   };
 
@@ -301,7 +321,7 @@ const EmployerProfile = () => {
       const userResumes = response.data;
       
       if (userResumes.length === 0) {
-        toast.error('У пользователя нет резюме');
+        toast.error(t('toasts.noResumes'));
         return;
       }
 
@@ -310,7 +330,7 @@ const EmployerProfile = () => {
       setShowResumeModal(true);
     } catch (error: any) {
       console.error('Error loading user resumes:', error);
-      toast.error('Ошибка при загрузке резюме');
+      toast.error(t('toasts.resumeLoadError'));
     }
   };
 
@@ -328,18 +348,18 @@ const EmployerProfile = () => {
 
   const handleStartChat = async (userId: number) => {
     if (!user) {
-      toast.error('Войдите в систему, чтобы написать сообщение');
+      toast.error(t('toasts.loginRequired'));
       navigate('/login');
       return;
     }
 
     try {
       const chat = await chatAPI.createChat(userId);
-      toast.success('Чат создан!');
+      toast.success(t('toasts.chatCreated'));
       navigate(`/messenger/${chat.id}`);
     } catch (error) {
       console.error('Error creating chat:', error);
-      toast.error('Ошибка при создании чата');
+      toast.error(t('toasts.chatError'));
     }
   };
 
@@ -354,7 +374,7 @@ const EmployerProfile = () => {
   if (!profile) {
     return (
       <div className="min-h-screen bg-dark-bg flex items-center justify-center">
-        <div className="text-white text-xl">Загрузка...</div>
+        <div className="text-white text-xl">{t('employerProfile.loading')}</div>
       </div>
     );
   }
@@ -369,7 +389,7 @@ const EmployerProfile = () => {
         {activeTab === 'profile' && (
           <div className="bg-dark-surface rounded-lg p-8 border border-dark-card">
           <div className="flex justify-between items-start mb-8">
-            <h1 className="text-3xl font-bold text-white">Профиль работодателя</h1>
+            <h1 className="text-3xl font-bold text-white">{t('employerProfile.title')}</h1>
             <button
               onClick={() => setIsEditing(!isEditing)}
               className="p-2 text-accent-cyan hover:bg-dark-card rounded-lg transition-colors"
@@ -383,7 +403,7 @@ const EmployerProfile = () => {
               {/* Загрузка аватара */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Аватар компании
+                  {t('employerProfile.companyAvatar')}
                 </label>
                 <div className="space-y-3">
                   {avatarPreview && (
@@ -416,7 +436,7 @@ const EmployerProfile = () => {
                       onClick={() => avatarFileInputRef.current?.click()}
                       className="px-4 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors text-sm flex items-center gap-2"
                     >
-                      📁 {avatarFile ? 'Файл выбран' : 'Выбрать файл'}
+                      📁 {avatarFile ? t('employerProfile.fileSelected') : t('employerProfile.selectFile')}
                     </button>
                     {avatarFile && (
                       <button
@@ -425,17 +445,17 @@ const EmployerProfile = () => {
                         disabled={isUploadingAvatar}
                         className="px-4 py-2 bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg font-medium rounded-lg transition-colors text-sm disabled:opacity-50"
                       >
-                        {isUploadingAvatar ? 'Загрузка...' : 'Загрузить'}
+                        {isUploadingAvatar ? t('employerProfile.uploading') : t('employerProfile.upload')}
                       </button>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400">Максимальный размер файла: 5MB. Поддерживаются JPG, PNG, GIF</p>
+                  <p className="text-xs text-gray-400">{t('employerProfile.maxFileSize')}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Название компании
+                    {t('employerProfile.companyName')}
                   </label>
                   <input
                     type="text"
@@ -448,7 +468,7 @@ const EmployerProfile = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Отрасль
+                    {t('employerProfile.industry')}
                   </label>
                   <select
                     name="industry"
@@ -456,20 +476,20 @@ const EmployerProfile = () => {
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 bg-dark-bg border border-dark-card rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan"
                   >
-                    <option value="">Выберите отрасль</option>
-                    <option value="IT">IT и технологии</option>
-                    <option value="Finance">Финансы</option>
-                    <option value="Healthcare">Здравоохранение</option>
-                    <option value="Education">Образование</option>
-                    <option value="Retail">Розничная торговля</option>
-                    <option value="Manufacturing">Производство</option>
-                    <option value="Other">Другое</option>
+                    <option value="">{t('employerProfile.selectIndustry')}</option>
+                    <option value="IT">{t('employerProfile.industries.it')}</option>
+                    <option value="Finance">{t('employerProfile.industries.finance')}</option>
+                    <option value="Healthcare">{t('employerProfile.industries.healthcare')}</option>
+                    <option value="Education">{t('employerProfile.industries.education')}</option>
+                    <option value="Retail">{t('employerProfile.industries.retail')}</option>
+                    <option value="Manufacturing">{t('employerProfile.industries.manufacturing')}</option>
+                    <option value="Other">{t('employerProfile.industries.other')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Размер компании
+                    {t('employerProfile.companySize')}
                   </label>
                   <select
                     name="companySize"
@@ -477,18 +497,18 @@ const EmployerProfile = () => {
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 bg-dark-bg border border-dark-card rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan"
                   >
-                    <option value="">Выберите размер</option>
-                    <option value="1-10">1-10 сотрудников</option>
-                    <option value="11-50">11-50 сотрудников</option>
-                    <option value="51-200">51-200 сотрудников</option>
-                    <option value="201-500">201-500 сотрудников</option>
-                    <option value="501+">501+ сотрудников</option>
+                    <option value="">{t('employerProfile.selectSize')}</option>
+                    <option value="1-10">{t('employerProfile.companySizes.1-10')}</option>
+                    <option value="11-50">{t('employerProfile.companySizes.11-50')}</option>
+                    <option value="51-200">{t('employerProfile.companySizes.51-200')}</option>
+                    <option value="201-500">{t('employerProfile.companySizes.201-500')}</option>
+                    <option value="501+">{t('employerProfile.companySizes.501+')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Веб-сайт
+                    {t('employerProfile.companyWebsite')}
                   </label>
                   <input
                     type="url"
@@ -502,21 +522,21 @@ const EmployerProfile = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Адрес
+                    {t('employerProfile.companyAddress')}
                   </label>
                   <input
                     type="text"
                     name="companyAddress"
                     value={formData.companyAddress}
                     onChange={handleInputChange}
-                    placeholder="г. Москва, ул. Примерная, д. 1"
+                    placeholder={t('employerProfile.addressPlaceholder')}
                     className="w-full px-4 py-2 bg-dark-bg border border-dark-card rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Телефон
+                    {t('employerProfile.phone')}
                   </label>
                   <input
                     type="tel"
@@ -531,27 +551,26 @@ const EmployerProfile = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Описание компании
+                  {t('employerProfile.companyDescription')}
                 </label>
                 <textarea
                   name="companyDescription"
                   value={formData.companyDescription}
                   onChange={handleInputChange}
                   rows={6}
-                  placeholder="Расскажите о вашей компании..."
+                  placeholder={t('employerProfile.tellAboutCompany')}
                   className="w-full px-4 py-2 bg-dark-bg border border-dark-card rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan"
                 />
               </div>
 
               <div className="flex gap-4">
                 <button type="submit" className="btn-primary">
-                  Сохранить
+                  {t('employerProfile.save')}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     setIsEditing(false);
-                    // Восстанавливаем данные из сохраненного профиля
                     if (profile) {
                       setFormData(profile);
                       setAvatarPreview(profile.avatar ? getImageUrl(profile.avatar) : null);
@@ -560,7 +579,7 @@ const EmployerProfile = () => {
                   }}
                   className="px-6 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors"
                 >
-                  Отмена
+                  {t('employerProfile.cancel')}
                 </button>
               </div>
             </form>
@@ -577,7 +596,7 @@ const EmployerProfile = () => {
                 </div>
                 <div className="flex-1">
                   <h2 className="text-3xl font-bold text-white mb-2">
-                    {profile.companyName || 'Название не указано'}
+                    {profile.companyName || t('employerProfile.nameNotSpecified')}
                   </h2>
                   {profile.industry && (
                     <p className="text-accent-cyan font-medium mb-2">{profile.industry}</p>
@@ -604,7 +623,7 @@ const EmployerProfile = () => {
                 <div className="bg-dark-card rounded-lg p-6">
                   <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                     <Briefcase className="h-5 w-5 text-accent-cyan" />
-                    О компании
+                    {t('employerProfile.aboutCompany')}
                   </h3>
                   <p className="text-gray-300 leading-relaxed whitespace-pre-line">
                     {profile.companyDescription}
@@ -614,7 +633,7 @@ const EmployerProfile = () => {
 
               {/* Contact Information */}
               <div className="bg-dark-card rounded-lg p-6">
-                <h3 className="text-xl font-semibold text-white mb-4">Контактная информация</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">{t('employerProfile.contactInfo')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {profile.email && (
                     <div>
@@ -626,7 +645,7 @@ const EmployerProfile = () => {
                   )}
                   {profile.phone && (
                     <div>
-                      <p className="text-gray-400 text-sm mb-1">Телефон</p>
+                      <p className="text-gray-400 text-sm mb-1">{t('employerProfile.phone')}</p>
                       <a href={`tel:${profile.phone}`} className="text-accent-cyan hover:text-accent-cyan/80">
                         {profile.phone}
                       </a>
@@ -634,7 +653,7 @@ const EmployerProfile = () => {
                   )}
                   {profile.companyWebsite && (
                     <div>
-                      <p className="text-gray-400 text-sm mb-1">Веб-сайт</p>
+                      <p className="text-gray-400 text-sm mb-1">{t('employerProfile.companyWebsite')}</p>
                       <a
                         href={profile.companyWebsite}
                         target="_blank"
@@ -648,7 +667,7 @@ const EmployerProfile = () => {
                   )}
                   {profile.companyAddress && (
                     <div>
-                      <p className="text-gray-400 text-sm mb-1">Адрес</p>
+                      <p className="text-gray-400 text-sm mb-1">{t('employerProfile.companyAddress')}</p>
                       <p className="text-white">{profile.companyAddress}</p>
                     </div>
                   )}
@@ -659,10 +678,10 @@ const EmployerProfile = () => {
               {!profile.companyName && !profile.companyDescription && (
                 <div className="text-center py-12">
                   <Building2 className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">Профиль не заполнен</h3>
-                  <p className="text-gray-400 mb-6">Заполните информацию о вашей компании</p>
+                  <h3 className="text-xl font-semibold text-white mb-2">{t('employerProfile.profileNotFilled')}</h3>
+                  <p className="text-gray-400 mb-6">{t('employerProfile.fillProfileHint')}</p>
                   <button onClick={() => setIsEditing(true)} className="btn-primary">
-                    Заполнить профиль
+                    {t('employerProfile.fillProfile')}
                   </button>
                 </div>
               )}
@@ -675,11 +694,11 @@ const EmployerProfile = () => {
         {activeTab === 'applications' && (
           <div className="bg-dark-surface rounded-lg p-8 border border-dark-card">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white">Отклики на вакансии</h2>
+              <h2 className="text-2xl font-bold text-white">{t('employerProfile.applicationsTitle')}</h2>
             <button
               onClick={loadApplications}
               className="p-2 text-accent-cyan hover:bg-dark-card rounded-lg transition-colors"
-              title="Обновить список откликов"
+              title={t('employerProfile.refreshApplications')}
             >
               <RefreshCw className="h-5 w-5" />
             </button>
@@ -706,7 +725,7 @@ const EmployerProfile = () => {
                           )}
                           <div>
                             <h3 className="text-lg font-semibold text-white">
-                              {app.user?.username || app.user?.email || 'Пользователь'}
+                              {app.user?.username || app.user?.email || t('employerProfile.user')}
                             </h3>
                             {app.user?.email && (
                               <p className="text-gray-400 text-sm">{app.user.email}</p>
@@ -715,10 +734,10 @@ const EmployerProfile = () => {
                         </div>
                         <div className="ml-16">
                           <p className="text-white font-medium mb-1">
-                            Вакансия: {app.vacancy?.title || `Вакансия #${app.vacancyId}` || 'Вакансия удалена'}
+                            {t('employerProfile.vacancy')}: {app.vacancy?.title || `#${app.vacancyId}` || t('employerProfile.vacancyDeleted')}
                           </p>
                           <p className="text-gray-400 text-sm mb-2">
-                            Отклик отправлен: {new Date(app.createdAt).toLocaleDateString('ru-RU', {
+                            {t('employerProfile.applicationSent')}: {new Date(app.createdAt).toLocaleDateString('ru-RU', {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',
@@ -733,7 +752,7 @@ const EmployerProfile = () => {
                           )}
                           {app.user?.resumes && app.user.resumes.length > 0 && (
                             <div className="mt-3">
-                              <p className="text-gray-400 text-sm mb-1">Резюме:</p>
+                              <p className="text-gray-400 text-sm mb-1">{t('employerProfile.resume')}:</p>
                               <p className="text-accent-cyan text-sm">{app.user.resumes[0].title}</p>
                             </div>
                           )}
@@ -745,16 +764,16 @@ const EmployerProfile = () => {
                           app.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
                           'bg-yellow-500/20 text-yellow-400'
                         }`}>
-                          {app.status === 'accepted' ? 'Принят' :
-                           app.status === 'rejected' ? 'Отклонен' :
-                           'На рассмотрении'}
+                          {app.status === 'accepted' ? t('employerProfile.accepted') :
+                           app.status === 'rejected' ? t('employerProfile.rejected') :
+                           t('employerProfile.underReview')}
                         </span>
                         <button
                           onClick={() => handleViewResumes(app.userId)}
                           className="px-3 py-1.5 bg-accent-cyan/20 hover:bg-accent-cyan/30 text-accent-cyan rounded-lg text-sm transition-colors flex items-center gap-1 whitespace-nowrap"
                         >
                           <Eye className="h-4 w-4" />
-                          Посмотреть резюме
+                          {t('employerProfile.viewResume')}
                         </button>
                         {app.status === 'pending' && (
                           <>
@@ -763,14 +782,14 @@ const EmployerProfile = () => {
                               className="px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-sm transition-colors flex items-center gap-1 whitespace-nowrap"
                             >
                               <Check className="h-4 w-4" />
-                              Принять
+                              {t('employerProfile.accept')}
                             </button>
                             <button
                               onClick={() => handleUpdateApplicationStatus(app.id, 'rejected')}
                               className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors flex items-center gap-1 whitespace-nowrap"
                             >
                               <X className="h-4 w-4" />
-                              Отклонить
+                              {t('employerProfile.reject')}
                             </button>
                           </>
                         )}
@@ -783,9 +802,9 @@ const EmployerProfile = () => {
             ) : (
               <Card>
                 <p className="text-gray-300 text-center py-8">
-                  У вас пока нет откликов на вакансии
+                  {t('employerProfile.noApplicationsYet')}
                   <br />
-                  <span className="text-gray-400 text-sm">Убедитесь, что у вас есть активные вакансии и на них есть отклики</span>
+                  <span className="text-gray-400 text-sm">{t('employerProfile.makeActiveVacancies')}</span>
                 </p>
               </Card>
             )}
@@ -820,7 +839,7 @@ const EmployerProfile = () => {
                     {viewingResumes[currentResumeIndex].title}
                   </h2>
                   <p className="text-gray-400">
-                    {viewingResumes[currentResumeIndex].user?.username || 'Кандидат'}
+                    {viewingResumes[currentResumeIndex].user?.username || t('employerProfile.candidate')}
                   </p>
                 </div>
                 <button
@@ -835,7 +854,7 @@ const EmployerProfile = () => {
               {viewingResumes.length > 1 && (
                 <div className="mb-6 pb-4 border-b border-dark-card">
                   <div className="text-sm text-gray-400">
-                    Резюме {currentResumeIndex + 1} из {viewingResumes.length}
+                    {t('employerProfile.resumeCounter', { current: currentResumeIndex + 1, total: viewingResumes.length })}
                   </div>
                 </div>
               )}
@@ -845,7 +864,7 @@ const EmployerProfile = () => {
                 {/* Описание */}
                 {viewingResumes[currentResumeIndex].description && (
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-3">Описание</h3>
+                    <h3 className="text-xl font-semibold text-white mb-3">{t('employerProfile.description')}</h3>
                     <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
                       {viewingResumes[currentResumeIndex].description}
                     </p>
@@ -876,7 +895,7 @@ const EmployerProfile = () => {
                 {/* Навыки */}
                 {viewingResumes[currentResumeIndex].skillsArray && viewingResumes[currentResumeIndex].skillsArray.length > 0 && (
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-3">Навыки</h3>
+                    <h3 className="text-xl font-semibold text-white mb-3">{t('employerProfile.skills')}</h3>
                     <div className="flex flex-wrap gap-2">
                       {viewingResumes[currentResumeIndex].skillsArray.map((skill, i) => (
                         <span
@@ -895,7 +914,7 @@ const EmployerProfile = () => {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                       <Award className="h-5 w-5 text-accent-cyan" />
-                      Опыт работы
+                      {t('employerProfile.experience')}
                     </h3>
                     <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
                       {viewingResumes[currentResumeIndex].experience}
@@ -908,7 +927,7 @@ const EmployerProfile = () => {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                       <GraduationCap className="h-5 w-5 text-accent-cyan" />
-                      Образование
+                      {t('employerProfile.education')}
                     </h3>
                     <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
                       {viewingResumes[currentResumeIndex].education}
@@ -921,7 +940,7 @@ const EmployerProfile = () => {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                       <Globe className="h-5 w-5 text-accent-cyan" />
-                      Портфолио
+                      {t('employerProfile.portfolio')}
                     </h3>
                     <a
                       href={viewingResumes[currentResumeIndex].portfolio}
@@ -943,7 +962,7 @@ const EmployerProfile = () => {
                         className="btn-primary flex items-center gap-2"
                       >
                         <ChevronLeft className="h-4 w-4" />
-                        Предыдущее резюме
+                        {t('employerProfile.previousResume')}
                       </button>
                     )}
                     {viewingResumes.length > 1 && currentResumeIndex < viewingResumes.length - 1 && (
@@ -951,7 +970,7 @@ const EmployerProfile = () => {
                         onClick={handleNextResume}
                         className="btn-primary flex items-center gap-2"
                       >
-                        Следующее резюме
+                        {t('employerProfile.nextResume')}
                         <ChevronRight className="h-4 w-4" />
                       </button>
                     )}
@@ -966,7 +985,7 @@ const EmployerProfile = () => {
                       className="btn-primary flex items-center gap-2"
                     >
                       <MessageSquare className="h-4 w-4" />
-                      Написать сообщение
+                      {t('employerProfile.sendMessage')}
                     </button>
                   </div>
                 </div>

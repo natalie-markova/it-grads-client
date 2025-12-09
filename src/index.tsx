@@ -35,6 +35,8 @@ import ResumeForm from './components/pages/Resume/ResumeForm';
 import InterviewTracker from './components/pages/InterviewTracker/InterviewTracker';
 import { CodeBattleHome, TaskList, VSAITaskList, Playground, Leaderboard, PvPBattle } from './components/pages/CodeBattle';
 import { PositionSelector, PlanDashboard } from './components/pages/DevelopmentPlan';
+import VerifyEmailPending from './components/pages/VerifyEmail/VerifyEmailPending';
+import VerifyEmailSuccess from './components/pages/VerifyEmail/VerifyEmailSuccess';
 
 const router = createBrowserRouter([
   {
@@ -222,6 +224,16 @@ const router = createBrowserRouter([
         <ProtectedRoute>
           <PositionSelector />
         </ProtectedRoute>,
+      },
+      {
+        path: "/verify-email-pending",
+        element:
+          <VerifyEmailPending />
+      },
+      {
+        path: "/verify-email/:token",
+        element:
+          <VerifyEmailSuccess/>
       },
 
     ]}

@@ -270,9 +270,9 @@ export const createPlan = createAsyncThunk(
 // Получить статус активного плана
 export const fetchPlanStatus = createAsyncThunk(
   'developmentPlan/fetchPlanStatus',
-  async (_, { rejectWithValue }) => {
+  async (lang: string = 'ru', { rejectWithValue }) => {
     try {
-      const { data } = await $api.get('/development-plan/active');
+      const { data } = await $api.get('/development-plan/active', { params: { lang } });
       return data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Ошибка загрузки плана');
@@ -283,9 +283,9 @@ export const fetchPlanStatus = createAsyncThunk(
 // Синхронизировать план
 export const syncPlan = createAsyncThunk(
   'developmentPlan/syncPlan',
-  async (_, { rejectWithValue }) => {
+  async (lang: string = 'ru', { rejectWithValue }) => {
     try {
-      const { data } = await $api.post('/development-plan/sync');
+      const { data } = await $api.post('/development-plan/sync', {}, { params: { lang } });
       return data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Ошибка синхронизации');
@@ -469,15 +469,43 @@ const developmentPlanSlice = createSlice({
     // completeStep
     builder
       .addCase(completeStep.fulfilled, (state, action) => {
-        if (state.planStatus && state.planStatus.steps) {
-          const stepIndex = state.planStatus.steps.findIndex(
-            (s) => s.id === action.payload.step.id
-          );
-          if (stepIndex !== -1) {
-            state.planStatus.steps[stepIndex] = action.payload.step;
+        if (state.planStatus) {
+          // Обновляем все шаги из ответа сервера
+          if (action.payload.steps) {
+            state.planStatus.steps = action.payload.steps;
           }
+
+          // Обновляем общий прогресс
           if (state.planStatus.plan) {
             state.planStatus.plan.overallProgress = action.payload.overallProgress;
+            if (action.payload.planStatus) {
+              state.planStatus.plan.status = action.payload.planStatus;
+            }
+          }
+
+          // Обновляем currentStep - теперь это nextStep (который стал in_progress)
+          if (action.payload.nextStep) {
+            state.planStatus.currentStep = action.payload.nextStep;
+          } else if (state.planStatus.steps) {
+            // Fallback: ищем текущий активный шаг из массива
+            const activeStep = state.planStatus.steps.find(s => s.status === 'in_progress') ||
+                               state.planStatus.steps.find(s => s.status === 'unlocked');
+            state.planStatus.currentStep = activeStep;
+          } else {
+            // Если нет следующего шага - план завершён
+            state.planStatus.currentStep = undefined;
+          }
+
+          // Обновляем статистику шагов
+          if (state.planStatus.stepsStats && state.planStatus.steps) {
+            const steps = state.planStatus.steps;
+            state.planStatus.stepsStats = {
+              total: steps.length,
+              completed: steps.filter(s => s.status === 'completed').length,
+              inProgress: steps.filter(s => s.status === 'in_progress').length,
+              unlocked: steps.filter(s => s.status === 'unlocked').length,
+              locked: steps.filter(s => s.status === 'locked').length,
+            };
           }
         }
       });

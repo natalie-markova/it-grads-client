@@ -8,14 +8,14 @@ import type {
 
 export const interviewAPI = {
   // Создать новую сессию интервью
-  createSession: async (config: InterviewConfig): Promise<{
+  createSession: async (config: InterviewConfig, lang: string = 'ru'): Promise<{
     session: InterviewSession;
     firstMessage: InterviewMessage;
   }> => {
     const response = await $api.post<{
       session: InterviewSession;
       firstMessage: InterviewMessage;
-    }>('/interviews', config);
+    }>('/interviews', { ...config, lang });
     return response.data;
   },
 
@@ -28,7 +28,8 @@ export const interviewAPI = {
   // Отправить сообщение пользователя и получить ответ AI
   sendMessage: async (
     sessionId: number,
-    content: string
+    content: string,
+    lang: string = 'ru'
   ): Promise<{
     userMessage: InterviewMessage;
     aiMessage: InterviewMessage;
@@ -36,14 +37,15 @@ export const interviewAPI = {
     const response = await $api.post<{
       userMessage: InterviewMessage;
       aiMessage: InterviewMessage;
-    }>(`/interviews/${sessionId}/message`, { content });
+    }>(`/interviews/${sessionId}/message`, { content, lang });
     return response.data;
   },
 
   // Завершить интервью и получить итоговую оценку
-  completeSession: async (sessionId: number): Promise<InterviewFeedback> => {
+  completeSession: async (sessionId: number, lang: string = 'ru'): Promise<InterviewFeedback> => {
     const response = await $api.post<InterviewFeedback>(
-      `/interviews/${sessionId}/complete`
+      `/interviews/${sessionId}/complete`,
+      { lang }
     );
     return response.data;
   },

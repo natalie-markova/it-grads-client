@@ -78,98 +78,134 @@ const AudioInterview = () => {
   // Web Speech API for recognition
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const interimTranscriptRef = useRef<string>('');
+  const isListeningRef = useRef(false); // Ref для отслеживания состояния
+  const confirmedTextRef = useRef<string>(''); // Храним подтверждённый текст
+  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Для отмены таймера перезапуска
+  const isRestartingRef = useRef(false); // Флаг что идёт перезапуск
 
+  // Инициализация Audio один раз
   useEffect(() => {
-    // Create audio element for Yandex TTS
     audioRef.current = new Audio();
     audioRef.current.onended = () => setIsSpeaking(false);
     audioRef.current.onerror = () => setIsSpeaking(false);
 
-    // Initialize speech recognition with improved settings
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-      // Устанавливаем язык распознавания в зависимости от языка приложения
-      recognitionRef.current.lang = i18n.language === 'en' ? 'en-US' : 'ru-RU';
-      recognitionRef.current.maxAlternatives = 1; // Уменьшаем для стабильности
-
-      // Храним финальный текст отдельно
-      let confirmedText = '';
-
-      recognitionRef.current.onresult = (event: any) => {
-        let interimTranscript = '';
-        let newFinalTranscript = '';
-
-        // Обрабатываем только новые результаты
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            // Финальный результат - добавляем к подтверждённому тексту
-            newFinalTranscript += transcript;
-          } else {
-            // Промежуточный результат - показываем как preview
-            interimTranscript += transcript;
-          }
-        }
-
-        // Если есть новый финальный текст - добавляем его
-        if (newFinalTranscript) {
-          confirmedText = (confirmedText + ' ' + newFinalTranscript).trim();
-          interimTranscriptRef.current = '';
-          setCurrentMessage(confirmedText);
-        } else if (interimTranscript) {
-          // Показываем промежуточный результат (будет заменён финальным)
-          interimTranscriptRef.current = interimTranscript;
-          setCurrentMessage((confirmedText + ' ' + interimTranscript).trim());
-        }
-      };
-
-      // Сбрасываем confirmedText при начале новой записи
-      const originalStart = recognitionRef.current.start.bind(recognitionRef.current);
-      recognitionRef.current.start = () => {
-        confirmedText = '';
-        interimTranscriptRef.current = '';
-        originalStart();
-      };
-
-      recognitionRef.current.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        if (event.error !== 'no-speech') {
-          setIsListening(false);
-          if (event.error === 'not-allowed') {
-            toast.error(t('audioInterview.micAccessDenied'));
-          } else if (event.error === 'network') {
-            toast.error(t('audioInterview.networkError'));
-          }
-        }
-      };
-
-      recognitionRef.current.onend = () => {
-        if (isListening && recognitionRef.current) {
-          try {
-            recognitionRef.current.start();
-          } catch (e) {
-            setIsListening(false);
-          }
-        } else {
-          setIsListening(false);
-        }
-      };
-    }
-
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
     };
-  }, [isListening]);
+  }, []);
+
+  // Инициализация Speech Recognition один раз (без зависимостей от языка)
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event: any) => {
+      let interimTranscript = '';
+      let newFinalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          newFinalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      if (newFinalTranscript) {
+        confirmedTextRef.current = (confirmedTextRef.current + ' ' + newFinalTranscript).trim();
+        setCurrentMessage(confirmedTextRef.current);
+      } else if (interimTranscript) {
+        setCurrentMessage((confirmedTextRef.current + ' ' + interimTranscript).trim());
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.warn('Speech recognition error:', event.error);
+
+      // Критические ошибки - полностью останавливаем
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        isListeningRef.current = false;
+        setIsListening(false);
+        toast.error(t('toasts.micAccessDenied'));
+        return;
+      }
+
+      if (event.error === 'network') {
+        isListeningRef.current = false;
+        setIsListening(false);
+        toast.error(t('toasts.networkError'));
+        return;
+      }
+
+      // Остальные ошибки (aborted, no-speech, audio-capture) - игнорируем
+      // onend сам перезапустит если нужно
+    };
+
+    recognition.onend = () => {
+      // Если это был запланированный перезапуск - игнорируем
+      if (isRestartingRef.current) {
+        isRestartingRef.current = false;
+        return;
+      }
+
+      // Если пользователь всё ещё хочет слушать - перезапускаем
+      if (isListeningRef.current) {
+        // Отменяем предыдущий таймер если есть
+        if (restartTimeoutRef.current) {
+          clearTimeout(restartTimeoutRef.current);
+        }
+
+        restartTimeoutRef.current = setTimeout(() => {
+          if (isListeningRef.current && recognitionRef.current) {
+            try {
+              isRestartingRef.current = true;
+              recognitionRef.current.start();
+            } catch (e: any) {
+              // Если уже запущен - это нормально
+              if (e.message?.includes('already started')) {
+                isRestartingRef.current = false;
+                return;
+              }
+              console.error('Failed to restart recognition:', e);
+              isListeningRef.current = false;
+              setIsListening(false);
+            }
+          }
+        }, 150);
+      }
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+      }
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // Ignore
+        }
+      }
+    };
+  }, []); // Пустой массив зависимостей!
+
+  // Обновляем язык recognition при смене языка (без пересоздания)
+  useEffect(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = i18n.language === 'en' ? 'en-US' : 'ru-RU';
+    }
+  }, [i18n.language]);
 
   // Маппинг персоны на гендер голоса
   const personaGender: Record<string, 'male' | 'female'> = {
@@ -237,16 +273,54 @@ const AudioInterview = () => {
       return;
     }
 
+    // Сбрасываем текст
+    confirmedTextRef.current = '';
     setCurrentMessage('');
+
+    // Отменяем любой pending таймер перезапуска
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = null;
+    }
+
+    // Устанавливаем флаги ПЕРЕД запуском
+    isListeningRef.current = true;
+    isRestartingRef.current = false;
     setIsListening(true);
-    recognitionRef.current.start();
+
+    try {
+      recognitionRef.current.start();
+    } catch (e: any) {
+      // Если уже запущен - это нормально
+      if (e.message?.includes('already started')) {
+        return;
+      }
+      console.error('Failed to start recognition:', e);
+      isListeningRef.current = false;
+      setIsListening(false);
+    }
   };
 
   const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
+    // Сначала сбрасываем все флаги
+    isListeningRef.current = false;
+    isRestartingRef.current = false;
+
+    // Отменяем таймер перезапуска
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = null;
     }
+
     setIsListening(false);
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        // Ignore - может быть уже остановлен
+      }
+    }
   };
 
   const startInterview = async () => {

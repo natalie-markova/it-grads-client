@@ -579,27 +579,24 @@ const GraduateProfile = () => {
   const handleSaveProfile = async (newProfile: Profile) => {
     if (!user) return
     try {
-      // Убеждаемся, что фото сохраняется (не отправляем null, если фото было загружено)
-      // Если photo пустое или null, но в профиле есть фото, сохраняем текущее фото
-      // Если photo есть в newProfile, используем его
-      let photoToSave: string | null = newProfile.photo || null
-      
-      // Если фото пустое, но в текущем профиле есть фото, сохраняем его
-      if (!photoToSave || photoToSave.trim() === '') {
-        photoToSave = profile?.photo || null
-      }
-      
-      // Не отправляем null, если фото было загружено - отправляем пустую строку или текущее значение
-      if (photoToSave === null && profile?.photo) {
-        photoToSave = profile.photo
-      }
-      
+      // Логика сохранения фото:
+      // 1. Если пользователь загрузил новое фото - используем его
+      // 2. Если фото есть в текущем профиле - сохраняем его
+      // 3. Никогда не отправляем пустое/null значение, чтобы не затереть существующее фото на сервере
+
+      // Определяем фото для сохранения
+      const photoToSave = (newProfile.photo && newProfile.photo.trim() !== '')
+        ? newProfile.photo
+        : (profile?.photo && profile.photo.trim() !== '')
+          ? profile.photo
+          : undefined // Не отправляем поле вообще если фото нет
+
       console.log('Saving profile with photo:', photoToSave)
       console.log('newProfile.photo:', newProfile.photo)
       console.log('profile?.photo:', profile?.photo)
-      
-      const response = await $api.put('/user/profile', {
-        photo: photoToSave,
+
+      // Формируем объект для отправки, включая photo только если оно есть
+      const dataToSend: Record<string, unknown> = {
         lastName: newProfile.lastName || null,
         firstName: newProfile.firstName || null,
         middleName: newProfile.middleName || null,
@@ -615,7 +612,14 @@ const GraduateProfile = () => {
         portfolio: newProfile.portfolio || null,
         skills: newProfile.skills || [],
         projects: newProfile.projects || [],
-      })
+      }
+
+      // Добавляем photo только если оно определено
+      if (photoToSave !== undefined) {
+        dataToSend.photo = photoToSave
+      }
+
+      const response = await $api.put('/user/profile', dataToSend)
       
       // Обновляем профиль сразу из ответа сервера
       const savedData = response.data

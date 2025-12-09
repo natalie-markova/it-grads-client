@@ -367,24 +367,24 @@ const CandidatesMap = () => {
 
   const handleStartChat = async (candidateId: number) => {
     if (!user) {
-      toast.error('Войдите в систему, чтобы написать сообщение');
+      toast.error(t('toasts.loginRequired'));
       navigate('/login');
       return;
     }
 
     if (user.role !== 'employer') {
-      toast.error('Только работодатели могут писать кандидатам');
+      toast.error(t('toasts.employerOnly'));
       return;
     }
 
     setCreatingChatFor(candidateId);
     try {
       const chat = await chatAPI.createChat(candidateId);
-      toast.success('Чат создан!');
+      toast.success(t('toasts.chatCreated'));
       navigate(`/messenger/${chat.id}`);
     } catch (error) {
       console.error('Error creating chat:', error);
-      toast.error('Ошибка при создании чата');
+      toast.error(t('toasts.chatError'));
     } finally {
       setCreatingChatFor(null);
     }
@@ -400,7 +400,7 @@ const CandidatesMap = () => {
       const userResumes = response.data;
       
       if (userResumes.length === 0) {
-        toast.error('У пользователя нет резюме');
+        toast.error(t('toasts.noResumes'));
         return;
       }
 
@@ -409,7 +409,7 @@ const CandidatesMap = () => {
       setShowResumeModal(true);
     } catch (error: any) {
       console.error('Error loading user resumes:', error);
-      toast.error('Ошибка при загрузке резюме');
+      toast.error(t('toasts.resumeLoadError'));
     }
   };
 

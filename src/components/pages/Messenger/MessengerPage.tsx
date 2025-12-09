@@ -34,7 +34,7 @@ const MessengerPage = () => {
       setChats(data);
     } catch (error: any) {
       console.error('Error loading chats:', error);
-      toast.error('Ошибка при загрузке чатов');
+      toast.error(t('toasts.chatsLoadError'));
     } finally {
       setLoading(false);
     }
@@ -177,7 +177,7 @@ const MessengerPage = () => {
 
     const handleJoinChatError = (error: any) => {
         console.error('Ошибка присоединения к чату:', error);
-        toast.error('Не удалось присоединиться к чату');
+        toast.error(t('toasts.chatJoinError'));
     };
 
     socketService.onNewMessage(handleNewMessage);
@@ -210,9 +210,9 @@ const MessengerPage = () => {
         setActiveChat(null);
         setMessages([]);
         navigate('/messenger', { replace: true });
-        toast.error('Чат не найден');
+        toast.error(t('toasts.chatNotFound'));
       } else {
-        toast.error('Ошибка при загрузке чата');
+        toast.error(t('toasts.chatLoadError'));
       }
     }
   };
@@ -234,7 +234,7 @@ const MessengerPage = () => {
         // Подписываемся на ошибку однократно
         const errorHandler = (error: any) => {
           console.error('Ошибка отправки сообщения:', error);
-          toast.error('Не удалось отправить сообщение');
+          toast.error(t('toasts.messageError'));
           socketService.off('message-error');
           setSending(false);
         };
@@ -264,7 +264,7 @@ const MessengerPage = () => {
       loadChats();
     } catch (error: any) {
       console.error('Error sending message:', error);
-      toast.error('Ошибка при отправке сообщения');
+      toast.error(t('toasts.messageError'));
       setSending(false);
     }
   };
@@ -284,7 +284,7 @@ const MessengerPage = () => {
 
     try {
       await chatAPI.deleteChat(deleteConfirmChatId);
-      toast.success('Чат успешно удален');
+      toast.success(t('toasts.chatDeleted'));
       
       // Очищаем состояние перед перенаправлением
       setActiveChat(null);

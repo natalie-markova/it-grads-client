@@ -13,7 +13,7 @@ const Footer = ({ user }: FooterProps) => {
   const { t } = useTranslation()
   const handlePhoneClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault()
-    toast.success('Открывается приложение для звонка...')
+    toast.success(t('toasts.phoneAppOpening'))
     // Открываем звонок после небольшой задержки, чтобы показать toast
     setTimeout(() => {
       window.location.href = 'tel:+79991234567'

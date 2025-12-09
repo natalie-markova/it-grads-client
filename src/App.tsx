@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Navbar from "./components/pages/Navbar/Navbar";
 import Footer from "./components/Footer";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { type User, type OutletContext } from "./types";
 import { Toaster } from "react-hot-toast";
 import ScrollToTop from "./components/common/ScrollToTop/ScrollToTop";
@@ -11,6 +11,10 @@ import { ParmaProvider, Parma, ParmaTourOverlay, ParmaRouteWatcher } from "./com
 const App = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
+  const location = useLocation();
+
+  // Скрываем footer на полноэкранных страницах (CodeBattle Playground)
+  const hideFooter = location.pathname.startsWith('/codebattle/play/');
   
   // Сохраняем пользователя в localStorage при изменении
   useEffect(() => {
@@ -128,7 +132,7 @@ const App = () => {
         <main className="flex-grow">
           <Outlet context={contextValue}/>
         </main>
-        <Footer user={user} />
+        {!hideFooter && <Footer user={user} />}
 
         {/* Маскот Парма */}
         <Parma />

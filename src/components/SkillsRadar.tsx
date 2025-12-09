@@ -375,7 +375,7 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
     })
 
     if (!actualUserId) {
-      toast.error('Необходимо войти в систему для сохранения навыков')
+      toast.error(t('toasts.skillsLoginRequired'))
       return
     }
 
@@ -393,7 +393,7 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
         radarImage
       })
 
-      toast.success('Навыки успешно сохранены!')
+      toast.success(t('toasts.skillsSaved'))
       setIsEditing(false)
       await loadSkills()
 
@@ -403,14 +403,14 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
 
       // Перенаправляем на страницу вакансий, если указано
       if (redirectToJobs) {
-        toast.success('Переходим к подбору вакансий...')
+        toast.success(t('toasts.redirectToVacancies'))
         setTimeout(() => {
           navigate('/jobs')
         }, 1500)
       }
     } catch (error) {
       console.error('Error saving skills:', error)
-      toast.error('Ошибка при сохранении навыков')
+      toast.error(t('toasts.skillsSaveError'))
     }
   }
 

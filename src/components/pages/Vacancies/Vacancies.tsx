@@ -4,9 +4,11 @@ import { Vacancy } from '../../../types';
 import { $api } from '../../../utils/axios.instance';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import type { OutletContext } from '../../../types';
 
 const Vacancies = () => {
+  const { t } = useTranslation();
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -43,7 +45,7 @@ const Vacancies = () => {
 
   const handleToggleFavorite = async (vacancyId: number) => {
     if (!user) {
-      toast.error('Необходимо авторизоваться');
+      toast.error(t('toasts.loginRequired'));
       return;
     }
 
@@ -58,17 +60,16 @@ const Vacancies = () => {
           newSet.delete(vacancyId);
           return newSet;
         });
-        toast.success('Вакансия удалена из избранного');
+        toast.success(t('toasts.removedFromFavorites'));
       } else {
         // Добавляем в избранное
         await $api.post('/favorites', { vacancyId });
         setFavoriteIds(prev => new Set(prev).add(vacancyId));
-        toast.success('Вакансия добавлена в избранное');
+        toast.success(t('toasts.addedToFavorites'));
       }
     } catch (error: any) {
       console.error('Error toggling favorite:', error);
-      const errorMessage = error.response?.data?.error || 'Ошибка при изменении избранного';
-      toast.error(errorMessage);
+      toast.error(t('toasts.favoritesError'));
     }
   };
 
@@ -79,7 +80,7 @@ const Vacancies = () => {
       setVacancies(response.data);
     } catch (error) {
       console.error('Error fetching vacancies:', error);
-      toast.error('Ошибка при загрузке вакансий');
+      toast.error(t('toasts.vacanciesLoadError'));
     } finally {
       setLoading(false);
     }
@@ -117,7 +118,7 @@ const Vacancies = () => {
     e.preventDefault();
 
     if (!user) {
-      toast.error('Необходимо авторизоваться');
+      toast.error(t('toasts.loginRequired'));
       navigate('/login');
       return;
     }
@@ -127,7 +128,7 @@ const Vacancies = () => {
         ...formData,
         salary: formData.salary ? parseInt(formData.salary) : undefined
       });
-      toast.success('Вакансия создана');
+      toast.success(t('toasts.vacancyCreated'));
       setShowCreateModal(false);
       setFormData({
         title: '',
@@ -140,15 +141,15 @@ const Vacancies = () => {
       fetchVacancies();
     } catch (error) {
       console.error('Error creating vacancy:', error);
-      toast.error('Ошибка при создании вакансии');
+      toast.error(t('toasts.vacancySaveError'));
     }
   };
 
-  const employmentTypeLabels = {
-    'full-time': 'Полная занятость',
-    'part-time': 'Частичная занятость',
-    'contract': 'Контракт',
-    'internship': 'Стажировка'
+  const employmentTypeLabels: Record<string, string> = {
+    'full-time': t('vacancies.fullTime'),
+    'part-time': t('vacancies.partTime'),
+    'contract': t('vacancies.contract'),
+    'internship': t('vacancies.internship')
   };
 
   if (loading) {
