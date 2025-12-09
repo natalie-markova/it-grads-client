@@ -190,25 +190,22 @@ function Registration() {
             password: password,
             role: role,
         };
+        
         $api.post("/users/registration", data)
         .then((response) => {
             console.log("Response:", response.data)
             if (response.status === 200) {
-                toast.success("Регистрация прошла успешно!")
-                // Auto login after registration
-                return $api.post("/users/login", {
-                    email: data.email,
-                    password: data.password
-                });
-            }
-        })
-        .then((loginResponse) => {
-            if (loginResponse) {
-                setAccessToken(loginResponse.data.accessToken)
-                setUser(loginResponse.data.user)
-                const userRole = loginResponse.data.user?.role || 'graduate'
-                // Добавляем параметр tour=start для запуска тура Пармы
-                navigate(`/profile/${userRole}?tour=start`);
+                toast.success("Регистрация прошла успешно! Проверьте ваш email.")
+                
+                // Сохраняем email для страницы верификации
+                localStorage.setItem('pendingVerificationEmail', data.email);
+                
+                // Сохраняем токен для возможности переотправки письма
+                setAccessToken(response.data.accessToken);
+                setUser(response.data.user);
+                
+                // Редирект на страницу проверки email
+                navigate('/verify-email-pending');
             }
         })
         .catch(error => {
@@ -224,8 +221,8 @@ function Registration() {
                 statusCode === 400 || 
                 errorMessage.toLowerCase().includes('email') && 
                 (errorMessage.toLowerCase().includes('invalid') || 
-                 errorMessage.toLowerCase().includes('format') ||
-                 errorMessage.toLowerCase().includes('некорректн'))
+                errorMessage.toLowerCase().includes('format') ||
+                errorMessage.toLowerCase().includes('некорректн'))
             ) {
                 setEmailError('Некорректный формат email');
                 toast.error('Пожалуйста, введите корректный email адрес');
@@ -246,6 +243,7 @@ function Registration() {
             // Общая ошибка
             toast.error(errorMessage || 'Ошибка регистрации. Попробуйте еще раз.');
         });
+
     }
     
     return (

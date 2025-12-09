@@ -221,11 +221,8 @@ export default function TaskList() {
                 </div>
               ))}
             </div>
-
-              </>
-            );
-          })()
-        }
+          </>
+        )}
       </div>
     </div>
   );
