@@ -89,6 +89,15 @@
     @apply bg-dark-card border border-dark-surface rounded-xl p-6 shadow-card hover:shadow-glow-cyan transition-shadow;
   }
 
+  /* Google Login button hover effect */
+  .google-login-wrapper iframe {
+    transition: opacity 0.2s ease;
+  }
+
+  .google-login-wrapper:hover iframe {
+    opacity: 0.8;
+  }
+
   .section-title {
     @apply text-[24px] md:text-[28px] font-bold text-white mb-4;
   }

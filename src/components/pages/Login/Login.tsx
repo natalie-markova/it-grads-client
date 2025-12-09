@@ -2,6 +2,7 @@ import { FormEvent, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { LogIn, Mail, Lock, Eye, EyeOff, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { $api, setAccessToken } from "../../../utils/axios.instance";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { OutletContext } from "../../../types";
@@ -23,12 +24,12 @@ function Login() {
     useEffect(() => {
         const rememberedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY);
         const rememberedPassword = localStorage.getItem(REMEMBERED_PASSWORD_KEY);
-        
+
         if (rememberedEmail) {
             setSavedEmail(rememberedEmail);
             setRememberMe(true);
         }
-        
+
         if (rememberedPassword) {
             // Декодируем пароль из base64
             try {
@@ -41,6 +42,31 @@ function Login() {
             }
         }
     }, []);
+
+    // Google OAuth handler
+    const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+        try {
+            const response = await $api.post('/users/google', {
+                credential: credentialResponse.credential
+            });
+
+            console.log("Google login response:", response.data);
+            toast.success(t('toasts.loginSuccess'));
+            setAccessToken(response.data.accessToken);
+            setUser(response.data.user);
+
+            const userRole = response.data.user?.role || 'graduate';
+            navigate(`/profile/${userRole}`);
+        } catch (error: any) {
+            console.error("Google login error:", error.response?.data || error.message);
+            toast.error(t('toasts.loginError'));
+        }
+    };
+
+    const handleGoogleError = () => {
+        console.error("Google login failed");
+        toast.error(t('toasts.loginError'));
+    };
     
     function submitHandler(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -179,6 +205,26 @@ function Login() {
                         >
                             {t('auth.loginButton')}
                         </button>
+
+                        <div className="relative my-4">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-600"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-dark-card text-gray-400">{t('auth.or') || 'или'}</span>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-center google-login-wrapper">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={handleGoogleError}
+                                theme="filled_black"
+                                size="large"
+                                text="signin_with"
+                                shape="rectangular"
+                            />
+                        </div>
                     </form>
                 </div>
             </div>
