@@ -18,6 +18,8 @@
     "error": "Error",
     "success": "Success",
     "noResults": "No results found",
+    "confirm": "Confirm",
+    "rub": "RUB",
     "more": "More",
     "less": "Less",
     "learnMore": "Learn more",
@@ -89,7 +91,7 @@
     },
     "sources": {
       "codeBattle": "Code Battle",
-      "resume": "Resume",
+      "resume": "CV",
       "roadmap": "Career Roadmap",
       "aiInterview": "AI Interview",
       "audioInterview": "Audio Interview",
@@ -190,7 +192,20 @@
     },
     "tasks": "Tasks",
     "allTasks": "All tasks",
-    "solutions": "{{count}} solutions"
+    "solutions": "{{count}} solutions",
+    "taskList": {
+      "back": "Back",
+      "title": "All Tasks",
+      "allDifficulties": "All difficulties",
+      "allCategories": "All categories",
+      "allLanguages": "All languages",
+      "resetFilters": "Reset filters",
+      "noTasks": "No tasks found",
+      "found": "Found: {{count}} tasks",
+      "minutes": "min",
+      "availableLanguages": "Available languages:",
+      "points": "pts"
+    }
   },
   "navbar": {
     "skillsRadar": "Skills Radar",
@@ -552,7 +567,110 @@
     "myVacancies": "My Vacancies",
     "noVacancies": "No vacancies found",
     "allVacancies": "All vacancies",
-    "recommended": "Recommended for you"
+    "recommended": "Recommended for you",
+    "details": "Details",
+    "errors": {
+      "loginRequired": "Please login",
+      "invalidId": "Invalid vacancy ID",
+      "favoriteError": "Error changing favorites",
+      "applyError": "Error submitting application"
+    },
+    "success": {
+      "addedToFavorites": "Vacancy added to favorites",
+      "removedFromFavorites": "Vacancy removed from favorites",
+      "applied": "Application submitted successfully!",
+      "chatCreated": "Chat created!"
+    },
+    "modal": {
+      "description": "Description",
+      "requirements": "Requirements",
+      "jobType": "Job Type",
+      "workFormat": "Work Format",
+      "requiredSkills": "Required Skills",
+      "technologies": "Technologies",
+      "programmingLanguages": "Programming Languages",
+      "additionalSkills": "Additional Skills",
+      "yourVerifiedSkills": "Your Verified Skills",
+      "learningPathSkills": "Learning Path Skills",
+      "learningPathSkillsDesc": "These skills are part of your learning plan on the roadmap",
+      "englishLevel": "English Level",
+      "companySize": "Company Size",
+      "industry": "Industry",
+      "matchesRoadmap": "Matches your specialization roadmap",
+      "close": "Close"
+    },
+    "chat": {
+      "loginRequired": "Please login to send a message",
+      "graduateOnly": "Only graduates can message employers",
+      "creating": "Creating...",
+      "write": "Message",
+      "chatError": "Error creating chat"
+    },
+    "labels": {
+      "match": "match",
+      "skillsAndMap": "Skills + Roadmap",
+      "byRoadmap": "By specialization map",
+      "byLearningPath": "By learning path",
+      "yourSkills": "Your skills",
+      "learningNow": "Currently learning"
+    },
+    "types": {
+      "fullTime": "Full-time",
+      "partTime": "Part-time",
+      "remote": "Remote",
+      "hybrid": "Hybrid",
+      "internship": "Internship",
+      "freelance": "Freelance"
+    },
+    "levels": {
+      "noExperience": "No experience",
+      "junior": "Junior",
+      "juniorFull": "Junior (up to 2 years)",
+      "middle": "Middle",
+      "middleFull": "Middle (2-5 years)",
+      "senior": "Senior",
+      "seniorFull": "Senior (5+ years)",
+      "lead": "Lead",
+      "teamLead": "Team Lead/Tech Lead"
+    },
+    "workFormats": {
+      "office": "Office",
+      "hybrid": "Hybrid",
+      "remote": "Remote"
+    },
+    "english": {
+      "basic": "Basic",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced",
+      "fluent": "Fluent"
+    },
+    "companySizes": {
+      "startup": "Startup (<10)",
+      "startupShort": "Startups (<10)",
+      "small": "Small (10-50)",
+      "smallShort": "Small (10-50)",
+      "medium": "Medium (50-200)",
+      "mediumShort": "Medium (50-200)",
+      "large": "Large (>200)",
+      "largeShort": "Large (>200)"
+    },
+    "filterLabels": {
+      "activeFilters": "Active filters:",
+      "employmentType": "Employment type",
+      "format": "Format",
+      "salary": "Salary:",
+      "technologies": "Technologies",
+      "languages": "Languages",
+      "skills": "Skills",
+      "english": "English",
+      "clearAll": "Clear all"
+    },
+    "noResults": {
+      "empty": "No vacancies found",
+      "emptyWithHint": "No vacancies found. Fill in your resume, profile or skill radar for recommendations.",
+      "addToFavorites": "Add to favorites",
+      "removeFromFavorites": "Remove from favorites"
+    }
   },
   "candidates": {
     "title": "Candidates",
@@ -566,7 +684,7 @@
     "totalCandidates": "Total Candidates",
     "onMap": "On Map",
     "writeMessage": "Message",
-    "viewResume": "View Resume",
+    "viewResume": "View CV",
     "goToMoscow": "Moscow",
     "resetFilters": "Reset filters",
     "totalInCity": "Total candidates"
@@ -780,17 +898,17 @@
     "deleteProfile": "Delete Profile",
     "createProfile": "Create Profile",
     "profileNotFilled": "Profile not filled",
-    "myResume": "My Resume",
-    "myResumes": "My Resumes",
-    "createResume": "Create Resume",
-    "noResumes": "You don't have any resumes yet. Create your first resume!",
+    "myResume": "My CV",
+    "myResumes": "My CVs",
+    "createResume": "Create CV",
+    "noResumes": "You don't have any CVs yet. Create your first CV!",
     "myResponses": "My Responses",
     "noResponses": "You don't have any responses yet",
     "myVacancies": "My Vacancies",
     "favorites": "Favorite Vacancies",
     "noFavorites": "You don't have any favorite vacancies yet",
     "skillsRadar": "Skills Radar",
-    "noRadar": "You don't have a skills radar yet. Create a resume and generate your skills radar!",
+    "noRadar": "You don't have a skills radar yet. Create a CV and generate your skills radar!",
     "settings": "Settings",
     "about": "About",
     "experience": "Experience",
@@ -820,12 +938,46 @@
     "selectFile": "Select file",
     "upload": "Upload",
     "uploading": "Uploading...",
-    "maxFileSize": "Max file size: 5MB. Supported formats: JPG, PNG, GIF"
+    "maxFileSize": "Max file size: 5MB. Supported formats: JPG, PNG, GIF",
+    "vacancyDeleted": "Vacancy deleted",
+    "unknownCompany": "Unknown company",
+    "errors": {
+      "selectImage": "Please select an image file",
+      "fileTooLarge": "File size must not exceed 5MB",
+      "serverConnection": "Server connection error. Please check if the server is running.",
+      "uploadError": "Error uploading photo",
+      "saveError": "Error saving profile",
+      "deleteError": "Error deleting profile",
+      "removeFavoriteError": "Error removing from favorites",
+      "deleteApplicationError": "Error deleting application",
+      "deleteResumeError": "Error deleting CV"
+    },
+    "success": {
+      "photoUploaded": "Photo uploaded successfully",
+      "profileUpdated": "Profile updated successfully",
+      "profileDeleted": "Profile deleted successfully",
+      "removedFromFavorites": "Vacancy removed from favorites",
+      "applicationDeleted": "Application deleted",
+      "resumeDeleted": "CV deleted"
+    },
+    "confirmDelete": {
+      "profileTitle": "Delete Profile",
+      "profileMessage": "Are you sure you want to delete your profile? This action cannot be undone.",
+      "resumeTitle": "Delete CV",
+      "resumeMessage": "Are you sure you want to delete this CV? This action cannot be undone."
+    },
+    "tooltips": {
+      "editResume": "Edit CV",
+      "deleteResume": "Delete CV",
+      "deletePhoto": "Delete photo",
+      "removeFromFavorites": "Remove from favorites",
+      "deleteApplication": "Delete application"
+    }
   },
   "resume": {
-    "title": "Resume",
-    "create": "Create Resume",
-    "edit": "Edit Resume",
+    "title": "CV",
+    "create": "Create CV",
+    "edit": "Edit CV",
     "position": "Position",
     "description": "Description",
     "skills": "Skills",
@@ -867,8 +1019,8 @@
       "description": "AI chatbot helps identify strengths, choose a direction, and find the ideal job."
     },
     "resumeCreation": {
-      "title": "Automatic Resume Creation",
-      "description": "Resume generation in various formats based on profile and projects, with customization options for specific vacancies."
+      "title": "Automatic CV Creation",
+      "description": "CV generation in various formats based on profile and projects, with customization options for specific vacancies."
     },
     "vacancyAnalysis": {
       "title": "Vacancy Match Analysis",
@@ -956,25 +1108,119 @@
       "techWriter": "Technical Writer"
     }
   },
+  "trackerAccess": {
+    "title": "Calendar Access Management",
+    "addCompany": "Add Company",
+    "addGraduate": "Add Graduate",
+    "graduateDescription": "Allow companies to view your interview calendar. You can revoke access at any time.",
+    "employerDescription": "Allow graduates to view your interview calendar. You can revoke access at any time.",
+    "searchGraduate": "Search Graduate",
+    "searchGraduatePlaceholder": "Enter graduate name...",
+    "notFoundOrHasAccess": "Graduates not found or already have access",
+    "grantAccess": "Grant Access",
+    "loading": "Loading...",
+    "noGraduatesWithAccess": "No graduates with access",
+    "useSearchAbove": "Use the search above to find and grant access to a graduate",
+    "noCompaniesWithAccess": "No companies with access",
+    "companiesDescription": "Companies you granted access to, or who granted access to you, will appear here",
+    "graduatesIGrantedAccess": "Graduates I granted access to",
+    "graduatesWhoGrantedMe": "Graduates who granted access to me",
+    "companiesIGrantedAccess": "Companies I granted access to",
+    "companiesWhoGrantedMe": "Companies who granted access to me",
+    "accessGrantedOn": "Access granted on",
+    "active": "Active",
+    "viewCalendar": "View Calendar",
+    "revokeAccess": "Revoke Access",
+    "searchCompany": "Search company (enter first letter or name)",
+    "searchCompanyPlaceholder": "Enter first letter or company name...",
+    "selectCompany": "Select Company",
+    "selectGraduate": "Select Graduate",
+    "enterFirstLetter": "Enter the first letter of the company name or name to search",
+    "enterNameForSearch": "Enter the first letter of last name or full name to search",
+    "companiesNotFound": "No companies found or they already have access.",
+    "graduatesNotFound": "No graduates found or they already have access.",
+    "revokeAccessFor": "Revoke access for {{name}}?",
+    "revokeConfirmGraduate": "Are you sure you want to revoke access? The company will no longer be able to view your interview calendar.",
+    "revokeConfirmEmployer": "Are you sure you want to revoke access? The graduate will no longer be able to view your interview calendar.",
+    "revoke": "Revoke",
+    "calendarTitle": "Interview Calendar: {{name}}",
+    "loadingCalendar": "Loading calendar...",
+    "noScheduledInterviews": "No scheduled interviews",
+    "scheduled": "Scheduled",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "online": "Online",
+    "offline": "Office",
+    "phone": "Phone",
+    "errors": {
+      "loadAccess": "Error loading access list",
+      "loadEmployers": "Error loading companies list",
+      "loadGraduates": "Error loading graduates list",
+      "selectCompany": "Select a company",
+      "selectGraduate": "Select a graduate",
+      "grantAccess": "Error granting access",
+      "revokeAccess": "Error revoking access",
+      "loadCalendar": "Error loading calendar"
+    },
+    "success": {
+      "accessGranted": "Access granted",
+      "accessRevoked": "Access revoked"
+    }
+  },
+  "changePassword": {
+    "title": "Change Password",
+    "description": "Change your password to keep your account secure",
+    "currentPassword": "Current Password",
+    "currentPasswordPlaceholder": "Enter current password",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter new password",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm new password",
+    "requirements": "Password requirements:",
+    "minLength": "at least 8 characters",
+    "upperLower": "includes at least 1 uppercase and 1 lowercase letter (A-Z, a-z)",
+    "submit": "Change Password",
+    "submitting": "Saving...",
+    "errors": {
+      "minLength": "Password must be at least 8 characters",
+      "needUppercase": "Password must contain at least one uppercase letter",
+      "needLowercase": "Password must contain at least one lowercase letter",
+      "mismatch": "Passwords do not match",
+      "samePassword": "New and old passwords cannot be the same",
+      "enterCurrent": "Enter current password",
+      "changeFailed": "Error changing password"
+    },
+    "success": "Password changed successfully"
+  },
   "developmentPlan": {
-    "title": "Development Plan",
+    "title": "Career Manager",
     "subtitle": "Your personalized career development path",
+    "selectGoal": "Select Development Goal",
+    "selectGoalDescription": "The system will create a personalized plan based on your current profile",
     "selectPosition": "Select Target Position",
     "selectPositionDesc": "Choose a specialization to create a development plan",
+    "recommended": "Recommended for You",
     "recommendedPositions": "Recommended Positions",
     "allPositions": "All Positions",
+    "match": "Match",
     "currentMatch": "Current Match",
+    "profileMatch": "Profile Match",
     "skillGap": "Skill Gap",
+    "skillsGap": "Skills Gap",
     "requiredRoadmaps": "Required Roadmaps",
     "codebattleReqs": "CodeBattle Requirements",
+    "rating": "Rating",
     "minRating": "Min Rating",
+    "solved": "Tasks Solved",
     "minSolved": "Min Tasks Solved",
-    "createPlan": "Create Plan",
+    "createPlan": "Create Development Plan",
+    "creating": "Creating plan...",
     "viewGap": "View Gap Analysis",
     "planDashboard": "Plan Dashboard",
     "overallProgress": "Overall Progress",
     "currentStep": "Current Step",
     "skillProgress": "Skill Progress",
+    "planSteps": "Plan Steps",
     "steps": "Steps",
     "stepCompleted": "Completed",
     "stepInProgress": "In Progress",
@@ -984,13 +1230,43 @@
     "noRecommendedTasks": "No recommended tasks for current step",
     "pausePlan": "Pause Plan",
     "resumePlan": "Resume Plan",
+    "pause": "Pause",
+    "resume": "Resume",
     "abandonPlan": "Abandon Plan",
     "abandonConfirm": "Are you sure you want to abandon this plan? You can create a new plan later.",
-    "noPlan": "No Active Plan",
+    "confirmAbandon": "Are you sure you want to abandon this plan?",
+    "noPlan": "You don't have an active development plan",
+    "noPlanDescription": "Select a target position and the system will create a personalized learning plan",
     "noPlanDesc": "Create a development plan to track your progress toward your career goals",
     "createNewPlan": "Create New Plan",
+    "yourGoal": "Your development goal",
+    "sync": "Sync",
+    "estimatedTime": "Estimated time",
+    "weeks": "weeks",
     "estimatedWeeks": "Estimated {{weeks}} weeks",
     "targetPosition": "Target Position",
+    "allCategories": "All Categories",
+    "allLevels": "All Levels",
+    "taskProgress": "Progress",
+    "goToCodeBattle": "Go to CodeBattle",
+    "roadmapProgress": "Progress",
+    "continue": "Continue",
+    "practiceQuiz": "Practice Quiz",
+    "aiInterview": "AI Interview",
+    "audioInterview": "Audio Interview",
+    "anyTrainer": "Any Trainer",
+    "interview": "Trainer",
+    "successful": "successful",
+    "minPassScore": "Min pass score",
+    "totalAttempts": "total attempts",
+    "goToTrainer": "Go to Trainer",
+    "tasks": "tasks",
+    "completed": "completed",
+    "sessions": "sessions",
+    "viewRadar": "Open Skills Radar",
+    "allTasks": "All Tasks",
+    "actions": "Actions",
+    "changePlan": "Change Goal",
     "planStatus": {
       "active": "Active",
       "paused": "Paused",
@@ -1153,6 +1429,66 @@
         "title": "Done!",
         "text": "Now you're ready to go! If you have questions — I'm always here. Good luck finding talent! 🐕"
       }
+    }
+  },
+  "candidates": {
+    "title": "Candidates",
+    "subtitle": "Browse resumes and find suitable candidates",
+    "candidatesMap": "Candidates Map",
+    "stats": {
+      "total": "Total candidates",
+      "filtered": "Filtered",
+      "cities": "Cities",
+      "skills": "Skills"
+    },
+    "search": {
+      "placeholder": "Search by skills, cities, name...",
+      "filters": "Filters"
+    },
+    "filters": {
+      "level": "Level",
+      "allLevels": "All levels",
+      "city": "City",
+      "allCities": "All cities",
+      "salaryFrom": "Salary from",
+      "salaryTo": "Salary to",
+      "minPlaceholder": "min",
+      "maxPlaceholder": "max",
+      "skills": "Skills",
+      "selected": "Selected:",
+      "clearAll": "Clear all filters",
+      "reset": "Reset filters"
+    },
+    "loading": "Loading resumes...",
+    "noResults": "No candidates found",
+    "noResultsHint": "Try changing search parameters",
+    "salaryFrom": "from {{salary}}",
+    "experience": "Work Experience",
+    "education": "Education",
+    "portfolio": "Portfolio",
+    "skillsTitle": "Skills",
+    "viewResume": "View CV",
+    "writeMessage": "Message",
+    "creatingChat": "Creating...",
+    "modal": {
+      "candidate": "Candidate",
+      "description": "Description",
+      "resumeCount": "CV {{current}} of {{total}}"
+    },
+    "navigation": {
+      "prevResume": "Previous CV",
+      "nextResume": "Next CV",
+      "sendMessage": "Send Message"
+    },
+    "errors": {
+      "loginRequired": "Please log in to send a message",
+      "employerOnly": "Only employers can message candidates",
+      "noResumes": "User has no resumes",
+      "loadError": "Error loading resumes",
+      "chatError": "Error creating chat"
+    },
+    "success": {
+      "chatCreated": "Chat created!"
     }
   }
 }

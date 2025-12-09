@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import Card from '../../ui/Card';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
 const ChangePassword = () => {
+  const { t } = useTranslation();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,15 +20,15 @@ const ChangePassword = () => {
 
   const validatePassword = (password: string): boolean => {
     if (password.length < 8) {
-      setPasswordError('Пароль должен быть не менее 8 символов');
+      setPasswordError(t('changePassword.errors.minLength'));
       return false;
     }
     if (!/[A-Z]/.test(password)) {
-      setPasswordError('Пароль должен содержать хотя бы одну заглавную букву');
+      setPasswordError(t('changePassword.errors.needUppercase'));
       return false;
     }
     if (!/[a-z]/.test(password)) {
-      setPasswordError('Пароль должен содержать хотя бы одну строчную букву');
+      setPasswordError(t('changePassword.errors.needLowercase'));
       return false;
     }
     setPasswordError('');
@@ -35,7 +37,7 @@ const ChangePassword = () => {
 
   const validatePasswordMatch = (password: string, confirmPassword: string): boolean => {
     if (confirmPassword && password !== confirmPassword) {
-      setConfirmPasswordError('Пароли не совпадают');
+      setConfirmPasswordError(t('changePassword.errors.mismatch'));
       return false;
     }
     setConfirmPasswordError('');
@@ -44,7 +46,7 @@ const ChangePassword = () => {
 
   const validateDifferentPasswords = (currentPassword: string, newPassword: string): boolean => {
     if (currentPassword && newPassword && currentPassword === newPassword) {
-      setSamePasswordError('Новый и старый пароли не могут совпадать');
+      setSamePasswordError(t('changePassword.errors.samePassword'));
       return false;
     }
     setSamePasswordError('');
@@ -60,7 +62,7 @@ const ChangePassword = () => {
     setSamePasswordError('');
 
     if (!currentPassword) {
-      toast.error('Введите текущий пароль');
+      toast.error(t('changePassword.errors.enterCurrent'));
       return;
     }
 
@@ -94,15 +96,15 @@ const ChangePassword = () => {
         withCredentials: true
       });
 
-      toast.success('Пароль успешно изменен');
-      
+      toast.success(t('changePassword.success'));
+
       // Очищаем поля
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: any) {
       console.error('Error changing password:', error);
-      const errorMessage = error.response?.data?.error || 'Ошибка при смене пароля';
+      const errorMessage = error.response?.data?.error || t('changePassword.errors.changeFailed');
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -112,15 +114,15 @@ const ChangePassword = () => {
   return (
     <div className="mt-8">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Смена пароля</h2>
-        <p className="text-gray-400 text-sm">Измените ваш пароль для обеспечения безопасности аккаунта</p>
+        <h2 className="text-2xl font-bold text-white mb-2">{t('changePassword.title')}</h2>
+        <p className="text-gray-400 text-sm">{t('changePassword.description')}</p>
       </div>
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Текущий пароль */}
           <div>
             <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-300 mb-2">
-              Текущий пароль
+              {t('changePassword.currentPassword')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -140,7 +142,7 @@ const ChangePassword = () => {
                 }}
                 required
                 className="input-field pl-10 pr-10"
-                placeholder="Введите текущий пароль"
+                placeholder={t('changePassword.currentPasswordPlaceholder')}
               />
               <button
                 type="button"
@@ -159,7 +161,7 @@ const ChangePassword = () => {
           {/* Новый пароль */}
           <div>
             <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-2">
-              Новый пароль
+              {t('changePassword.newPassword')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -189,7 +191,7 @@ const ChangePassword = () => {
                 }}
                 required
                 className={`input-field pl-10 pr-10 ${passwordError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
-                placeholder="Введите новый пароль"
+                placeholder={t('changePassword.newPasswordPlaceholder')}
               />
               <button
                 type="button"
@@ -211,11 +213,11 @@ const ChangePassword = () => {
             )}
             <div className="mt-2">
               <p className="text-sm text-gray-400 mb-2">
-                Требования к паролю:
+                {t('changePassword.requirements')}
               </p>
               <ul className="text-sm text-gray-400 space-y-1 list-disc list-inside">
-                <li>не менее 8 символов</li>
-                <li>включает минимум 1 заглавную и 1 строчную букву (A-Z, a-z)</li>
+                <li>{t('changePassword.minLength')}</li>
+                <li>{t('changePassword.upperLower')}</li>
               </ul>
             </div>
           </div>
@@ -223,7 +225,7 @@ const ChangePassword = () => {
           {/* Подтверждение пароля */}
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-              Подтверждение пароля
+              {t('changePassword.confirmPassword')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -244,7 +246,7 @@ const ChangePassword = () => {
                 }}
                 required
                 className={`input-field pl-10 pr-10 ${confirmPasswordError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
-                placeholder="Подтвердите новый пароль"
+                placeholder={t('changePassword.confirmPasswordPlaceholder')}
               />
               <button
                 type="button"
@@ -270,7 +272,7 @@ const ChangePassword = () => {
               disabled={isSubmitting}
               className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Сохранение...' : 'Изменить пароль'}
+              {isSubmitting ? t('changePassword.submitting') : t('changePassword.submit')}
             </button>
           </div>
         </form>

@@ -49,14 +49,14 @@ const Jobs = () => {
 
   const handleToggleFavorite = async (jobId: string) => {
     if (!user) {
-      toast.error('Необходимо авторизоваться')
+      toast.error(t('vacancies.errors.loginRequired'))
       return
     }
 
     try {
       const vacancyId = parseInt(jobId, 10)
       if (isNaN(vacancyId)) {
-        toast.error('Неверный ID вакансии')
+        toast.error(t('vacancies.errors.invalidId'))
         return
       }
 
@@ -70,16 +70,16 @@ const Jobs = () => {
           newSet.delete(vacancyId)
           return newSet
         })
-        toast.success('Вакансия удалена из избранного')
+        toast.success(t('vacancies.success.removedFromFavorites'))
       } else {
         // Добавляем в избранное
         await $api.post('/favorites', { vacancyId })
         setFavoriteIds(prev => new Set(prev).add(vacancyId))
-        toast.success('Вакансия добавлена в избранное')
+        toast.success(t('vacancies.success.addedToFavorites'))
       }
     } catch (error: any) {
       console.error('Error toggling favorite:', error)
-      const errorMessage = error.response?.data?.error || 'Ошибка при изменении избранного'
+      const errorMessage = error.response?.data?.error || t('vacancies.errors.favoriteError')
       toast.error(errorMessage)
     }
   }
@@ -138,24 +138,24 @@ const Jobs = () => {
 
   const handleApply = async (jobId: string) => {
     if (!user) {
-      toast.error('Необходимо авторизоваться')
+      toast.error(t('vacancies.errors.loginRequired'))
       return
     }
 
     try {
       const vacancyId = parseInt(jobId, 10)
-      
+
       if (isNaN(vacancyId)) {
-        toast.error('Неверный ID вакансии')
+        toast.error(t('vacancies.errors.invalidId'))
         return
       }
 
       await $api.post('/applications', { vacancyId })
       setAppliedIds(prev => new Set(prev).add(vacancyId))
-      toast.success('Отклик успешно отправлен!')
+      toast.success(t('vacancies.success.applied'))
     } catch (error: any) {
       console.error('Error applying to job:', error)
-      const errorMessage = error.response?.data?.error || 'Ошибка при отправке отклика'
+      const errorMessage = error.response?.data?.error || t('vacancies.errors.applyError')
       toast.error(errorMessage)
     }
   }

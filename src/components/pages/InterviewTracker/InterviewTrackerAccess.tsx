@@ -114,7 +114,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
       }
     } catch (error) {
       console.error('Error loading accesses:', error)
-      toast.error('Ошибка при загрузке списка доступа')
+      toast.error(t('trackerAccess.errors.loadAccess'))
     } finally {
       setLoading(false)
     }
@@ -126,7 +126,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
       setEmployers(response.data)
     } catch (error) {
       console.error('Error loading employers:', error)
-      toast.error('Ошибка при загрузке списка компаний')
+      toast.error(t('trackerAccess.errors.loadEmployers'))
     }
   }
 
@@ -137,7 +137,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
       setGraduates(response.data)
     } catch (error) {
       console.error('Error loading graduates:', error)
-      toast.error('Ошибка при загрузке списка выпускников')
+      toast.error(t('trackerAccess.errors.loadGraduates'))
     }
   }
 
@@ -148,13 +148,13 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
     }
     const targetId = selectedId || selectedGraduateId
     if (!targetId) {
-      toast.error(userRole === 'graduate' ? 'Выберите компанию' : 'Выберите выпускника')
+      toast.error(userRole === 'graduate' ? t('trackerAccess.errors.selectCompany') : t('trackerAccess.errors.selectGraduate'))
       return
     }
 
     try {
       await $api.post('/interview-tracker/access', { targetId: Number(targetId) })
-      toast.success('Доступ предоставлен')
+      toast.success(t('trackerAccess.success.accessGranted'))
       loadAccesses()
       setIsModalOpen(false)
       setSelectedId('')
@@ -162,7 +162,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
       setSearchQuery('')
     } catch (error: any) {
       console.error('Error adding access:', error)
-      const errorMessage = error.response?.data?.error || 'Ошибка при предоставлении доступа'
+      const errorMessage = error.response?.data?.error || t('trackerAccess.errors.grantAccess')
       toast.error(errorMessage)
     }
   }
@@ -170,13 +170,13 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
   const handleGrantAccess = async (graduateId: number) => {
     try {
       await $api.post('/interview-tracker/access', { targetId: graduateId })
-      toast.success('Доступ предоставлен')
+      toast.success(t('trackerAccess.success.accessGranted'))
       loadAccesses()
       setSelectedGraduateId(null)
       setSearchQuery('')
     } catch (error: any) {
       console.error('Error adding access:', error)
-      const errorMessage = error.response?.data?.error || 'Ошибка при предоставлении доступа'
+      const errorMessage = error.response?.data?.error || t('trackerAccess.errors.grantAccess')
       toast.error(errorMessage)
     }
   }
@@ -190,12 +190,12 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
 
     try {
       await $api.delete(`/interview-tracker/access/${deleteConfirm.id}`)
-      toast.success('Доступ запрещен')
+      toast.success(t('trackerAccess.success.accessRevoked'))
       loadAccesses()
       setDeleteConfirm({ isOpen: false, id: null, name: '' })
     } catch (error: any) {
       console.error('Error deleting access:', error)
-      const errorMessage = error.response?.data?.error || 'Ошибка при запрете доступа'
+      const errorMessage = error.response?.data?.error || t('trackerAccess.errors.revokeAccess')
       toast.error(errorMessage)
     }
   }
@@ -208,7 +208,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
       setCalendarInterviews(response.data)
     } catch (error: any) {
       console.error('Error loading calendar:', error)
-      const errorMessage = error.response?.data?.error || 'Ошибка при загрузке календаря'
+      const errorMessage = error.response?.data?.error || t('trackerAccess.errors.loadCalendar')
       toast.error(errorMessage)
       setViewingCalendar({ isOpen: false, userId: null, userName: '' })
     } finally {
@@ -373,7 +373,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
           <div className="flex items-center gap-3">
             <Shield className="h-6 w-6 text-accent-cyan" />
             <h2 className="text-xl font-semibold text-white">
-              {userRole === 'graduate' ? 'Управление доступом к календарю' : 'Управление доступом к календарю'}
+              {t('trackerAccess.title')}
             </h2>
           </div>
           {userRole === 'graduate' && (
@@ -382,22 +382,22 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
               className="btn-primary flex items-center gap-2"
             >
               <Plus className="h-5 w-5" />
-              Добавить компанию
+              {t('trackerAccess.addCompany')}
             </button>
           )}
         </div>
 
         <p className="text-gray-400 text-sm mb-6">
-          {userRole === 'graduate' 
-            ? 'Разрешите компаниям видеть ваш календарь собеседований. Вы можете в любой момент запретить доступ.'
-            : 'Разрешите выпускникам видеть ваш календарь собеседований. Вы можете в любой момент запретить доступ.'}
+          {userRole === 'graduate'
+            ? t('trackerAccess.graduateDescription')
+            : t('trackerAccess.employerDescription')}
         </p>
 
         {/* Блок поиска выпускников для работодателя */}
         {userRole === 'employer' && (
           <div className="mb-6 p-4 bg-dark-surface border border-dark-card rounded-lg">
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Поиск выпускника
+              {t('trackerAccess.searchGraduate')}
             </label>
             <div className="relative z-10">
               <input
@@ -417,7 +417,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                     setSelectedGraduateId(null)
                   }
                 }}
-                placeholder="Введите имя или фамилию выпускника..."
+                placeholder={t('trackerAccess.searchGraduatePlaceholder')}
                 className="w-full bg-dark-bg border border-dark-card rounded-lg px-4 py-2 text-white"
               />
               {searchQuery && !selectedGraduateId && getFilteredGraduatesForAccess().length > 0 && (
@@ -461,7 +461,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
             </div>
             {searchQuery && getFilteredGraduatesForAccess().length === 0 && graduates.length > 0 && (
               <p className="text-xs text-gray-400 mt-1">
-                Выпускники не найдены или уже имеют доступ
+                {t('trackerAccess.notFoundOrHasAccess')}
               </p>
             )}
             {selectedGraduateId && (
@@ -500,7 +500,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                   className="btn-primary flex items-center gap-2"
                 >
                   <Shield className="h-4 w-4" />
-                  Разрешить доступ
+                  {t('trackerAccess.grantAccess')}
                 </button>
               </div>
             )}
@@ -508,16 +508,16 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
         )}
 
         {loading ? (
-          <div className="text-center py-8 text-gray-400">Загрузка...</div>
+          <div className="text-center py-8 text-gray-400">{t('trackerAccess.loading')}</div>
         ) : (userRole === 'employer' ? (
           // Для работодателя показываем два отдельных списка
           <>
             {grantedByMe.length === 0 && grantedToMe.length === 0 ? (
               <div className="text-center py-8">
                 <Shield className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                <p className="text-gray-400 mb-4">Нет выпускников с доступом</p>
+                <p className="text-gray-400 mb-4">{t('trackerAccess.noGraduatesWithAccess')}</p>
                 <p className="text-gray-500 text-sm">
-                  Используйте поиск выше, чтобы найти и разрешить доступ выпускнику
+                  {t('trackerAccess.useSearchAbove')}
                 </p>
               </div>
             ) : (
@@ -527,7 +527,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <Shield className="h-5 w-5 text-accent-cyan" />
-                      Выпускники, которым я разрешаю доступ
+                      {t('trackerAccess.graduatesIGrantedAccess')}
                     </h3>
                     <div className="space-y-3">
                       {grantedByMe.map((access) => {
@@ -563,12 +563,12 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                                   </div>
                                 )}
                                 <div className="text-gray-500 text-xs mt-1">
-                                  Доступ предоставлен {new Date(access.createdAt).toLocaleDateString('ru-RU')}
+                                  {t('trackerAccess.accessGrantedOn')} {new Date(access.createdAt).toLocaleDateString()}
                                 </div>
                               </div>
                               {access.isActive && (
                                 <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs border border-green-500/30">
-                                  Активен
+                                  {t('trackerAccess.active')}
                                 </span>
                               )}
                             </div>
@@ -577,7 +577,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                                 <button
                                   onClick={() => handleViewCalendar(displayItem.id, displayName)}
                                   className="p-2 text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors"
-                                  title="Просмотреть календарь"
+                                  title={t('trackerAccess.viewCalendar')}
                                 >
                                   <Eye className="h-5 w-5" />
                                 </button>
@@ -585,7 +585,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                               <button
                                 onClick={() => handleDeleteAccess(access.id, displayName)}
                                 className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                title="Запретить доступ"
+                                title={t('trackerAccess.revokeAccess')}
                               >
                                 <X className="h-5 w-5" />
                               </button>
@@ -602,7 +602,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <Shield className="h-5 w-5 text-accent-purple" />
-                      Выпускники, которые разрешили доступ мне
+                      {t('trackerAccess.graduatesWhoGrantedMe')}
                     </h3>
                     <div className="space-y-3">
                       {grantedToMe.map((access) => {
@@ -638,12 +638,12 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                                   </div>
                                 )}
                                 <div className="text-gray-500 text-xs mt-1">
-                                  Доступ предоставлен {new Date(access.createdAt).toLocaleDateString('ru-RU')}
+                                  {t('trackerAccess.accessGrantedOn')} {new Date(access.createdAt).toLocaleDateString()}
                                 </div>
                               </div>
                               {access.isActive && (
                                 <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs border border-green-500/30">
-                                  Активен
+                                  {t('trackerAccess.active')}
                                 </span>
                               )}
                             </div>
@@ -652,7 +652,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                                 <button
                                   onClick={() => handleViewCalendar(displayItem.id, displayName)}
                                   className="p-2 text-accent-purple hover:bg-accent-purple/10 rounded-lg transition-colors"
-                                  title="Просмотреть календарь"
+                                  title={t('trackerAccess.viewCalendar')}
                                 >
                                   <Eye className="h-5 w-5" />
                                 </button>
@@ -660,7 +660,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                               <button
                                 onClick={() => handleDeleteAccess(access.id, displayName)}
                                 className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                title="Запретить доступ"
+                                title={t('trackerAccess.revokeAccess')}
                               >
                                 <X className="h-5 w-5" />
                               </button>
@@ -680,9 +680,9 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
             {grantedByMe.length === 0 && grantedToMe.length === 0 ? (
               <div className="text-center py-8">
                 <Shield className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                <p className="text-gray-400 mb-4">Нет компаний с доступом</p>
+                <p className="text-gray-400 mb-4">{t('trackerAccess.noCompaniesWithAccess')}</p>
                 <p className="text-gray-500 text-sm">
-                  Компании, которым вы разрешили доступ, или которые разрешили доступ вам, появятся здесь
+                  {t('trackerAccess.companiesDescription')}
                 </p>
               </div>
             ) : (
@@ -692,7 +692,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <Shield className="h-5 w-5 text-accent-cyan" />
-                      Компании, которым я разрешил доступ
+                      {t('trackerAccess.companiesIGrantedAccess')}
                     </h3>
                     <div className="space-y-3">
                       {grantedByMe.map((access) => {
@@ -726,12 +726,12 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                                   </div>
                                 )}
                                 <div className="text-gray-500 text-xs mt-1">
-                                  Доступ предоставлен {new Date(access.createdAt).toLocaleDateString('ru-RU')}
+                                  {t('trackerAccess.accessGrantedOn')} {new Date(access.createdAt).toLocaleDateString()}
                                 </div>
                               </div>
                               {access.isActive && (
                                 <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs border border-green-500/30">
-                                  Активен
+                                  {t('trackerAccess.active')}
                                 </span>
                               )}
                             </div>
@@ -740,7 +740,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                                 <button
                                   onClick={() => handleViewCalendar(displayItem.id, displayName)}
                                   className="p-2 text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors"
-                                  title="Просмотреть календарь"
+                                  title={t('trackerAccess.viewCalendar')}
                                 >
                                   <Eye className="h-5 w-5" />
                                 </button>
@@ -748,7 +748,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                               <button
                                 onClick={() => handleDeleteAccess(access.id, displayName)}
                                 className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                title="Запретить доступ"
+                                title={t('trackerAccess.revokeAccess')}
                               >
                                 <X className="h-5 w-5" />
                               </button>
@@ -765,7 +765,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <Shield className="h-5 w-5 text-accent-purple" />
-                      Компании, которые разрешили доступ мне
+                      {t('trackerAccess.companiesWhoGrantedMe')}
                     </h3>
                     <div className="space-y-3">
                       {grantedToMe.map((access) => {
@@ -799,12 +799,12 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                                   </div>
                                 )}
                                 <div className="text-gray-500 text-xs mt-1">
-                                  Доступ предоставлен {new Date(access.createdAt).toLocaleDateString('ru-RU')}
+                                  {t('trackerAccess.accessGrantedOn')} {new Date(access.createdAt).toLocaleDateString()}
                                 </div>
                               </div>
                               {access.isActive && (
                                 <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs border border-green-500/30">
-                                  Активен
+                                  {t('trackerAccess.active')}
                                 </span>
                               )}
                             </div>
@@ -813,7 +813,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                                 <button
                                   onClick={() => handleViewCalendar(displayItem.id, displayName)}
                                   className="p-2 text-accent-purple hover:bg-accent-purple/10 rounded-lg transition-colors"
-                                  title="Просмотреть календарь"
+                                  title={t('trackerAccess.viewCalendar')}
                                 >
                                   <Eye className="h-5 w-5" />
                                 </button>
@@ -838,7 +838,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
             <div className="p-6 flex-shrink-0">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white">
-                  {userRole === 'graduate' ? 'Добавить компанию' : 'Добавить выпускника'}
+                  {userRole === 'graduate' ? t('trackerAccess.addCompany') : t('trackerAccess.addGraduate')}
                 </h2>
                 <button
                   onClick={() => {
@@ -855,9 +855,9 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
               <form onSubmit={handleAddAccess} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    {userRole === 'graduate' 
-                      ? 'Поиск компании (введите первую букву или название)'
-                      : 'Поиск выпускника (введите первую букву фамилии или имя/фамилию)'}
+                    {userRole === 'graduate'
+                      ? t('trackerAccess.searchCompany')
+                      : t('trackerAccess.searchGraduate')}
                   </label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -866,9 +866,9 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full bg-dark-surface border border-dark-card rounded-lg pl-10 pr-4 py-2 text-white"
-                      placeholder={userRole === 'graduate' 
-                        ? 'Введите первую букву или название компании...'
-                        : 'Введите первую букву фамилии или имя/фамилию...'}
+                      placeholder={userRole === 'graduate'
+                        ? t('trackerAccess.searchCompanyPlaceholder')
+                        : t('trackerAccess.searchGraduatePlaceholder')}
                     />
                   </div>
                 </div>
@@ -876,7 +876,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                 {searchQuery && filteredItems.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      {userRole === 'graduate' ? 'Выберите компанию' : 'Выберите выпускника'} ({filteredItems.length})
+                      {userRole === 'graduate' ? t('trackerAccess.selectCompany') : t('trackerAccess.selectGraduate')} ({filteredItems.length})
                     </label>
                     <div className="max-h-48 overflow-y-auto border border-dark-card rounded-lg bg-dark-surface custom-scrollbar">
                       {filteredItems.map((item) => {
@@ -933,16 +933,16 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
 
                 {!searchQuery && (
                   <p className="text-gray-500 text-sm">
-                    {userRole === 'graduate' 
-                      ? 'Введите первую букву названия компании или название для поиска'
-                      : 'Введите первую букву фамилии или имя/фамилию для поиска'}
+                    {userRole === 'graduate'
+                      ? t('trackerAccess.enterFirstLetter')
+                      : t('trackerAccess.enterNameForSearch')}
                   </p>
                 )}
                 {searchQuery && filteredItems.length === 0 && (
                   <p className="text-gray-500 text-sm">
-                    {userRole === 'graduate' 
-                      ? 'Компании по вашему запросу не найдены или уже имеют доступ.'
-                      : 'Выпускники по вашему запросу не найдены или уже имеют доступ.'}
+                    {userRole === 'graduate'
+                      ? t('trackerAccess.companiesNotFound')
+                      : t('trackerAccess.graduatesNotFound')}
                   </p>
                 )}
 
@@ -956,14 +956,14 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                     }}
                     className="btn-secondary"
                   >
-                    Отмена
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="btn-primary"
                     disabled={!selectedId}
                   >
-                    Разрешить доступ
+                    {t('trackerAccess.grantAccess')}
                   </button>
                 </div>
               </form>
@@ -974,10 +974,10 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
 
       <ConfirmModal
         isOpen={deleteConfirm.isOpen}
-        title={`Запретить доступ для ${deleteConfirm.name}?`}
-        message={`Вы уверены, что хотите запретить доступ? ${userRole === 'graduate' ? 'Компания' : 'Выпускник'} больше не сможет просматривать ваш календарь собеседований.`}
-        confirmText="Запретить"
-        cancelText="Отмена"
+        title={t('trackerAccess.revokeAccessFor', { name: deleteConfirm.name })}
+        message={userRole === 'graduate' ? t('trackerAccess.revokeConfirmGraduate') : t('trackerAccess.revokeConfirmEmployer')}
+        confirmText={t('trackerAccess.revoke')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={confirmDelete}
         onCancel={() => setDeleteConfirm({ isOpen: false, id: null, name: '' })}
@@ -992,7 +992,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                 <div className="flex items-center gap-3">
                   <Calendar className="h-6 w-6 text-accent-cyan" />
                   <h2 className="text-2xl font-bold text-white">
-                    Календарь собеседований: {viewingCalendar.userName}
+                    {t('trackerAccess.calendarTitle', { name: viewingCalendar.userName })}
                   </h2>
                 </div>
                 <button
@@ -1009,11 +1009,11 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
 
             <div className="flex-1 overflow-y-auto p-6">
               {loadingCalendar ? (
-                <div className="text-center py-8 text-gray-400">Загрузка календаря...</div>
+                <div className="text-center py-8 text-gray-400">{t('trackerAccess.loadingCalendar')}</div>
               ) : calendarInterviews.length === 0 ? (
                 <div className="text-center py-8">
                   <Calendar className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400">Нет запланированных собеседований</p>
+                  <p className="text-gray-400">{t('trackerAccess.noScheduledInterviews')}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1033,15 +1033,15 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                               <Building2 className="h-5 w-5 text-accent-cyan" />
                               <h3 className="text-lg font-semibold text-white">{interview.company}</h3>
                               <span className={`px-2 py-0.5 rounded text-xs border ${statusColor}`}>
-                                {interview.status === 'scheduled' ? 'Запланировано' : 
-                                 interview.status === 'completed' ? 'Завершено' : 'Отменено'}
+                                {interview.status === 'scheduled' ? t('trackerAccess.scheduled') :
+                                 interview.status === 'completed' ? t('trackerAccess.completed') : t('trackerAccess.cancelled')}
                               </span>
                             </div>
                             <p className="text-gray-400 mb-2">{interview.position}</p>
                             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-4 w-4" />
-                                {new Date(interview.date).toLocaleDateString('ru-RU')}
+                                {new Date(interview.date).toLocaleDateString()}
                               </span>
                               <span className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
@@ -1049,7 +1049,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                               </span>
                               <span className="flex items-center gap-1">
                                 <TypeIcon className="h-4 w-4" />
-                                {interview.type === 'online' ? 'Онлайн' : interview.type === 'offline' ? 'Офис' : 'Телефон'}
+                                {interview.type === 'online' ? t('trackerAccess.online') : interview.type === 'offline' ? t('trackerAccess.offline') : t('trackerAccess.phone')}
                               </span>
                             </div>
                             {interview.notes && (
