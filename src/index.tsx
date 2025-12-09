@@ -38,6 +38,8 @@ import { CodeBattleHome, TaskList, VSAITaskList, Playground, Leaderboard, PvPBat
 import { PositionSelector, PlanDashboard } from './components/pages/DevelopmentPlan';
 import VerifyEmailPending from './components/pages/VerifyEmail/VerifyEmailPending';
 import VerifyEmailSuccess from './components/pages/VerifyEmail/VerifyEmailSuccess';
+import ForgotPassword from './components/pages/PasswordReset/ForgotPassword';
+import ResetPassword from './components/pages/PasswordReset/ResetPassword';
 
 const router = createBrowserRouter([
   {
@@ -235,6 +237,16 @@ const router = createBrowserRouter([
         path: "/verify-email/:token",
         element:
           <VerifyEmailSuccess/>
+      },
+      {
+        path: "/forgot-password",
+        element:
+          <ForgotPassword />
+      },
+      {
+        path: "/reset-password/:token",
+        element:
+          <ResetPassword/>
       },
 
     ]}

@@ -178,26 +178,35 @@ function Login() {
                             </div>
                         </div>
 
-                        <label 
-                            htmlFor="rememberMe" 
-                            className="flex items-center gap-3 p-3 bg-dark-surface rounded-lg cursor-pointer hover:bg-dark-card transition-colors border border-transparent hover:border-accent-cyan/30"
-                        >
-                            <div className="relative flex items-center justify-center">
-                                <input
-                                    type="checkbox"
-                                    id="rememberMe"
-                                    checked={rememberMe}
-                                    onChange={(e) => setRememberMe(e.target.checked)}
-                                    className="h-5 w-5 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-card cursor-pointer appearance-none checked:bg-accent-cyan checked:border-accent-cyan transition-colors"
-                                />
-                                {rememberMe && (
-                                    <Check className="h-5 w-5 text-dark-bg absolute pointer-events-none" />
-                                )}
-                            </div>
-                            <span className="text-gray-300 text-sm flex-1">
-                                {t('auth.rememberMe') || 'Запомнить меня'}
-                            </span>
-                        </label>
+                        <div className="flex items-center justify-between">
+                            <label
+                                htmlFor="rememberMe"
+                                className="flex items-center gap-2 cursor-pointer"
+                            >
+                                <div className="relative flex items-center justify-center">
+                                    <input
+                                        type="checkbox"
+                                        id="rememberMe"
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        className="h-5 w-5 text-accent-cyan focus:ring-accent-cyan border-gray-600 rounded bg-dark-card cursor-pointer appearance-none checked:bg-accent-cyan checked:border-accent-cyan transition-colors"
+                                    />
+                                    {rememberMe && (
+                                        <Check className="h-5 w-5 text-dark-bg absolute pointer-events-none" />
+                                    )}
+                                </div>
+                                <span className="text-gray-300 text-sm">
+                                    {t('auth.rememberMe') || 'Запомнить меня'}
+                                </span>
+                            </label>
+
+                            <Link
+                                to="/forgot-password"
+                                className="text-accent-cyan hover:text-accent-cyan/80 transition-colors text-sm"
+                            >
+                                Забыли пароль?
+                            </Link>
+                        </div>
 
                         <button
                             type="submit"
