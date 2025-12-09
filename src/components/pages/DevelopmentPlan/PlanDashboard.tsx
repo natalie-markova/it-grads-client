@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ChevronRight } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import {
   fetchPlanStatus,
@@ -14,7 +15,7 @@ import {
 } from '../../../store/slices/developmentPlanSlice';
 
 const PlanDashboard: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
@@ -28,8 +29,8 @@ const PlanDashboard: React.FC = () => {
   } = useAppSelector((state) => state.developmentPlan);
 
   useEffect(() => {
-    dispatch(fetchPlanStatus());
-  }, [dispatch]);
+    dispatch(fetchPlanStatus(i18n.language));
+  }, [dispatch, i18n.language]);
 
   useEffect(() => {
     if (planStatus?.hasPlan) {
@@ -38,7 +39,7 @@ const PlanDashboard: React.FC = () => {
   }, [planStatus?.hasPlan, dispatch]);
 
   const handleSync = () => {
-    dispatch(syncPlan());
+    dispatch(syncPlan(i18n.language));
   };
 
   const handleCompleteStep = (stepId: string) => {
@@ -60,6 +61,19 @@ const PlanDashboard: React.FC = () => {
   const handleAbandon = () => {
     if (planStatus?.plan?.id && confirm(t('developmentPlan.confirmAbandon', 'Вы уверены, что хотите отменить план?'))) {
       dispatch(abandonPlan(planStatus.plan.id));
+    }
+  };
+
+  // Исправление бага с заблокированными шагами
+  const handleFixUnlock = async () => {
+    try {
+      const { $api } = await import('../../../utils/axios.instance');
+      const response = await $api.post('/development-plan/fix-unlock');
+      console.log('[FixUnlock] Response:', response.data);
+      // Перезагружаем статус плана
+      dispatch(fetchPlanStatus());
+    } catch (error) {
+      console.error('Error fixing unlock:', error);
     }
   };
 
@@ -111,6 +125,39 @@ const PlanDashboard: React.FC = () => {
         return t('developmentPlan.anyTrainer', 'Любой тренажер');
       default:
         return t('developmentPlan.interview', 'Тренажер');
+    }
+  };
+
+  // Получить URL для шага
+  const getStepUrl = (step: PlanStep): string | null => {
+    switch (step.type) {
+      case 'codebattle':
+        return '/codebattle';
+      case 'roadmap':
+        return step.roadmapSlug ? `/roadmap/${step.roadmapSlug}` : '/roadmap';
+      case 'interview':
+        // Перенаправляем на соответствующий тип тренажера
+        if (step.interviewType === 'practice') return '/interview';
+        if (step.interviewType === 'ai') return '/interview';
+        if (step.interviewType === 'audio') return '/interview';
+        return '/interview';
+      case 'project':
+        return null; // Проекты пока не имеют страницы
+      case 'course':
+        return null; // Курсы пока не имеют страницы
+      default:
+        return null;
+    }
+  };
+
+  // Обработчик клика на шаг
+  const handleStepClick = (step: PlanStep) => {
+    // Не переходим для заблокированных шагов
+    if (step.status === 'locked') return;
+
+    const url = getStepUrl(step);
+    if (url) {
+      navigate(url);
     }
   };
 
@@ -176,6 +223,30 @@ const PlanDashboard: React.FC = () => {
                 )}
                 {' '}{t('developmentPlan.sync', 'Синхронизировать')}
               </button>
+              {/* Кнопка для исправления разблокировки - показываем если есть проблемы */}
+              {(() => {
+                // Проверяем есть ли roadmap шаги с полным прогрессом, но не completed
+                const hasRoadmapBug = steps?.some(
+                  (s: PlanStep) => s.type === 'roadmap' &&
+                  (s.currentProgress || 0) >= (s.requiredProgress || 100) &&
+                  s.status !== 'completed'
+                );
+                // Или есть completed шаги и locked, но нет in_progress
+                const hasUnlockBug = stepsStats && stepsStats.completed > 0 && stepsStats.locked > 0 && stepsStats.inProgress === 0;
+
+                if (hasRoadmapBug || hasUnlockBug) {
+                  return (
+                    <button
+                      onClick={handleFixUnlock}
+                      className="px-4 py-2 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40 rounded-lg transition-colors font-medium"
+                      title={t('developmentPlan.fixUnlock', 'Исправить разблокировку')}
+                    >
+                      🔧 {t('developmentPlan.fixProgress', 'Исправить')}
+                    </button>
+                  );
+                }
+                return null;
+              })()}
               {plan?.status === 'active' ? (
                 <button
                   onClick={handlePause}
@@ -332,14 +403,15 @@ const PlanDashboard: React.FC = () => {
                 {steps?.map((step, index) => (
                   <div
                     key={step.id}
-                    className={`flex items-start gap-4 p-4 rounded-lg border ${
+                    onClick={() => handleStepClick(step)}
+                    className={`flex items-start gap-4 p-4 rounded-lg border transition-all ${
                       step.status === 'completed'
-                        ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800'
+                        ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800 cursor-pointer hover:border-green-400 dark:hover:border-green-600'
                         : step.status === 'in_progress'
-                        ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800'
+                        ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800 cursor-pointer hover:border-blue-400 dark:hover:border-blue-600'
                         : step.status === 'locked'
-                        ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 opacity-60'
-                        : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700'
+                        ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 opacity-60 cursor-not-allowed'
+                        : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500'
                     }`}
                   >
                     <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
@@ -394,13 +466,37 @@ const PlanDashboard: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    {step.status === 'in_progress' && step.type !== 'codebattle' && step.type !== 'roadmap' && step.type !== 'interview' && (
-                      <button
-                        onClick={() => handleCompleteStep(step.id)}
-                        className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
-                      >
-                        ✓
-                      </button>
+                    {/* Кнопка завершения для roadmap */}
+                    {step.status === 'in_progress' && step.type !== 'codebattle' && step.type !== 'interview' && (
+                      // Для roadmap показываем кнопку только если прогресс >= 100%
+                      step.type === 'roadmap' ? (
+                        (step.currentProgress || 0) >= 100 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCompleteStep(step.id);
+                            }}
+                            className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+                            title={t('developmentPlan.markComplete', 'Отметить выполненным')}
+                          >
+                            ✓
+                          </button>
+                        )
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCompleteStep(step.id);
+                          }}
+                          className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+                        >
+                          ✓
+                        </button>
+                      )
+                    )}
+                    {/* Иконка перехода для незаблокированных шагов */}
+                    {step.status !== 'locked' && getStepUrl(step) && (
+                      <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     )}
                   </div>
                 ))}

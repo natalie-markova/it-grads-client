@@ -56,7 +56,7 @@ function Login() {
         $api.post("/users/login", data)
         .then(data => {
             console.log("Response:", data.data);
-            toast.success("Авторизация прошла успешно!");
+            toast.success(t('toasts.loginSuccess'));
             setAccessToken(data.data.accessToken)
             setUser(data.data.user)
             
@@ -77,7 +77,7 @@ function Login() {
         })
         .catch(error => {
             console.error("Что-то пошло не так:", error.response?.data || error.message);
-            toast.error("Ошибка авторизации. Проверьте логин и пароль.");
+            toast.error(t('toasts.loginError'));
         });
     }
     

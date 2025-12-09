@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Send, Loader2 } from 'lucide-react';
 
 interface ChatInputProps {
@@ -7,6 +8,7 @@ interface ChatInputProps {
 }
 
 export default function ChatInput({ onSend, disabled }: ChatInputProps) {
+  const { t } = useTranslation();
   const [message, setMessage] = useState('');
 
   const handleSubmit = () => {
@@ -30,7 +32,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Введите ваш ответ... (Enter - отправить, Shift+Enter - новая строка)"
+          placeholder={t('aiInterview.inputPlaceholder')}
           rows={3}
           disabled={disabled}
           className="w-full px-4 py-3 bg-dark-surface border border-dark-card rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:border-transparent resize-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -48,7 +50,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
         ) : (
           <Send className="h-5 w-5" />
         )}
-        {disabled ? 'Отправка...' : 'Отправить'}
+        {disabled ? t('aiInterview.sending') : t('aiInterview.send')}
       </button>
     </div>
   );

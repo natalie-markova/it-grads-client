@@ -234,11 +234,13 @@ export default function Playground() {
         memory: 0
       })) as TestResult[]);
 
-      // Формируем вывод
+      // Формируем вывод (с защитой от null/undefined)
+      const execTime = result.executionTime ?? 0;
+      const memUsed = result.memoryUsed ?? 0;
       const outputText = `Пробное тестирование (видимые тесты):\n` +
         `Пройдено: ${result.passed}/${result.total}\n` +
-        `Время выполнения: ${result.executionTime.toFixed(2)}ms\n` +
-        `Память: ${result.memoryUsed.toFixed(2)}KB\n\n` +
+        `Время выполнения: ${execTime.toFixed(2)}ms\n` +
+        `Память: ${memUsed.toFixed(2)}KB\n\n` +
         result.testResults.map((test, idx) => {
           if (test.passed) {
             return `✅ Тест ${idx + 1}: Пройден`;
@@ -918,15 +920,14 @@ export default function Playground() {
                       )}
 
                       {/* VS AI Result - Real AI Battle */}
-                      {mode === 'vs_ai' && submitResult.beatAi !== undefined && (
-                        <div className={`mt-4 p-4 rounded-lg ${submitResult.beatAi ? 'bg-green-500/20 border border-green-500/50' : 'bg-red-500/20 border border-red-500/50'}`}>
+                      {/* Победа: beatAi === true */}
+                      {mode === 'vs_ai' && submitResult.beatAi === true && (
+                        <div className="mt-4 p-4 rounded-lg bg-green-500/20 border border-green-500/50">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
-                              <span className="text-3xl">{submitResult.beatAi ? '🏆' : '🤖'}</span>
+                              <span className="text-3xl">🏆</span>
                               <div>
-                                <h4 className={`font-bold ${submitResult.beatAi ? 'text-green-400' : 'text-red-400'}`}>
-                                  {submitResult.beatAi ? 'Вы победили AI!' : 'AI победил'}
-                                </h4>
+                                <h4 className="font-bold text-green-400">Вы победили AI!</h4>
                                 <p className="text-xs text-gray-500 mt-1">
                                   Реальный AI ({selectedAiDifficulty === 'hard' ? 'YandexGPT Pro' : selectedAiDifficulty === 'medium' ? 'YandexGPT' : 'YandexGPT Lite'})
                                 </p>
@@ -934,8 +935,75 @@ export default function Playground() {
                             </div>
                             {submitResult.playerRating && (
                               <div className="text-right">
-                                <div className={`text-lg font-bold ${submitResult.beatAi ? 'text-green-400' : 'text-red-400'}`}>
-                                  {submitResult.beatAi ? '+' : ''}{submitResult.beatAi ? (15 * (selectedAiDifficulty === 'hard' ? 3 : selectedAiDifficulty === 'medium' ? 2 : 1)) : -(10 * (selectedAiDifficulty === 'hard' ? 3 : selectedAiDifficulty === 'medium' ? 2 : 1))} рейтинга
+                                <div className="text-lg font-bold text-green-400">
+                                  +{15 * (selectedAiDifficulty === 'hard' ? 3 : selectedAiDifficulty === 'medium' ? 2 : 1)} рейтинга
+                                </div>
+                                <div className="text-sm text-gray-400">
+                                  Текущий: {submitResult.playerRating.rating}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Comparison Table */}
+                          <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
+                            <div className="bg-dark-surface/50 rounded-lg p-3">
+                              <div className="text-gray-400 mb-2">Вы</div>
+                              <div className="space-y-1">
+                                <div className="flex justify-between">
+                                  <span>Решено:</span>
+                                  <span className="text-green-400">Да</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Тесты:</span>
+                                  <span>{submitResult.testsPassed}/{submitResult.totalTests}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Время:</span>
+                                  <span>{submitResult.timeSpent}с</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="bg-dark-surface/50 rounded-lg p-3">
+                              <div className="text-gray-400 mb-2">AI ({selectedAiDifficulty})</div>
+                              <div className="space-y-1">
+                                <div className="flex justify-between">
+                                  <span>Решено:</span>
+                                  <span className={submitResult.aiSolved ? 'text-green-400' : 'text-yellow-400'}>
+                                    {submitResult.aiSolved ? 'Да' : 'Нет/Думает'}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Тесты:</span>
+                                  <span>{submitResult.aiTestsPassed ?? '?'}/{submitResult.totalTests}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Время:</span>
+                                  <span>{submitResult.aiSolveTime ? `${submitResult.aiSolveTime}с` : 'N/A'}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Поражение: beatAi === false (AI решил, игрок нет или медленнее) */}
+                      {mode === 'vs_ai' && submitResult.beatAi === false && (
+                        <div className="mt-4 p-4 rounded-lg bg-red-500/20 border border-red-500/50">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-3xl">🤖</span>
+                              <div>
+                                <h4 className="font-bold text-red-400">AI победил</h4>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Реальный AI ({selectedAiDifficulty === 'hard' ? 'YandexGPT Pro' : selectedAiDifficulty === 'medium' ? 'YandexGPT' : 'YandexGPT Lite'})
+                                </p>
+                              </div>
+                            </div>
+                            {submitResult.playerRating && (
+                              <div className="text-right">
+                                <div className="text-lg font-bold text-red-400">
+                                  -{10 * (selectedAiDifficulty === 'hard' ? 3 : selectedAiDifficulty === 'medium' ? 2 : 1)} рейтинга
                                 </div>
                                 <div className="text-sm text-gray-400">
                                   Текущий: {submitResult.playerRating.rating}
@@ -970,13 +1038,11 @@ export default function Playground() {
                               <div className="space-y-1">
                                 <div className="flex justify-between">
                                   <span>Решено:</span>
-                                  <span className={submitResult.aiSolved ? 'text-green-400' : submitResult.aiSolved === null ? 'text-yellow-400' : 'text-red-400'}>
-                                    {submitResult.aiSolved === null ? 'Думает...' : submitResult.aiSolved ? 'Да' : 'Нет'}
-                                  </span>
+                                  <span className="text-green-400">Да</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span>Тесты:</span>
-                                  <span>{submitResult.aiTestsPassed ?? '?'}/{submitResult.totalTests}</span>
+                                  <span>{submitResult.aiTestsPassed ?? submitResult.totalTests}/{submitResult.totalTests}</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span>Время:</span>
@@ -988,27 +1054,22 @@ export default function Playground() {
                         </div>
                       )}
 
-                      {/* Loss against AI (didn't solve) - only show if beatAi is undefined (no comparison data) */}
-                      {mode === 'vs_ai' && !submitResult.solved && submitResult.beatAi === undefined && (
-                        <div className="mt-4 p-4 rounded-lg bg-red-500/20 border border-red-500/50">
+                      {/* Ожидание результата: beatAi === null (AI ещё думает, игрок не решил) */}
+                      {mode === 'vs_ai' && submitResult.beatAi === null && !submitResult.solved && (
+                        <div className="mt-4 p-4 rounded-lg bg-yellow-500/20 border border-yellow-500/50">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <span className="text-3xl">🤖</span>
+                              <span className="text-3xl animate-pulse">🤖</span>
                               <div>
-                                <h4 className="font-bold text-red-400">AI победил</h4>
-                                <p className="text-sm text-gray-400">Задача не решена</p>
+                                <h4 className="font-bold text-yellow-400">AI ещё думает...</h4>
+                                <p className="text-sm text-gray-400">Попробуйте решить задачу, пока AI не справился!</p>
                               </div>
                             </div>
-                            {submitResult.playerRating && (
-                              <div className="text-right">
-                                <div className="text-lg font-bold text-red-400">
-                                  -{10 * (selectedAiDifficulty === 'hard' ? 3 : selectedAiDifficulty === 'medium' ? 2 : 1)} рейтинга
-                                </div>
-                                <div className="text-sm text-gray-400">
-                                  Текущий: {submitResult.playerRating.rating}
-                                </div>
+                            <div className="text-right">
+                              <div className="text-sm text-gray-400">
+                                Рейтинг не изменён
                               </div>
-                            )}
+                            </div>
                           </div>
                         </div>
                       )}

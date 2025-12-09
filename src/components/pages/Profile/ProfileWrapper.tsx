@@ -1,15 +1,10 @@
-import { useOutletContext, useSearchParams } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import { OutletContext } from '../../../types';
 import GraduateProfile from './Profile';
 import EmployerProfile from './EmployerProfile';
-import { ParmaTour } from '../../mascot';
 
 const ProfileWrapper = () => {
   const { user } = useOutletContext<OutletContext>();
-  const [searchParams] = useSearchParams();
-
-  // Проверяем, нужно ли запустить тур (после регистрации)
-  const shouldStartTour = searchParams.get('tour') === 'start';
 
   if (!user) {
     return (
@@ -23,12 +18,6 @@ const ProfileWrapper = () => {
 
   return (
     <>
-      {/* Тур по сайту */}
-      <ParmaTour
-        role={role}
-        autoStart={shouldStartTour}
-      />
-
       {/* Профиль */}
       {role === 'employer' ? <EmployerProfile /> : <GraduateProfile />}
     </>

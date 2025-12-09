@@ -2,8 +2,9 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useParmaContext } from "./ParmaProvider";
 import type { ParmaState } from "./ParmaProvider";
-import { X, Settings } from "lucide-react";
+import { Settings, MessageCircle, Send, X, Loader2 } from "lucide-react";
 import { speechService } from "../../services/speechService";
+import { $api } from "../../utils/axios.instance";
 
 // Random phrases when clicking on mascot (ru/en)
 const CLICK_PHRASES_RU = [
@@ -85,7 +86,7 @@ const saveCustomPosition = (position: { x: number; y: number } | null) => {
 };
 
 export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
-  const { state, message, isVisible, settings, hide, updateSettings } =
+  const { state, message, isVisible, settings, updateSettings, setState } =
     useParmaContext();
   const { i18n } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -93,7 +94,47 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
+  // AI Chat state
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [aiQuestion, setAIQuestion] = useState('');
+  const [aiResponse, setAIResponse] = useState('');
+  const [isAILoading, setIsAILoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const isRu = i18n.language === 'ru';
+
+  // AI Assistant function
+  const handleAskAI = useCallback(async () => {
+    if (!aiQuestion.trim() || isAILoading) return;
+
+    setIsAILoading(true);
+    setAIResponse('');
+    setState('thinking');
+
+    try {
+      const response = await $api.post('/assistant/ask', {
+        question: aiQuestion,
+        lang: i18n.language
+      });
+
+      setAIResponse(response.data.answer || (isRu ? 'Не удалось получить ответ' : 'Could not get an answer'));
+      setState('idle');
+    } catch (error) {
+      console.error('AI Assistant error:', error);
+      setAIResponse(isRu ? 'Произошла ошибка. Попробуйте позже.' : 'An error occurred. Please try again later.');
+      setState('idle');
+    } finally {
+      setIsAILoading(false);
+    }
+  }, [aiQuestion, isAILoading, i18n.language, isRu, setState]);
+
+  // Handle Enter key in input
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAskAI();
+    }
+  }, [handleAskAI]);
 
   // Function to play random phrase via Yandex SpeechKit
   const playRandomPhrase = useCallback(() => {
@@ -282,21 +323,28 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
       {/* Основной контейнер */}
       <div className="relative">
         {/* Кнопки управления (появляются при наведении) */}
-        {isHovered && !isDragging && (
+        {isHovered && !isDragging && !showAIChat && (
           <div className="absolute -top-2 -right-2 flex gap-1 z-10">
             <button
-              onClick={() => setShowSettings(!showSettings)}
-              className="p-1 bg-gray-800/80 hover:bg-gray-700 rounded-full text-white transition-colors"
-              title="Настройки"
+              onClick={() => {
+                setShowAIChat(true);
+                setShowSettings(false);
+                setTimeout(() => inputRef.current?.focus(), 100);
+              }}
+              className="p-1 bg-blue-600/90 hover:bg-blue-500 rounded-full text-white transition-colors"
+              title={isRu ? "Спросить Парму" : "Ask Parma"}
             >
-              <Settings size={14} />
+              <MessageCircle size={14} />
             </button>
             <button
-              onClick={hide}
-              className="p-1 bg-gray-800/80 hover:bg-red-600 rounded-full text-white transition-colors"
-              title="Скрыть Парму"
+              onClick={() => {
+                setShowSettings(!showSettings);
+                setShowAIChat(false);
+              }}
+              className="p-1 bg-gray-800/80 hover:bg-gray-700 rounded-full text-white transition-colors"
+              title={isRu ? "Настройки" : "Settings"}
             >
-              <X size={14} />
+              <Settings size={14} />
             </button>
           </div>
         )}
@@ -452,8 +500,76 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
               }}
               className="mt-4 w-full py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
             >
-              Отключить Парму
+              {isRu ? 'Отключить Парму' : 'Disable Parma'}
             </button>
+          </div>
+        )}
+
+        {/* AI Chat Panel */}
+        {showAIChat && (
+          <div
+            className={`absolute bottom-full mb-12 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 animate-fade-in ${
+              isOnLeftSide ? "left-0" : "right-0"
+            }`}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <MessageCircle size={16} className="text-blue-500" />
+                {isRu ? 'Спросить Парму' : 'Ask Parma'}
+              </h4>
+              <button
+                onClick={() => {
+                  setShowAIChat(false);
+                  setAIQuestion('');
+                  setAIResponse('');
+                }}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              >
+                <X size={16} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* Response area */}
+            {aiResponse && (
+              <div className="px-4 py-3 max-h-48 overflow-y-auto border-b border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                  {aiResponse}
+                </p>
+              </div>
+            )}
+
+            {/* Input area */}
+            <div className="p-3">
+              <div className="flex gap-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={aiQuestion}
+                  onChange={(e) => setAIQuestion(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={isRu ? 'Задайте вопрос о сайте...' : 'Ask about the site...'}
+                  className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isAILoading}
+                />
+                <button
+                  onClick={handleAskAI}
+                  disabled={isAILoading || !aiQuestion.trim()}
+                  className="p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                >
+                  {isAILoading ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <Send size={18} />
+                  )}
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                {isRu
+                  ? 'Я помогу разобраться с функциями сайта!'
+                  : 'I can help you understand the site features!'}
+              </p>
+            </div>
           </div>
         )}
       </div>

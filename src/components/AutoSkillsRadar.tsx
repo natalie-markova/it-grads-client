@@ -377,7 +377,7 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
     ctx.font = 'bold 16px "Segoe UI"'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText('Уровень', centerX, centerY - 12)
+    ctx.fillText(t('autoRadar.level'), centerX, centerY - 12)
     ctx.fillStyle = '#00a8c4'
     ctx.font = 'bold 24px "Segoe UI"'
     ctx.fillText(Math.round(totalAverage).toString(), centerX, centerY + 12)
@@ -782,7 +782,7 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
                             </div>
                           ))}
                           {content.sources.length > 3 && (
-                            <p className="text-gray-500 text-[10px]">+{content.sources.length - 3} ещё...</p>
+                            <p className="text-gray-500 text-[10px]">+{content.sources.length - 3} {t('common.more').toLowerCase()}...</p>
                           )}
                         </div>
                       )}
@@ -1043,7 +1043,7 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
           >
             <h4 className="text-lg font-bold text-white flex items-center gap-2">
               <Award className="h-5 w-5 text-yellow-400" />
-              Достижения ({data.achievements.length})
+              {t('autoRadar.achievementsTitle', { count: data.achievements.length })}
             </h4>
             {showAchievements ? (
               <ChevronUp className="h-5 w-5 text-gray-400" />

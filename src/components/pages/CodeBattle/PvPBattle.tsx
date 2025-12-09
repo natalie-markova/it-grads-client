@@ -8,6 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../../ui/ConfirmModal';
 import { getImageUrl } from '../../../utils/image.utils';
+import { useTranslation } from 'react-i18next';
 
 interface OutletContext {
   user: { id: number; role: string } | null;
@@ -65,6 +66,7 @@ interface MatchResult {
 }
 
 export default function PvPBattle() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const context = useOutletContext<OutletContext>();
   const user = context?.user;
@@ -294,13 +296,13 @@ export default function PvPBattle() {
       });
 
       if (result.success) {
-        setOutput(result.stdout || 'Код выполнен успешно (нет вывода)');
+        setOutput(result.stdout || t('pvpBattle.codeExecutedNoOutput'));
       } else {
-        setOutput(`Ошибка: ${result.error || result.stderr || result.status}`);
+        setOutput(`${t('pvpBattle.error')}: ${result.error || result.stderr || result.status}`);
       }
     } catch (error: unknown) {
       const err = error as { message?: string };
-      setOutput(`Ошибка выполнения: ${err.message}`);
+      setOutput(`${t('pvpBattle.executionError')}: ${err.message}`);
     } finally {
       setRunning(false);
     }
@@ -361,23 +363,23 @@ export default function PvPBattle() {
             className="px-4 py-2 bg-dark-surface hover:bg-dark-card border border-dark-card hover:border-accent-cyan/50 rounded-lg text-sm text-gray-400 hover:text-accent-cyan transition-all flex items-center gap-2 mb-8"
           >
             <span>&larr;</span>
-            <span>Назад</span>
+            <span>{t('common.back')}</span>
           </button>
 
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-8">
               <div className="text-5xl mb-4">⚔️</div>
               <h1 className="text-3xl font-bold mb-2">PvP Battle</h1>
-              <p className="text-gray-400">Сразись с другими игроками в реальном времени</p>
+              <p className="text-gray-400">{t('pvpBattle.description')}</p>
             </div>
 
             {/* Match Settings */}
             <div className="bg-dark-card border border-dark-surface rounded-xl p-6 mb-6">
-              <h2 className="text-lg font-bold mb-4">Настройки матча</h2>
+              <h2 className="text-lg font-bold mb-4">{t('pvpBattle.matchSettings')}</h2>
 
               {/* Difficulty */}
               <div className="mb-6">
-                <label className="block text-sm text-gray-400 mb-2">Сложность задачи:</label>
+                <label className="block text-sm text-gray-400 mb-2">{t('pvpBattle.taskDifficulty')}:</label>
                 <div className="grid grid-cols-3 gap-3">
                   {(['easy', 'medium', 'hard'] as const).map((diff) => (
                     <button
@@ -399,7 +401,7 @@ export default function PvPBattle() {
 
               {/* Auto Time Info */}
               <div className="mb-6 p-3 bg-dark-surface rounded-lg text-center text-sm text-gray-400">
-                <span className="text-accent-cyan font-medium">{formatTime(getTimeLimit(selectedDifficulty))}</span> — автоматический лимит времени
+                <span className="text-accent-cyan font-medium">{formatTime(getTimeLimit(selectedDifficulty))}</span> — {t('pvpBattle.autoTimeLimit')}
               </div>
 
               {/* Find Match Button */}
@@ -407,7 +409,7 @@ export default function PvPBattle() {
                 onClick={handleFindMatch}
                 className="w-full py-4 bg-gradient-to-r from-accent-cyan to-accent-blue hover:from-accent-cyan/90 hover:to-accent-blue/90 rounded-xl text-xl font-bold transition-all"
               >
-                Найти соперника
+                {t('pvpBattle.findOpponent')}
               </button>
             </div>
 
@@ -417,7 +419,7 @@ export default function PvPBattle() {
                 onClick={() => setShowRoomOptions(!showRoomOptions)}
                 className="w-full flex items-center justify-between text-left"
               >
-                <h2 className="text-lg font-bold">Приватная комната</h2>
+                <h2 className="text-lg font-bold">{t('pvpBattle.privateRoom')}</h2>
                 <span className="text-gray-400">{showRoomOptions ? '▲' : '▼'}</span>
               </button>
 
@@ -429,13 +431,13 @@ export default function PvPBattle() {
                       onClick={handleCreateRoom}
                       className="w-full py-3 bg-dark-surface hover:bg-dark-bg border border-dark-bg hover:border-accent-cyan/50 rounded-lg transition-all"
                     >
-                      Создать комнату
+                      {t('pvpBattle.createRoom')}
                     </button>
                     {roomCode && (
                       <div className="mt-2 p-3 bg-accent-cyan/10 border border-accent-cyan/30 rounded-lg text-center">
-                        <div className="text-sm text-gray-400 mb-1">Код комнаты:</div>
+                        <div className="text-sm text-gray-400 mb-1">{t('pvpBattle.roomCode')}:</div>
                         <div className="text-2xl font-mono font-bold text-accent-cyan">{roomCode}</div>
-                        <div className="text-xs text-gray-500 mt-1">Отправьте этот код другу</div>
+                        <div className="text-xs text-gray-500 mt-1">{t('pvpBattle.sendCodeToFriend')}</div>
                       </div>
                     )}
                   </div>
@@ -446,7 +448,7 @@ export default function PvPBattle() {
                       type="text"
                       value={joinRoomCode}
                       onChange={(e) => setJoinRoomCode(e.target.value.toUpperCase())}
-                      placeholder="Введите код"
+                      placeholder={t('pvpBattle.enterCode')}
                       maxLength={6}
                       className="flex-1 px-4 py-3 bg-dark-surface border border-dark-bg rounded-lg focus:outline-none focus:border-accent-cyan font-mono text-center text-lg"
                     />
@@ -455,7 +457,7 @@ export default function PvPBattle() {
                       disabled={joinRoomCode.length !== 6}
                       className="px-6 py-3 bg-accent-blue hover:bg-accent-blue/90 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
-                      Войти
+                      {t('pvpBattle.join')}
                     </button>
                   </div>
                 </div>
@@ -477,7 +479,7 @@ export default function PvPBattle() {
             <div className="absolute inset-0 border-4 border-transparent border-t-accent-cyan rounded-full animate-spin"></div>
             <div className="absolute inset-4 flex items-center justify-center text-4xl">⚔️</div>
           </div>
-          <h2 className="text-2xl font-bold mb-2">Поиск соперника...</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('pvpBattle.searchingOpponent')}</h2>
           <p className="text-gray-400 mb-4">
             {selectedDifficulty.toUpperCase()} | {formatTime(getTimeLimit(selectedDifficulty))}
           </p>
@@ -488,7 +490,7 @@ export default function PvPBattle() {
             onClick={handleCancelSearch}
             className="px-6 py-3 bg-dark-surface hover:bg-dark-card border border-dark-card hover:border-red-500/50 rounded-lg text-gray-400 hover:text-red-400 transition-all"
           >
-            Отменить поиск
+            {t('pvpBattle.cancelSearch')}
           </button>
         </div>
       </div>
@@ -500,7 +502,7 @@ export default function PvPBattle() {
     return (
       <div className="min-h-screen bg-dark-bg text-white flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-8 text-accent-gold">Соперник найден!</h2>
+          <h2 className="text-2xl font-bold mb-8 text-accent-gold">{t('pvpBattle.opponentFound')}</h2>
 
           <div className="flex items-center justify-center gap-8 mb-8">
             {/* You */}
@@ -508,7 +510,7 @@ export default function PvPBattle() {
               <div className="w-20 h-20 rounded-full bg-dark-surface flex items-center justify-center text-2xl mb-2 mx-auto border-2 border-accent-cyan">
                 {user?.id ? '👤' : '?'}
               </div>
-              <div className="font-medium">Вы</div>
+              <div className="font-medium">{t('pvpBattle.you')}</div>
             </div>
 
             <div className="text-4xl text-accent-gold">VS</div>
@@ -530,7 +532,7 @@ export default function PvPBattle() {
           </div>
 
           <div className="text-gray-400 animate-pulse">
-            Матч начнётся через 3 секунды...
+            {t('pvpBattle.matchStartsIn')}
           </div>
         </div>
       </div>
@@ -549,7 +551,7 @@ export default function PvPBattle() {
                 onClick={handleLeaveMatch}
                 className="px-3 py-1.5 bg-dark-card hover:bg-dark-bg border border-dark-bg hover:border-red-500/50 rounded-lg text-sm text-gray-400 hover:text-red-400 transition-all"
               >
-                Сдаться
+                {t('pvpBattle.surrender')}
               </button>
               <h1 className="font-bold">{task.title}</h1>
               <span className={`px-2 py-1 rounded text-xs border ${difficultyColors[task.difficulty]}`}>
@@ -575,7 +577,7 @@ export default function PvPBattle() {
                 <span className="text-sm text-gray-400">{opponent?.firstName || opponent?.username}</span>
                 {opponentSubmitted && (
                   <span className={`text-xs px-2 py-0.5 rounded ${opponentSolved ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
-                    {opponentSolved ? 'Решил!' : 'Отправил'}
+                    {opponentSolved ? t('pvpBattle.solved') : t('pvpBattle.submitted')}
                   </span>
                 )}
               </div>
@@ -606,13 +608,13 @@ export default function PvPBattle() {
                 onClick={() => setActiveTab('description')}
                 className={`px-4 py-2 text-sm transition-colors ${activeTab === 'description' ? 'bg-dark-card text-accent-cyan' : 'text-gray-400 hover:text-white'}`}
               >
-                Описание
+                {t('pvpBattle.description')}
               </button>
               <button
                 onClick={() => setActiveTab('output')}
                 className={`px-4 py-2 text-sm transition-colors ${activeTab === 'output' ? 'bg-dark-card text-accent-cyan' : 'text-gray-400 hover:text-white'}`}
               >
-                Вывод
+                {t('pvpBattle.output')}
               </button>
             </div>
 
@@ -629,7 +631,7 @@ export default function PvPBattle() {
 
                   {/* Описание задачи */}
                   <div className="mb-6">
-                    <ReactMarkdown>{task.description || 'Описание задачи недоступно'}</ReactMarkdown>
+                    <ReactMarkdown>{task.description || t('pvpBattle.descriptionUnavailable')}</ReactMarkdown>
                   </div>
 
                   {/* Link to Codeforces */}
@@ -641,14 +643,14 @@ export default function PvPBattle() {
                         rel="noopener noreferrer"
                         className="text-xs text-gray-500 hover:text-gray-400 transition-colors"
                       >
-                        Источник: Codeforces ↗
+                        {t('pvpBattle.sourceCodeforces')} ↗
                       </a>
                     </div>
                   )}
 
                   {/* Примеры тестов */}
                   <div className="mt-6 not-prose">
-                    <h4 className="text-sm font-semibold text-gray-400 mb-2">Примеры тестов:</h4>
+                    <h4 className="text-sm font-semibold text-gray-400 mb-2">{t('pvpBattle.exampleTests')}:</h4>
                     {task.testCases && task.testCases.filter(tc => !tc.isHidden).length > 0 ? (
                       task.testCases.filter(tc => !tc.isHidden).map((tc, i) => (
                         <div key={i} className="bg-dark-card rounded p-3 mb-2 text-sm font-mono">
@@ -657,7 +659,7 @@ export default function PvPBattle() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-gray-500 text-sm">Примеры недоступны</p>
+                      <p className="text-gray-500 text-sm">{t('pvpBattle.examplesUnavailable')}</p>
                     )}
                   </div>
                 </div>
@@ -670,13 +672,13 @@ export default function PvPBattle() {
                   ) : submitResult ? (
                     <div>
                       <div className={`text-lg mb-2 ${submitResult.solved ? 'text-green-400' : 'text-red-400'}`}>
-                        {submitResult.solved ? '✅ Решено!' : '❌ Не все тесты пройдены'}
+                        {submitResult.solved ? `✅ ${t('pvpBattle.solvedSuccess')}` : `❌ ${t('pvpBattle.notAllTestsPassed')}`}
                       </div>
-                      <div>Пройдено тестов: {submitResult.testsPassed}/{submitResult.totalTests}</div>
-                      <div>Время: {submitResult.solveTime}с</div>
+                      <div>{t('pvpBattle.testsPassed')}: {submitResult.testsPassed}/{submitResult.totalTests}</div>
+                      <div>{t('pvpBattle.time')}: {submitResult.solveTime}{t('pvpBattle.seconds')}</div>
                     </div>
                   ) : (
-                    <span className="text-gray-500">Нажмите "Запустить" чтобы выполнить код</span>
+                    <span className="text-gray-500">{t('pvpBattle.clickRunToExecute')}</span>
                   )}
                 </div>
               )}
@@ -701,14 +703,14 @@ export default function PvPBattle() {
                 disabled={running || !code.trim()}
                 className="px-4 py-2 bg-dark-surface hover:bg-dark-card rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {running && !submitted ? '⏳ Выполнение...' : '▶ Запустить'}
+                {running && !submitted ? `⏳ ${t('pvpBattle.executing')}` : `▶ ${t('pvpBattle.run')}`}
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={running || submitted || !code.trim()}
                 className="px-6 py-2 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {running && !submitted ? '⏳ Проверка...' : submitted ? (submitResult?.solved ? '✓ Решено' : 'Отправлено') : '📤 Отправить'}
+                {running && !submitted ? `⏳ ${t('pvpBattle.checking')}` : submitted ? (submitResult?.solved ? `✓ ${t('pvpBattle.solved')}` : t('pvpBattle.submitted')) : `📤 ${t('pvpBattle.submit')}`}
               </button>
             </div>
           </div>
@@ -733,7 +735,7 @@ export default function PvPBattle() {
               {isDraw ? '🤝' : isWinner ? '🏆' : '😔'}
             </div>
             <h1 className={`text-3xl font-bold ${isDraw ? 'text-yellow-400' : isWinner ? 'text-green-400' : 'text-red-400'}`}>
-              {isDraw ? 'Ничья!' : isWinner ? 'Победа!' : 'Поражение'}
+              {isDraw ? t('pvpBattle.draw') : isWinner ? t('pvpBattle.victory') : t('pvpBattle.defeat')}
             </h1>
           </div>
 
@@ -742,21 +744,21 @@ export default function PvPBattle() {
             <div className="grid grid-cols-2 gap-4 text-center">
               {/* You */}
               <div className="p-4 bg-dark-surface rounded-lg">
-                <div className="text-gray-400 mb-2">Вы</div>
+                <div className="text-gray-400 mb-2">{t('pvpBattle.you')}</div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Решено:</span>
+                    <span className="text-gray-500">{t('pvpBattle.solvedLabel')}:</span>
                     <span className={myResult.solved ? 'text-green-400' : 'text-red-400'}>
-                      {myResult.solved ? 'Да' : 'Нет'}
+                      {myResult.solved ? t('pvpBattle.yes') : t('pvpBattle.no')}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Тесты:</span>
+                    <span className="text-gray-500">{t('pvpBattle.tests')}:</span>
                     <span>{myResult.testsPassed}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Время:</span>
-                    <span>{myResult.solveTime ? `${myResult.solveTime}с` : '-'}</span>
+                    <span className="text-gray-500">{t('pvpBattle.time')}:</span>
+                    <span>{myResult.solveTime ? `${myResult.solveTime}${t('pvpBattle.seconds')}` : '-'}</span>
                   </div>
                   <div className={`text-lg font-bold ${myResult.ratingChange > 0 ? 'text-green-400' : myResult.ratingChange < 0 ? 'text-red-400' : 'text-gray-400'}`}>
                     {myResult.ratingChange > 0 ? '+' : ''}{myResult.ratingChange}
@@ -769,18 +771,18 @@ export default function PvPBattle() {
                 <div className="text-gray-400 mb-2">{opponent?.firstName || opponent?.username}</div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Решено:</span>
+                    <span className="text-gray-500">{t('pvpBattle.solvedLabel')}:</span>
                     <span className={opponentResult.solved ? 'text-green-400' : 'text-red-400'}>
-                      {opponentResult.solved ? 'Да' : 'Нет'}
+                      {opponentResult.solved ? t('pvpBattle.yes') : t('pvpBattle.no')}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Тесты:</span>
+                    <span className="text-gray-500">{t('pvpBattle.tests')}:</span>
                     <span>{opponentResult.testsPassed}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Время:</span>
-                    <span>{opponentResult.solveTime ? `${opponentResult.solveTime}с` : '-'}</span>
+                    <span className="text-gray-500">{t('pvpBattle.time')}:</span>
+                    <span>{opponentResult.solveTime ? `${opponentResult.solveTime}${t('pvpBattle.seconds')}` : '-'}</span>
                   </div>
                   <div className={`text-lg font-bold ${opponentResult.ratingChange > 0 ? 'text-green-400' : opponentResult.ratingChange < 0 ? 'text-red-400' : 'text-gray-400'}`}>
                     {opponentResult.ratingChange > 0 ? '+' : ''}{opponentResult.ratingChange}
@@ -796,13 +798,13 @@ export default function PvPBattle() {
               onClick={handlePlayAgain}
               className="flex-1 py-3 bg-gradient-to-r from-accent-cyan to-accent-blue hover:from-accent-cyan/90 hover:to-accent-blue/90 rounded-lg font-medium transition-all"
             >
-              Играть снова
+              {t('pvpBattle.playAgain')}
             </button>
             <button
               onClick={() => navigate('/codebattle')}
               className="flex-1 py-3 bg-dark-surface hover:bg-dark-card border border-dark-card hover:border-accent-cyan/50 rounded-lg text-gray-400 hover:text-white transition-all"
             >
-              На главную
+              {t('pvpBattle.toHome')}
             </button>
           </div>
         </div>
@@ -815,10 +817,10 @@ export default function PvPBattle() {
       {leaveConfirm && (
         <ConfirmModal
           isOpen={leaveConfirm}
-          title="Покинуть матч"
-          message="Вы уверены, что хотите покинуть матч? Вы потеряете рейтинг, если покинете игру."
-          confirmText="Покинуть"
-          cancelText="Отмена"
+          title={t('pvpBattle.leaveMatch')}
+          message={t('pvpBattle.leaveMatchConfirm')}
+          confirmText={t('pvpBattle.leave')}
+          cancelText={t('common.cancel')}
           variant="warning"
           onConfirm={confirmLeave}
           onCancel={() => setLeaveConfirm(false)}

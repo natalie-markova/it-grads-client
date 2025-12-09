@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { Bot, Sparkles } from 'lucide-react';
 import Section from '../../ui/Section';
 import Card from '../../ui/Card';
@@ -13,6 +14,7 @@ import { setSession } from '../../../store/slices/interviewSlice';
 import type { Direction, Level } from '../../../types';
 
 export default function InterviewSetupPage() {
+  const { t, i18n } = useTranslation();
   useScrollAnimation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -38,11 +40,11 @@ export default function InterviewSetupPage() {
 
   const handleSubmit = async () => {
     if (!direction) {
-      setError('Выберите направление');
+      setError(t('aiInterviewSetup.errors.selectDirection'));
       return;
     }
     if (selectedTechnologies.length === 0) {
-      setError('Выберите хотя бы одну технологию');
+      setError(t('aiInterviewSetup.errors.selectTechnology'));
       return;
     }
 
@@ -55,12 +57,12 @@ export default function InterviewSetupPage() {
         technologies: selectedTechnologies,
         level,
         questionsCount
-      });
+      }, i18n.language);
 
       dispatch(setSession(session));
       navigate(`/interview/ai/${session.id}`);
     } catch (err) {
-      setError('Не удалось создать сессию');
+      setError(t('aiInterviewSetup.errors.createSessionFailed'));
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -70,8 +72,8 @@ export default function InterviewSetupPage() {
   return (
     <div className="bg-dark-bg min-h-screen py-8">
       <Section
-        title="Настройка AI интервью"
-        subtitle="Настройте параметры собеседования с искусственным интеллектом"
+        title={t('aiInterviewSetup.title')}
+        subtitle={t('aiInterviewSetup.subtitle')}
         className="bg-dark-bg py-0"
       >
         <div className="max-w-4xl mx-auto space-y-8">
@@ -79,7 +81,7 @@ export default function InterviewSetupPage() {
           <Card className="scroll-animate-item">
             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-accent-cyan" />
-              Выберите направление
+              {t('aiInterviewSetup.selectDirection')}
             </h3>
             <div className="grid md:grid-cols-3 gap-4">
               <DirectionCard
@@ -116,7 +118,7 @@ export default function InterviewSetupPage() {
 
           {/* Questions Count */}
           <Card className="scroll-animate-item" style={{ transitionDelay: '0.3s' }}>
-            <h3 className="text-xl font-bold text-white mb-4">Количество вопросов</h3>
+            <h3 className="text-xl font-bold text-white mb-4">{t('aiInterviewSetup.questionsCount')}</h3>
             <div className="flex items-center gap-4">
               <input
                 type="range"
@@ -131,7 +133,7 @@ export default function InterviewSetupPage() {
               </span>
             </div>
             <p className="text-sm text-gray-400 mt-2">
-              Рекомендуется: 10-15 вопросов для полноценного интервью
+              {t('aiInterviewSetup.recommendedQuestions')}
             </p>
           </Card>
 
@@ -152,12 +154,12 @@ export default function InterviewSetupPage() {
               {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                  Создание сессии...
+                  {t('aiInterviewSetup.creatingSession')}
                 </>
               ) : (
                 <>
                   <Bot className="w-5 h-5" />
-                  Начать AI интервью
+                  {t('aiInterviewSetup.startInterview')}
                 </>
               )}
             </button>

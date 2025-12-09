@@ -5,12 +5,14 @@ import VacancyForm from './VacancyForm';
 import type { Vacancy } from '../../../types';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../../ui/ConfirmModal';
+import { useTranslation } from 'react-i18next';
 
 interface VacanciesManagementProps {
   userId?: number;
 }
 
 export default function VacanciesManagement({ userId }: VacanciesManagementProps) {
+  const { t } = useTranslation();
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -32,7 +34,7 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
       setVacancies(data);
     } catch (error) {
       console.error('Error loading vacancies:', error);
-      toast.error('Ошибка при загрузке вакансий');
+      toast.error(t('myVacancies.loadError', t('toasts.vacanciesLoadError')));
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +45,7 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
       await vacanciesAPI.create(data as any);
       await loadVacancies();
       setShowForm(false);
-      toast.success('Вакансия создана!');
+      toast.success(t('toasts.vacancyCreated'));
     } catch (error) {
       console.error('Error creating vacancy:', error);
       throw error;
@@ -57,7 +59,7 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
       await vacanciesAPI.update(editingVacancy.id, data);
       await loadVacancies();
       setEditingVacancy(undefined);
-      toast.success('Вакансия обновлена!');
+      toast.success(t('toasts.vacancySaved'));
     } catch (error) {
       console.error('Error updating vacancy:', error);
       throw error;
@@ -73,10 +75,10 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
     try {
       await vacanciesAPI.delete(deleteConfirm.id);
       await loadVacancies();
-      toast.success('Вакансия удалена');
+      toast.success(t('toasts.vacancyDeleted'));
     } catch (error) {
       console.error('Error deleting vacancy:', error);
-      toast.error('Ошибка при удалении вакансии');
+      toast.error(t('myVacancies.deleteError', t('toasts.vacancySaveError')));
     } finally {
       setDeleteConfirm({ isOpen: false, id: null });
     }
@@ -86,10 +88,10 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
     try {
       await vacanciesAPI.toggleStatus(vacancy.id);
       await loadVacancies();
-      toast.success(vacancy.isActive ? 'Вакансия деактивирована' : 'Вакансия активирована');
+      toast.success(t('myVacancies.statusUpdated'));
     } catch (error) {
       console.error('Error toggling vacancy status:', error);
-      toast.error('Ошибка при изменении статуса');
+      toast.error(t('myVacancies.statusError', t('toasts.vacancySaveError')));
     }
   };
 
@@ -117,25 +119,25 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <Briefcase className="h-6 w-6 text-accent-cyan" />
-          Мои вакансии ({vacancies.length})
+          {t('myVacancies.title')} ({vacancies.length})
         </h2>
       </div>
 
       {isLoading ? (
         <div className="text-center py-12">
-          <div className="text-white text-xl">Загрузка...</div>
+          <div className="text-white text-xl">{t('common.loading')}</div>
         </div>
       ) : vacancies.length === 0 ? (
         <div className="text-center py-12 bg-dark-card rounded-lg">
           <Briefcase className="h-16 w-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-white mb-2">
-            У вас пока нет вакансий
+            {t('myVacancies.noVacancies')}
           </h3>
           <p className="text-gray-400 mb-6">
-            Создайте первую вакансию для поиска кандидатов
+            {t('myVacancies.createFirst')}
           </p>
           <button onClick={() => setShowForm(true)} className="btn-primary">
-            Создать вакансию
+            {t('myVacancies.createNew')}
           </button>
         </div>
       ) : (
@@ -146,7 +148,7 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
               className="btn-primary flex items-center gap-2 mx-auto"
             >
               <Plus className="h-5 w-5" />
-              Создать вакансию
+              {t('myVacancies.createNew')}
             </button>
           </div>
           <div className="space-y-4">
@@ -168,7 +170,7 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
                           : 'bg-gray-500/20 text-gray-400'
                       }`}
                     >
-                      {vacancy.isActive ? 'Активна' : 'Неактивна'}
+                      {vacancy.isActive ? t('myVacancies.status.active') : t('myVacancies.status.paused')}
                     </span>
                   </div>
                   <p className="text-gray-400 text-sm mb-3 line-clamp-2">
@@ -195,7 +197,7 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
                   <button
                     onClick={() => handleToggleStatus(vacancy)}
                     className="p-2 hover:bg-dark-bg rounded-lg transition-colors"
-                    title={vacancy.isActive ? 'Деактивировать' : 'Активировать'}
+                    title={vacancy.isActive ? t('myVacancies.actions.pause') : t('myVacancies.actions.activate')}
                   >
                     {vacancy.isActive ? (
                       <EyeOff className="h-5 w-5 text-gray-400" />
@@ -206,14 +208,14 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
                   <button
                     onClick={() => setEditingVacancy(vacancy)}
                     className="p-2 hover:bg-dark-bg rounded-lg transition-colors"
-                    title="Редактировать"
+                    title={t('myVacancies.actions.edit')}
                   >
                     <Edit className="h-5 w-5 text-accent-cyan" />
                   </button>
                   <button
                     onClick={() => handleDelete(vacancy.id)}
                     className="p-2 hover:bg-dark-bg rounded-lg transition-colors"
-                    title="Удалить"
+                    title={t('myVacancies.actions.delete')}
                   >
                     <Trash2 className="h-5 w-5 text-red-400" />
                   </button>
@@ -232,7 +234,7 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
                   ))}
                   {vacancy.skills.length > 5 && (
                     <span className="px-3 py-1 text-gray-400 text-sm">
-                      +{vacancy.skills.length - 5} ещё
+                      +{vacancy.skills.length - 5} {t('common.more').toLowerCase()}
                     </span>
                   )}
                 </div>
@@ -246,10 +248,10 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
       {/* Модальное окно подтверждения удаления */}
       <ConfirmModal
         isOpen={deleteConfirm.isOpen}
-        title="Удаление вакансии"
-        message="Вы уверены, что хотите удалить эту вакансию? Это действие нельзя отменить."
-        confirmText="Удалить"
-        cancelText="Отмена"
+        title={t('myVacancies.deleteTitle', t('common.delete'))}
+        message={t('myVacancies.confirmDelete')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={confirmDelete}
         onCancel={() => setDeleteConfirm({ isOpen: false, id: null })}

@@ -19,6 +19,8 @@ import type { OutletContext } from '../../../types';
 import { useTranslation } from 'react-i18next';
 import ConfirmModal from '../../ui/ConfirmModal';
 import { useParmaEvents } from '../../mascot';
+import { useAppDispatch } from '../../../store/hooks';
+import { fetchPlanStatus } from '../../../store/slices/developmentPlanSlice';
 
 interface LearningStep {
   title: string;
@@ -73,6 +75,7 @@ const RoadmapDetail = () => {
   const { t, i18n } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
   const [loading, setLoading] = useState(true);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
@@ -150,6 +153,11 @@ const RoadmapDetail = () => {
       setSavedProgress(response.data.progress);
       setHasUnsavedChanges(false);
       toast.success(t('roadmap.progressSaved'));
+
+      // Если план развития был обновлён, перезагружаем его статус
+      if (response.data.planUpdated) {
+        dispatch(fetchPlanStatus());
+      }
 
       // Вызываем события маскота
       const newProgress = (completedSteps.size / roadmap.learningPath.length) * 100;

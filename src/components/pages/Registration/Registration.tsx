@@ -196,14 +196,14 @@ function Registration() {
             console.log("Response:", response.data)
             if (response.status === 200) {
                 toast.success("Регистрация прошла успешно! Проверьте ваш email.")
-                
+
                 // Сохраняем email для страницы верификации
                 localStorage.setItem('pendingVerificationEmail', data.email);
-                
+
                 // Сохраняем токен для возможности переотправки письма
                 setAccessToken(response.data.accessToken);
                 setUser(response.data.user);
-                
+
                 // Редирект на страницу проверки email
                 navigate('/verify-email-pending');
             }

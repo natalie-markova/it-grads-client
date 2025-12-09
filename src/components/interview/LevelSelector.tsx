@@ -1,24 +1,26 @@
 import { TrendingUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Level } from '../../../types';
-
 
 interface LevelSelectorProps {
   level: Level;
   onChange: (level: Level) => void;
 }
 
-const levels: { value: Level; label: string; description: string }[] = [
-  { value: 'junior', label: 'Junior', description: '0-2 года опыта' },
-  { value: 'middle', label: 'Middle', description: '2-5 лет опыта' },
-  { value: 'senior', label: 'Senior', description: '5+ лет опыта' }
-];
-
 export default function LevelSelector({ level, onChange }: LevelSelectorProps) {
+  const { t } = useTranslation();
+
+  const levels: { value: Level; label: string; description: string }[] = [
+    { value: 'junior', label: 'Junior', description: t('aiInterviewSetup.levels.junior') },
+    { value: 'middle', label: 'Middle', description: t('aiInterviewSetup.levels.middle') },
+    { value: 'senior', label: 'Senior', description: t('aiInterviewSetup.levels.senior') }
+  ];
+
   return (
     <div>
       <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
         <TrendingUp className="w-5 h-5 text-accent-cyan" />
-        Уровень сложности
+        {t('aiInterviewSetup.difficultyLevel')}
       </h3>
       <div className="grid md:grid-cols-3 gap-4">
         {levels.map((lvl) => (

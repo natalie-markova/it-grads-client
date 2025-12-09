@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 export default function FileUpload() {
-
+  const { t } = useTranslation();
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [url, setUrl] = useState('');
@@ -20,12 +21,12 @@ export default function FileUpload() {
         method: 'POST',
         body: formData,
       });
-      
+
       const data = await response.json();
       setUrl(data.url);
-      toast.success('Файл успешно загружен!');
+      toast.success(t('toasts.fileUploaded'));
     } catch (error: any) {
-      toast.error('Ошибка загрузки: ' + (error.message || 'Неизвестная ошибка'));
+      toast.error(t('toasts.fileUploadError') + ': ' + (error.message || t('toasts.unknownError')));
     } finally {
       setUploading(false);
     }

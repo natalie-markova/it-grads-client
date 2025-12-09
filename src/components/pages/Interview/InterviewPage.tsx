@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import ChatMessage from '../../interview/ChatMessage';
 import ChatInput from '../../interview/ChatInput';
 import { interviewAPI } from '../../../utils/interview.api';
@@ -10,6 +11,7 @@ import Card from '../../ui/Card';
 import { useScrollAnimation } from '../../../hooks/useScrollAnimation';
 
 export default function InterviewPage() {
+  const { t, i18n } = useTranslation();
   useScrollAnimation();
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
@@ -45,7 +47,7 @@ export default function InterviewPage() {
         setMessages(session.messages);
       }
     } catch (err) {
-      setError('Не удалось загрузить сессию');
+      setError(t('aiInterview.errors.loadSessionFailed'));
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -61,13 +63,14 @@ export default function InterviewPage() {
     try {
       const { userMessage, aiMessage } = await interviewAPI.sendMessage(
         Number(sessionId),
-        content
+        content,
+        i18n.language
       );
 
       // Добавляем оба сообщения в историю
       setMessages(prev => [...prev, userMessage, aiMessage]);
     } catch (err) {
-      setError('Не удалось отправить сообщение');
+      setError(t('aiInterview.errors.sendMessageFailed'));
       console.error(err);
     } finally {
       setIsSending(false);
@@ -78,10 +81,10 @@ export default function InterviewPage() {
     if (!sessionId) return;
 
     try {
-      await interviewAPI.completeSession(Number(sessionId));
+      await interviewAPI.completeSession(Number(sessionId), i18n.language);
       navigate(`/interview/ai/${sessionId}/results`);
     } catch (err) {
-      setError('Не удалось завершить интервью');
+      setError(t('aiInterview.errors.completeFailed'));
       console.error(err);
     }
   };
@@ -91,7 +94,7 @@ export default function InterviewPage() {
       <div className="bg-dark-bg min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3 text-white">
           <Loader2 className="h-8 w-8 animate-spin text-accent-cyan" />
-          <span className="text-xl">Загрузка интервью...</span>
+          <span className="text-xl">{t('aiInterview.loading')}</span>
         </div>
       </div>
     );
@@ -100,8 +103,8 @@ export default function InterviewPage() {
   return (
     <div className="bg-dark-bg min-h-screen py-8">
       <Section
-        title="AI Интервью"
-        subtitle="Отвечайте на вопросы интервьюера. Ваши ответы будут проанализированы"
+        title={t('aiInterview.title')}
+        subtitle={t('aiInterview.subtitle')}
         className="bg-dark-bg py-0 scroll-animate-item"
       >
         <Card className="max-w-4xl mx-auto scroll-animate-item" hover={false}>
@@ -117,9 +120,9 @@ export default function InterviewPage() {
           <div className="mb-6 bg-dark-surface rounded-lg border border-dark-card overflow-hidden">
             <div className="p-4 border-b border-dark-card bg-dark-bg/50 flex items-center gap-2">
               <MessageCircle className="h-5 w-5 text-accent-cyan" />
-              <span className="font-medium text-white">Диалог с интервьюером</span>
+              <span className="font-medium text-white">{t('aiInterview.dialogWithInterviewer')}</span>
               <span className="ml-auto text-sm text-gray-400">
-                {messages.length} сообщений
+                {messages.length} {t('aiInterview.messages')}
               </span>
             </div>
 
@@ -132,7 +135,7 @@ export default function InterviewPage() {
             >
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-gray-400">
-                  <p>Начните диалог с интервьюером</p>
+                  <p>{t('aiInterview.startDialog')}</p>
                 </div>
               ) : (
                 <>
@@ -155,7 +158,7 @@ export default function InterviewPage() {
               className="btn-secondary flex items-center gap-2"
             >
               <XCircle className="h-4 w-4" />
-              Прервать интервью
+              {t('aiInterview.cancelInterview')}
             </button>
 
             <button
@@ -164,7 +167,7 @@ export default function InterviewPage() {
               disabled={messages.length < 2}
             >
               <CheckCircle className="h-4 w-4" />
-              Завершить и получить результаты
+              {t('aiInterview.finishAndGetResults')}
             </button>
           </div>
         </Card>
