@@ -12,9 +12,10 @@ const CLICK_PHRASES_RU = [
   "Давайте ребятки, учитесь!",
   "Солнце ещё высоко!",
   "За дело, ублюдок!",
-  "Давайте ребятки, работайте!",
+  "Ладно ребятки, работайте!",
   "Хочу есть...",
   "Гав!",
+  "Пу-пу-пу!",
 ];
 
 const CLICK_PHRASES_EN = [
@@ -22,9 +23,10 @@ const CLICK_PHRASES_EN = [
   "Come on guys, study!",
   "The sun is still high!",
   "Get to work!",
-  "Come on guys, let's work!",
+  "Alright guys, get to work!",
   "I'm hungry...",
   "Woof!",
+  "Poo-poo-poo!",
 ];
 
 // Импорт видео (webm с прозрачным фоном)

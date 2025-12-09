@@ -380,7 +380,7 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
 }
 
 const GraduateProfile = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { user, setUser } = useOutletContext<OutletContext>()
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -500,7 +500,7 @@ const GraduateProfile = () => {
           id: app.id.toString(),
           jobTitle: app.vacancy?.title || t('profile.vacancyDeleted'),
           company: app.vacancy?.companyName || app.vacancy?.employer?.companyName || app.vacancy?.employer?.username || t('profile.unknownCompany'),
-          appliedDate: new Date(app.createdAt).toLocaleDateString('ru-RU', {
+          appliedDate: new Date(app.createdAt).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ru-RU', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -850,11 +850,11 @@ const GraduateProfile = () => {
                           <div className="flex items-center gap-3 text-gray-300">
                             <Calendar className="h-5 w-5 text-accent-cyan" />
                             <span>
-                          {profile.birthDate.includes('T') 
-                            ? new Date(profile.birthDate).toLocaleDateString('ru-RU', { 
-                                year: 'numeric', 
-                                    month: 'long', 
-                                    day: 'numeric' 
+                          {profile.birthDate.includes('T')
+                            ? new Date(profile.birthDate).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ru-RU', {
+                                year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
                               })
                             : profile.birthDate}
                             </span>
@@ -1256,7 +1256,7 @@ const GraduateProfile = () => {
                         <p className="text-gray-300 text-sm mt-2 whitespace-pre-wrap">{fav.description}</p>
                       )}
                       <p className="text-gray-400 text-xs mt-2">
-                        {t('profile.addedOn')}: {new Date(fav.createdAt || Date.now()).toLocaleDateString('ru-RU', {
+                        {t('profile.addedOn')}: {new Date(fav.createdAt || Date.now()).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ru-RU', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'

@@ -38,7 +38,7 @@ const ResetPassword: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await $api.post(`/users/reset-password/${token}`, { password });
+      const response = await $api.post(`/auth/reset-password/${token}`, { password });
       toast.success(response.data.message || 'Пароль успешно изменён');
       setIsSuccess(true);
 

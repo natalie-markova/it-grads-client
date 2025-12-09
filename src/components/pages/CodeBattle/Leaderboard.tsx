@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getLeaderboard, getMyRating } from './api';
 import type { PlayerRating, League } from './types';
 
@@ -19,6 +20,7 @@ const leagueData: Record<League, { name: string; icon: string; color: string; mi
 };
 
 export default function Leaderboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const context = useOutletContext<OutletContext>();
   const user = context?.user;
@@ -66,11 +68,11 @@ export default function Leaderboard() {
               className="px-4 py-2 bg-dark-card/50 hover:bg-dark-card border border-dark-surface hover:border-accent-cyan/50 rounded-lg text-sm text-gray-400 hover:text-accent-cyan transition-all flex items-center gap-2"
             >
               <span>←</span>
-              <span>Назад</span>
+              <span>{t('common.back')}</span>
             </button>
           </div>
-          <h1 className="text-4xl font-bold text-center mb-4">🏆 Таблица лидеров</h1>
-          <p className="text-center text-gray-400">Топ-30 игроков Code Battle Arena</p>
+          <h1 className="text-4xl font-bold text-center mb-4">{t('codeBattle.leaderboard.title', '🏆 Leaderboard')}</h1>
+          <p className="text-center text-gray-400">{t('codeBattle.leaderboard.subtitle', 'Top 30 Code Battle Arena players')}</p>
         </div>
       </div>
 

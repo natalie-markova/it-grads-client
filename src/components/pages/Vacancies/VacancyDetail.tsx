@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, MapPin, DollarSign, Briefcase, Heart, Calendar, User, Check, MessageSquare } from 'lucide-react';
 import { $api } from '../../../utils/axios.instance';
 import { chatAPI } from '../../../utils/chat.api';
@@ -8,6 +9,7 @@ import toast from 'react-hot-toast';
 import Card from '../../ui/Card';
 
 const VacancyDetail = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useOutletContext<OutletContext>();
@@ -197,7 +199,7 @@ const VacancyDetail = () => {
           className="mb-6 flex items-center gap-2 text-gray-400 hover:text-accent-cyan transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
-          Назад
+          {t('common.back')}
         </button>
 
         <Card className="p-8">

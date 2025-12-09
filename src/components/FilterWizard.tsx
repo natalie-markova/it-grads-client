@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, Check, Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import Card from './ui/Card'
 
 export interface FilterData {
@@ -27,6 +28,7 @@ interface FilterWizardProps {
 }
 
 const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizardProps) => {
+  const { t } = useTranslation()
   const [currentStep, setCurrentStep] = useState(0)
   const [customSkillInput, setCustomSkillInput] = useState('')
 
@@ -723,7 +725,7 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
                 className="btn-secondary flex items-center gap-2"
               >
                 <ChevronLeft className="h-5 w-5" />
-                Назад
+                {t('common.back')}
               </button>
             )}
             <button
@@ -731,14 +733,14 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
               className="btn-primary flex items-center gap-2"
             >
               <Search className="h-5 w-5" />
-              Поиск вакансий
+              {t('vacancies.title')}
             </button>
             {currentStep < steps.length - 1 && (
               <button
                 onClick={handleNext}
                 className="btn-secondary flex items-center gap-2"
               >
-                Далее
+                {t('common.next')}
                 <ChevronRight className="h-5 w-5" />
               </button>
             )}

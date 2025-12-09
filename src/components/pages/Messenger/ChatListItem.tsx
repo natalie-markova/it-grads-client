@@ -42,18 +42,18 @@ const ChatListItem = ({ chat, currentUser, isActive, onDelete }: ChatListItemPro
     >
       <div className="flex items-start gap-3">
         {/* Avatar */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 group/avatar">
           {otherUser?.avatar ? (
             <img
               src={getImageUrl(otherUser.avatar)}
               alt={otherUser.username}
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-12 h-12 rounded-full object-cover transition-transform duration-200 group-hover/avatar:scale-110"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-accent-cyan/20 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-accent-cyan/20 flex items-center justify-center transition-transform duration-200 group-hover/avatar:scale-110">
               <UserIcon className="h-6 w-6 text-accent-cyan" />
             </div>
           )}

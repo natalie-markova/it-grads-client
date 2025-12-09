@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useParmaContext } from './ParmaProvider';
@@ -13,10 +13,27 @@ export const useParmaRouteWatcher = () => {
   const { setTemporaryState, setState } = useParmaContext();
   const prevPathRef = useRef<string | null>(null);
   const isFirstRenderRef = useRef(true);
+  const [i18nReady, setI18nReady] = useState(i18n.isInitialized);
+
+  // Ждём инициализации i18n
+  useEffect(() => {
+    if (i18n.isInitialized) {
+      setI18nReady(true);
+    } else {
+      const handleInit = () => setI18nReady(true);
+      i18n.on('initialized', handleInit);
+      return () => {
+        i18n.off('initialized', handleInit);
+      };
+    }
+  }, [i18n]);
 
   const isRu = i18n.language === 'ru';
 
   useEffect(() => {
+    // Не показывать приветствие пока i18n не готов
+    if (!i18nReady) return;
+
     const path = location.pathname;
     const prevPath = prevPathRef.current;
 
@@ -132,7 +149,7 @@ export const useParmaRouteWatcher = () => {
 
     // For all other pages - normal state
     setState('idle');
-  }, [location.pathname, setTemporaryState, setState, isRu]);
+  }, [location.pathname, setTemporaryState, setState, isRu, i18nReady]);
 };
 
 export default useParmaRouteWatcher;

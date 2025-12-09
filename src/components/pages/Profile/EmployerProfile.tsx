@@ -871,6 +871,20 @@ const EmployerProfile = () => {
           </div>
         )}
 
+        {/* Reputation Tab */}
+        {activeTab === 'reputation' && (
+          <div className="bg-dark-surface rounded-lg p-8 border border-dark-card">
+            <h2 className="text-2xl font-bold text-white mb-6">{t('employerProfile.reputation.title')}</h2>
+            <p className="text-gray-400 mb-6">{t('employerProfile.reputation.description')}</p>
+            <button
+              onClick={() => navigate('/companies')}
+              className="btn-primary"
+            >
+              {t('employerProfile.reputation.viewRating')}
+            </button>
+          </div>
+        )}
+
         {/* Change Password Section - только на вкладке Профиль */}
         {activeTab === 'profile' && <ChangePassword />}
       </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getTasks, getLanguages } from './api';
 import type { GameTask, Language } from './types';
 
@@ -32,6 +33,7 @@ const formatLanguage = (lang: string): string => {
 };
 
 export default function VSAITaskList() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -111,7 +113,7 @@ export default function VSAITaskList() {
               className="px-4 py-2 bg-dark-card hover:bg-dark-bg border border-dark-bg hover:border-accent-cyan/50 rounded-lg text-sm text-gray-400 hover:text-accent-cyan transition-all flex items-center gap-2"
             >
               <span>←</span>
-              <span>Назад</span>
+              <span>{t('common.back')}</span>
             </button>
             <div>
               <h1 className="text-2xl font-bold">🤖 Соревнование с AI</h1>

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Eye, EyeOff, Briefcase } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Briefcase, X, MapPin, DollarSign, Clock } from 'lucide-react';
 import { vacanciesAPI } from '../../../utils/vacancies.api';
 import VacancyForm from './VacancyForm';
 import type { Vacancy } from '../../../types';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../../ui/ConfirmModal';
 import { useTranslation } from 'react-i18next';
+import Card from '../../ui/Card';
 
 interface VacanciesManagementProps {
   userId?: number;
@@ -17,6 +18,7 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingVacancy, setEditingVacancy] = useState<Vacancy | undefined>();
+  const [viewingVacancy, setViewingVacancy] = useState<Vacancy | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
   useEffect(() => {
@@ -176,6 +178,12 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
                   <p className="text-gray-400 text-sm mb-3 line-clamp-2">
                     {vacancy.description}
                   </p>
+                  <button
+                    onClick={() => setViewingVacancy(vacancy)}
+                    className="text-accent-cyan hover:text-accent-cyan/80 text-sm mb-3 transition-colors"
+                  >
+                    {t('myVacancies.viewDetails')}
+                  </button>
                   <div className="flex flex-wrap gap-3 text-sm text-gray-400">
                     {vacancy.location && (
                       <span>{vacancy.location}</span>
@@ -241,6 +249,140 @@ export default function VacanciesManagement({ userId }: VacanciesManagementProps
               )}
             </div>
           ))}
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно просмотра вакансии */}
+      {viewingVacancy && (
+        <div
+          className="fixed inset-0 bg-black/75 flex items-center justify-center z-[100] p-4"
+          onClick={() => setViewingVacancy(null)}
+        >
+          <div
+            className="max-w-3xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Card className="w-full">
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h2 className="text-2xl font-bold text-white">{viewingVacancy.title}</h2>
+                    <span
+                      className={`px-3 py-1 text-xs rounded-full ${
+                        viewingVacancy.isActive
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-gray-500/20 text-gray-400'
+                      }`}
+                    >
+                      {viewingVacancy.isActive ? t('myVacancies.status.active') : t('myVacancies.status.paused')}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewingVacancy(null)}
+                  className="p-2 text-gray-400 hover:text-white hover:bg-dark-surface rounded-lg transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Основная информация */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {viewingVacancy.location && (
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <MapPin className="h-5 w-5 text-accent-cyan" />
+                    <span>{viewingVacancy.location}</span>
+                  </div>
+                )}
+                {viewingVacancy.salary && (
+                  <div className="flex items-center gap-2 text-accent-cyan font-semibold">
+                    <DollarSign className="h-5 w-5" />
+                    <span>{viewingVacancy.salary.toLocaleString()} ₽</span>
+                  </div>
+                )}
+                {viewingVacancy.level && (
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <Briefcase className="h-5 w-5 text-accent-cyan" />
+                    <span className="capitalize">{viewingVacancy.level}</span>
+                  </div>
+                )}
+                {viewingVacancy.employmentType && (
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <Clock className="h-5 w-5 text-accent-cyan" />
+                    <span>{viewingVacancy.employmentType}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Описание */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-white mb-3">{t('myVacancies.modal.description')}</h3>
+                <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                  {viewingVacancy.description}
+                </p>
+              </div>
+
+              {/* Требования */}
+              {viewingVacancy.requirements && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-white mb-3">{t('myVacancies.modal.requirements')}</h3>
+                  <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                    {viewingVacancy.requirements}
+                  </p>
+                </div>
+              )}
+
+              {/* Навыки */}
+              {viewingVacancy.skills && viewingVacancy.skills.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-white mb-3">{t('myVacancies.modal.skills')}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingVacancy.skills.map((skill, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-accent-cyan/20 text-accent-cyan text-sm rounded-full"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Кнопки действий */}
+              <div className="flex gap-3 pt-4 border-t border-dark-card">
+                <button
+                  onClick={() => {
+                    setViewingVacancy(null);
+                    setEditingVacancy(viewingVacancy);
+                  }}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  {t('myVacancies.actions.edit')}
+                </button>
+                <button
+                  onClick={() => {
+                    setViewingVacancy(null);
+                    handleToggleStatus(viewingVacancy);
+                  }}
+                  className="px-4 py-2 bg-dark-card hover:bg-dark-card/80 text-white rounded-lg transition-colors flex items-center gap-2"
+                >
+                  {viewingVacancy.isActive ? (
+                    <>
+                      <EyeOff className="h-4 w-4" />
+                      {t('myVacancies.actions.pause')}
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-4 w-4" />
+                      {t('myVacancies.actions.activate')}
+                    </>
+                  )}
+                </button>
+              </div>
+            </Card>
           </div>
         </div>
       )}
