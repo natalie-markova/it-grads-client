@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { $api } from '../../../utils/axios.instance';
+import { OutletContext } from '../../../types';
 
 const VerifyEmailSuccess: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
+  const context = useOutletContext<OutletContext>();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -17,17 +19,27 @@ const VerifyEmailSuccess: React.FC = () => {
         if (response.data.user) {
           // Обновляем данные пользователя в localStorage
           const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-          localStorage.setItem('user', JSON.stringify({
+          const updatedUser = {
             ...currentUser,
             emailVerified: true
-          }));
+          };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+
+          // Обновляем контекст если пользователь залогинен
+          if (context?.setUser) {
+            context.setUser(updatedUser);
+          }
         }
 
         setStatus('success');
 
+        // Определяем куда редиректить
+        const isLoggedIn = !!localStorage.getItem('accessToken');
+        const redirectPath = isLoggedIn ? '/profile' : '/login';
+
         // Автоматический редирект через 3 секунды
         setTimeout(() => {
-          navigate('/login');
+          navigate(redirectPath);
         }, 3000);
       } catch (error: any) {
         setStatus('error');
@@ -83,6 +95,13 @@ const VerifyEmailSuccess: React.FC = () => {
     );
   }
 
+  const isLoggedIn = !!localStorage.getItem('accessToken');
+  const redirectPath = isLoggedIn ? '/profile' : '/login';
+  const redirectText = isLoggedIn
+    ? 'Вы будете автоматически перенаправлены в личный кабинет через 3 секунды...'
+    : 'Вы будете автоматически перенаправлены на страницу входа через 3 секунды...';
+  const buttonText = isLoggedIn ? 'Перейти в личный кабинет' : 'Перейти к входу';
+
   return (
     <div className="min-h-screen bg-dark-bg flex items-center justify-center p-4">
       <div className="max-w-md w-full">
@@ -102,14 +121,14 @@ const VerifyEmailSuccess: React.FC = () => {
             </p>
 
             <p className="text-sm text-gray-400">
-              Вы будете автоматически перенаправлены на страницу входа через 3 секунды...
+              {redirectText}
             </p>
 
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate(redirectPath)}
               className="w-full btn-primary"
             >
-              Перейти к входу сейчас
+              {buttonText}
             </button>
           </div>
         </div>
