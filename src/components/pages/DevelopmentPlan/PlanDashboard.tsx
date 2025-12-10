@@ -163,26 +163,26 @@ const PlanDashboard: React.FC = () => {
 
   if (planLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      <div className="min-h-screen bg-dark-bg flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-cyan" />
       </div>
     );
   }
 
   if (!planStatus?.hasPlan) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-dark-bg flex flex-col items-center justify-center p-4">
         <div className="text-center max-w-md">
           <span className="text-6xl mb-4 block">🎯</span>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl font-bold text-white mb-2">
             {t('developmentPlan.noPlan', 'У вас нет активного плана развития')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-gray-400 mb-6">
             {t('developmentPlan.noPlanDescription', 'Выберите целевую позицию, и система создаст персональный план обучения')}
           </p>
           <Link
             to="/development-plan/select"
-            className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            className="inline-block px-6 py-3 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg font-medium rounded-lg transition-colors"
           >
             {t('developmentPlan.selectPosition', 'Выбрать цель')}
           </Link>
@@ -194,18 +194,18 @@ const PlanDashboard: React.FC = () => {
   const { plan, currentStep, stepsStats, skillProgress, gaps, steps } = planStatus;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-dark-bg py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6">
+        <div className="bg-dark-surface rounded-xl p-6 border border-dark-card mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
               <span className="text-4xl">{plan?.targetPositionIcon}</span>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-2xl font-bold text-white">
                   {plan?.targetPositionTitle}
                 </h1>
-                <p className="text-gray-500 dark:text-gray-400">
+                <p className="text-gray-400">
                   {t('developmentPlan.yourGoal', 'Ваша цель развития')}
                 </p>
               </div>
@@ -214,7 +214,7 @@ const PlanDashboard: React.FC = () => {
               <button
                 onClick={handleSync}
                 disabled={syncLoading}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-400 hover:bg-dark-card rounded-lg transition-colors"
               >
                 {syncLoading ? (
                   <span className="animate-spin inline-block">↻</span>
@@ -238,7 +238,7 @@ const PlanDashboard: React.FC = () => {
                   return (
                     <button
                       onClick={handleFixUnlock}
-                      className="px-4 py-2 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40 rounded-lg transition-colors font-medium"
+                      className="px-4 py-2 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 rounded-lg transition-colors font-medium"
                       title={t('developmentPlan.fixUnlock', 'Исправить разблокировку')}
                     >
                       🔧 {t('developmentPlan.fixProgress', 'Исправить')}
@@ -250,14 +250,14 @@ const PlanDashboard: React.FC = () => {
               {plan?.status === 'active' ? (
                 <button
                   onClick={handlePause}
-                  className="px-4 py-2 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                  className="px-4 py-2 text-amber-400 hover:bg-amber-500/20 rounded-lg transition-colors"
                 >
                   {t('developmentPlan.pause', 'Приостановить')}
                 </button>
               ) : plan?.status === 'paused' ? (
                 <button
                   onClick={handleResume}
-                  className="px-4 py-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                  className="px-4 py-2 text-green-400 hover:bg-green-500/20 rounded-lg transition-colors"
                 >
                   {t('developmentPlan.resume', 'Возобновить')}
                 </button>
@@ -268,21 +268,21 @@ const PlanDashboard: React.FC = () => {
           {/* Progress Bar */}
           <div className="mt-6">
             <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-600 dark:text-gray-400">
+              <span className="text-gray-400">
                 {t('developmentPlan.overallProgress', 'Общий прогресс')}
               </span>
-              <span className="font-medium text-gray-900 dark:text-white">
+              <span className="font-medium text-white">
                 {plan?.overallProgress}%
               </span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+            <div className="w-full bg-dark-card rounded-full h-3">
               <div
-                className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all"
+                className="bg-gradient-to-r from-accent-cyan to-accent-blue h-3 rounded-full transition-all"
                 style={{ width: `${plan?.overallProgress || 0}%` }}
               />
             </div>
             {plan?.estimatedWeeks && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              <p className="text-sm text-gray-400 mt-2">
                 {t('developmentPlan.estimatedTime', 'Оценка времени')}: ~{plan.estimatedWeeks} {t('developmentPlan.weeks', 'недель')}
               </p>
             )}
@@ -294,37 +294,37 @@ const PlanDashboard: React.FC = () => {
           <div className="lg:col-span-2">
             {/* Current Step Highlight */}
             {currentStep && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 mb-6">
-                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm font-medium mb-2">
+              <div className="bg-accent-cyan/10 border border-accent-cyan/30 rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-2 text-accent-cyan text-sm font-medium mb-2">
                   <span className="animate-pulse">●</span>
                   {t('developmentPlan.currentStep', 'Текущий шаг')}
                 </div>
                 <div className="flex items-start gap-4">
                   <span className="text-3xl">{getStepTypeIcon(currentStep.type, currentStep.interviewType)}</span>
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                    <h3 className="text-xl font-semibold text-white mb-1">
                       {currentStep.title}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-3">
+                    <p className="text-gray-400 mb-3">
                       {currentStep.description}
                     </p>
                     {currentStep.type === 'codebattle' && currentStep.requiredTasks && (
                       <div className="flex items-center gap-4">
                         <div className="flex-1">
-                          <div className="flex justify-between text-sm mb-1">
+                          <div className="flex justify-between text-sm mb-1 text-gray-300">
                             <span>{t('developmentPlan.taskProgress', 'Прогресс')}</span>
                             <span>{currentStep.completedTasks || 0} / {currentStep.requiredTasks}</span>
                           </div>
-                          <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                          <div className="w-full bg-dark-card rounded-full h-2">
                             <div
-                              className="bg-blue-600 h-2 rounded-full"
+                              className="bg-accent-cyan h-2 rounded-full"
                               style={{ width: `${((currentStep.completedTasks || 0) / currentStep.requiredTasks) * 100}%` }}
                             />
                           </div>
                         </div>
                         <Link
                           to="/codebattle"
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                          className="px-4 py-2 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg rounded-lg transition-colors"
                         >
                           {t('developmentPlan.goToCodeBattle', 'Перейти')} →
                         </Link>
@@ -333,20 +333,20 @@ const PlanDashboard: React.FC = () => {
                     {currentStep.type === 'roadmap' && (
                       <div className="flex items-center gap-4">
                         <div className="flex-1">
-                          <div className="flex justify-between text-sm mb-1">
+                          <div className="flex justify-between text-sm mb-1 text-gray-300">
                             <span>{t('developmentPlan.roadmapProgress', 'Прогресс')}</span>
                             <span>{currentStep.currentProgress || 0}%</span>
                           </div>
-                          <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                          <div className="w-full bg-dark-card rounded-full h-2">
                             <div
-                              className="bg-blue-600 h-2 rounded-full"
+                              className="bg-accent-cyan h-2 rounded-full"
                               style={{ width: `${currentStep.currentProgress || 0}%` }}
                             />
                           </div>
                         </div>
                         <Link
                           to={`/roadmap/${currentStep.roadmapSlug}`}
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                          className="px-4 py-2 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg rounded-lg transition-colors"
                         >
                           {t('developmentPlan.continue', 'Продолжить')} →
                         </Link>
@@ -355,13 +355,13 @@ const PlanDashboard: React.FC = () => {
                     {currentStep.type === 'interview' && currentStep.requiredSessions && (
                       <div className="flex items-center gap-4">
                         <div className="flex-1">
-                          <div className="flex justify-between text-sm mb-1">
+                          <div className="flex justify-between text-sm mb-1 text-gray-300">
                             <span>{getInterviewTypeLabel(currentStep.interviewType)}</span>
                             <span>{currentStep.completedSessions || 0} / {currentStep.requiredSessions} {t('developmentPlan.successful', 'успешных')}</span>
                           </div>
-                          <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                          <div className="w-full bg-dark-card rounded-full h-2">
                             <div
-                              className="bg-blue-600 h-2 rounded-full"
+                              className="bg-accent-cyan h-2 rounded-full"
                               style={{ width: `${((currentStep.completedSessions || 0) / currentStep.requiredSessions) * 100}%` }}
                             />
                           </div>
@@ -378,7 +378,7 @@ const PlanDashboard: React.FC = () => {
                         </div>
                         <Link
                           to="/interview"
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                          className="px-4 py-2 bg-accent-cyan hover:bg-accent-cyan/90 text-dark-bg rounded-lg transition-colors"
                         >
                           {t('developmentPlan.goToTrainer', 'Перейти')} →
                         </Link>
@@ -390,8 +390,8 @@ const PlanDashboard: React.FC = () => {
             )}
 
             {/* All Steps */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-dark-surface rounded-xl p-6 border border-dark-card">
+              <h2 className="text-lg font-semibold text-white mb-4">
                 {t('developmentPlan.planSteps', 'Шаги плана')}
                 {stepsStats && (
                   <span className="text-sm font-normal text-gray-500 ml-2">
@@ -406,12 +406,12 @@ const PlanDashboard: React.FC = () => {
                     onClick={() => handleStepClick(step)}
                     className={`flex items-start gap-4 p-4 rounded-lg border transition-all ${
                       step.status === 'completed'
-                        ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800 cursor-pointer hover:border-green-400 dark:hover:border-green-600'
+                        ? 'bg-green-500/10 border-green-500/30 cursor-pointer hover:border-green-500/50'
                         : step.status === 'in_progress'
-                        ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800 cursor-pointer hover:border-blue-400 dark:hover:border-blue-600'
+                        ? 'bg-accent-cyan/10 border-accent-cyan/30 cursor-pointer hover:border-accent-cyan/50'
                         : step.status === 'locked'
-                        ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 opacity-60 cursor-not-allowed'
-                        : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500'
+                        ? 'bg-dark-card/50 border-dark-card opacity-60 cursor-not-allowed'
+                        : 'bg-dark-card/50 border-dark-card cursor-pointer hover:border-gray-500'
                     }`}
                   >
                     <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
@@ -421,17 +421,17 @@ const PlanDashboard: React.FC = () => {
                       <div className="flex items-center gap-2 mb-1">
                         <span>{getStepTypeIcon(step.type, step.interviewType)}</span>
                         <h3 className={`font-medium ${
-                          step.status === 'locked' ? 'text-gray-500' : 'text-gray-900 dark:text-white'
+                          step.status === 'locked' ? 'text-gray-500' : 'text-white'
                         }`}>
                           {step.title}
                         </h3>
                         {step.type === 'interview' && step.interviewType && (
-                          <span className="text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
+                          <span className="text-xs px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded">
                             {getInterviewTypeLabel(step.interviewType)}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-gray-400">
                         {step.description}
                       </p>
                       {step.type === 'codebattle' && step.requiredTasks && step.status !== 'locked' && (
@@ -454,7 +454,7 @@ const PlanDashboard: React.FC = () => {
                                   ({t('developmentPlan.totalAttempts', 'всего попыток')}: {step.practiceStats.attempts})
                                 </span>
                               ) : null}
-                              <div className="text-xs text-gray-400 mt-1">
+                              <div className="text-xs text-gray-500 mt-1">
                                 {t('developmentPlan.minPassScore', 'Минимум для зачёта')}: {step.minPassPercentage || 70}%
                               </div>
                             </>
@@ -508,24 +508,24 @@ const PlanDashboard: React.FC = () => {
           <div className="space-y-6">
             {/* Skill Progress */}
             {skillProgress && Object.keys(skillProgress).length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <div className="bg-dark-surface rounded-xl p-6 border border-dark-card">
+                <h2 className="text-lg font-semibold text-white mb-4">
                   {t('developmentPlan.skillProgress', 'Прогресс навыков')}
                 </h2>
                 <div className="space-y-3">
                   {Object.entries(skillProgress).map(([skill, progress]) => (
                     <div key={skill}>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-700 dark:text-gray-300 capitalize">
+                        <span className="text-gray-300 capitalize">
                           {skill.replace('_', ' ')}
                         </span>
-                        <span className={progress >= 100 ? 'text-green-600' : 'text-gray-500'}>
+                        <span className={progress >= 100 ? 'text-green-400' : 'text-gray-500'}>
                           {Math.round(progress)}%
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div className="w-full bg-dark-card rounded-full h-2">
                         <div
-                          className={`h-2 rounded-full ${progress >= 100 ? 'bg-green-500' : 'bg-blue-600'}`}
+                          className={`h-2 rounded-full ${progress >= 100 ? 'bg-green-500' : 'bg-accent-cyan'}`}
                           style={{ width: `${Math.min(progress, 100)}%` }}
                         />
                       </div>
@@ -534,7 +534,7 @@ const PlanDashboard: React.FC = () => {
                 </div>
                 <Link
                   to="/skills"
-                  className="block text-center text-blue-600 hover:text-blue-700 text-sm mt-4"
+                  className="block text-center text-accent-cyan hover:text-accent-cyan/80 text-sm mt-4"
                 >
                   {t('developmentPlan.viewRadar', 'Открыть радар навыков')} →
                 </Link>
@@ -543,8 +543,8 @@ const PlanDashboard: React.FC = () => {
 
             {/* Recommended Tasks */}
             {recommendedTasks.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <div className="bg-dark-surface rounded-xl p-6 border border-dark-card">
+                <h2 className="text-lg font-semibold text-white mb-4">
                   {t('developmentPlan.recommendedTasks', 'Рекомендуемые задачи')}
                 </h2>
                 <div className="space-y-3">
@@ -552,16 +552,16 @@ const PlanDashboard: React.FC = () => {
                     <Link
                       key={task.id}
                       to={`/codebattle/task/${task.id}`}
-                      className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                      className="block p-3 bg-dark-card rounded-lg hover:bg-dark-card/80 transition-colors"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-900 dark:text-white font-medium text-sm">
+                        <span className="text-white font-medium text-sm">
                           {task.title}
                         </span>
                         <span className={`text-xs px-2 py-0.5 rounded ${
-                          task.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                          task.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-red-100 text-red-700'
+                          task.difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
+                          task.difficulty === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-red-500/20 text-red-400'
                         }`}>
                           {task.difficulty}
                         </span>
@@ -576,7 +576,7 @@ const PlanDashboard: React.FC = () => {
                 </div>
                 <Link
                   to="/codebattle"
-                  className="block text-center text-blue-600 hover:text-blue-700 text-sm mt-4"
+                  className="block text-center text-accent-cyan hover:text-accent-cyan/80 text-sm mt-4"
                 >
                   {t('developmentPlan.allTasks', 'Все задачи')} →
                 </Link>
@@ -584,20 +584,20 @@ const PlanDashboard: React.FC = () => {
             )}
 
             {/* Actions */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-dark-surface rounded-xl p-6 border border-dark-card">
+              <h2 className="text-lg font-semibold text-white mb-4">
                 {t('developmentPlan.actions', 'Действия')}
               </h2>
               <div className="space-y-2">
                 <Link
                   to="/development-plan/select"
-                  className="block w-full text-center px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="block w-full text-center px-4 py-2 text-gray-400 hover:bg-dark-card rounded-lg transition-colors"
                 >
                   {t('developmentPlan.changePlan', 'Сменить цель')}
                 </Link>
                 <button
                   onClick={handleAbandon}
-                  className="w-full px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  className="w-full px-4 py-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                 >
                   {t('developmentPlan.abandonPlan', 'Отменить план')}
                 </button>
@@ -607,7 +607,7 @@ const PlanDashboard: React.FC = () => {
         </div>
 
         {error && (
-          <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
+          <div className="mt-4 p-4 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400">
             {error}
           </div>
         )}

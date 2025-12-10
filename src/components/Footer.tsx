@@ -49,7 +49,7 @@ const Footer = ({ user }: FooterProps) => {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/graduates" className="hover:text-accent-cyan transition-colors text-gray-400">
+                    <Link to="/candidates" className="hover:text-accent-cyan transition-colors text-gray-400">
                       {t('auth.graduate')}
                     </Link>
                   </li>

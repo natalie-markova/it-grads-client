@@ -339,14 +339,19 @@ const MessengerPage = () => {
               </p>
             </div>
           ) : (
-            chats.map((chat) => (
-              <ChatListItem
+            chats.map((chat, index) => (
+              <div
                 key={chat.id}
-                chat={chat}
-                currentUser={user}
-                isActive={chat.id === Number(chatId)}
-                onDelete={handleDeleteChat}
-              />
+                className="animate-fadeSlideIn"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <ChatListItem
+                  chat={chat}
+                  currentUser={user}
+                  isActive={chat.id === Number(chatId)}
+                  onDelete={handleDeleteChat}
+                />
+              </div>
             ))
           )}
         </div>
