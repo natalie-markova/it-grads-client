@@ -1,4 +1,4 @@
-import { User, Send, Briefcase } from 'lucide-react'
+import { User, Send, Briefcase, Star } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 interface EmployerProfileNavProps {
@@ -13,6 +13,7 @@ const EmployerProfileNav = ({ activeTab, onTabChange }: EmployerProfileNavProps)
     { id: 'profile', label: t('employerProfile.tabs.profile'), icon: User },
     { id: 'applications', label: t('employerProfile.tabs.responses'), icon: Send },
     { id: 'vacancies', label: t('employerProfile.tabs.vacancies'), icon: Briefcase },
+    { id: 'reputation', label: t('employerProfile.tabs.reputation'), icon: Star },
   ]
 
   return (

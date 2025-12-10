@@ -206,7 +206,7 @@ export default function CodeBattleHome() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="flex flex-col gap-6">
             {/* My Rating */}
             {myRating && (
               <div className="bg-dark-card border border-dark-surface rounded-xl p-6">
@@ -274,7 +274,7 @@ export default function CodeBattleHome() {
             </div>
 
             {/* Quick Stats */}
-            <div className="bg-dark-card border border-dark-surface rounded-xl p-6">
+            <div className="bg-dark-card border border-dark-surface rounded-xl p-6 flex-grow">
               <h2 className="text-lg font-bold mb-4">{t('graduates.languages')}</h2>
               <div className="flex flex-wrap gap-2">
                 {['JavaScript', 'Python', 'Java', 'C++', 'Go', 'TypeScript', 'C#', 'Kotlin'].map((lang) => (

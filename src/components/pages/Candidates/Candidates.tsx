@@ -231,7 +231,7 @@ const Candidates = () => {
                 className="btn-primary flex items-center gap-2 whitespace-nowrap"
               >
                 <Map className="h-5 w-5" />
-                {t('candidates.candidatesMap')}
+                {t('candidates.mapView')}
               </button>
             </div>
           </div>
@@ -327,11 +327,16 @@ const Candidates = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.salaryFrom')}</label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder={t('candidates.filters.minPlaceholder')}
                         value={salaryRange.min || ''}
-                        onChange={(e) => setSalaryRange(prev => ({ ...prev, min: e.target.value ? Number(e.target.value) : null }))}
-                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '');
+                          setSalaryRange(prev => ({ ...prev, min: value ? parseInt(value, 10) : null }));
+                        }}
+                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan"
                       />
                     </div>
 
@@ -339,11 +344,16 @@ const Candidates = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.salaryTo')}</label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder={t('candidates.filters.maxPlaceholder')}
                         value={salaryRange.max || ''}
-                        onChange={(e) => setSalaryRange(prev => ({ ...prev, max: e.target.value ? Number(e.target.value) : null }))}
-                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '');
+                          setSalaryRange(prev => ({ ...prev, max: value ? parseInt(value, 10) : null }));
+                        }}
+                        className="w-full px-4 py-2 bg-dark-surface border border-dark-card rounded-lg text-white focus:outline-none focus:border-accent-cyan"
                       />
                     </div>
                   </div>
@@ -351,7 +361,7 @@ const Candidates = () => {
                   {/* Навыки */}
                   <div className="mt-4">
                     <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.skills')}</label>
-                    <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-dark-surface rounded-lg">
+                    <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-dark-surface rounded-lg custom-scrollbar">
                       {filterOptions.skills.map(skill => (
                         <button
                           key={skill}

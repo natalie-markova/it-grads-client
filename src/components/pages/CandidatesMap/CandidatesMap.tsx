@@ -23,12 +23,13 @@ L.Icon.Default.mergeOptions({
 
 // Custom marker icon
 const createCustomIcon = (count: number = 1) => {
+  const size = count > 1 ? 40 : 32;
   return L.divIcon({
     className: 'custom-marker',
     html: `<div style="
       background: linear-gradient(135deg, #06b6d4, #0891b2);
-      width: ${count > 1 ? '40px' : '32px'};
-      height: ${count > 1 ? '40px' : '32px'};
+      width: ${size}px;
+      height: ${size}px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -39,9 +40,9 @@ const createCustomIcon = (count: number = 1) => {
       border: 3px solid white;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     ">${count > 1 ? count : ''}</div>`,
-    iconSize: [count > 1 ? 40 : 32, count > 1 ? 40 : 32],
-    iconAnchor: [count > 1 ? 20 : 16, count > 1 ? 40 : 32],
-    popupAnchor: [0, -32],
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2], // Центр иконки
+    popupAnchor: [0, -size / 2],
   });
 };
 
@@ -480,7 +481,7 @@ const CandidatesMap = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder={t('candidates.search')}
+                    placeholder={t('candidates.search.placeholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-dark-surface border border-dark-card rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-accent-cyan"
@@ -573,18 +574,18 @@ const CandidatesMap = () => {
                 <Users className="h-5 w-5 text-accent-cyan" />
                 {t('candidates.topCities')}
               </h3>
-              <div className="space-y-2 flex-1 overflow-y-auto">
+              <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar">
                 {cityStats.map(([city, count]) => (
                   <button
                     key={city}
                     onClick={() => handleCityClick(city)}
                     className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-dark-surface transition-colors group"
                   >
-                    <span className="text-gray-300 group-hover:text-white flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-accent-cyan" />
-                      {t(`cities.${city}`, city)}
+                    <span className="text-gray-300 group-hover:text-white flex items-center gap-2 min-w-0 text-left">
+                      <MapPin className="h-4 w-4 text-accent-cyan flex-shrink-0" />
+                      <span className="truncate">{t(`cities.${city}`, city)}</span>
                     </span>
-                    <span className="bg-accent-cyan/20 text-accent-cyan text-sm px-2 py-0.5 rounded-full">
+                    <span className="bg-accent-cyan/20 text-accent-cyan text-sm px-2 py-0.5 rounded-full flex-shrink-0 ml-2">
                       {count}
                     </span>
                   </button>
@@ -669,11 +670,11 @@ const CandidatesMap = () => {
                                         <span className="text-xs text-gray-500">#{index + 1}</span>
                                         <h4 className="text-white font-semibold">{resume.title}</h4>
                                       </div>
-                                      <p className="text-gray-400 text-sm">{resume.user?.username || 'Кандидат'}</p>
+                                      <p className="text-gray-400 text-sm">{resume.user?.username || t('candidates.modal.candidate')}</p>
                                     </div>
                                     {resume.desiredSalary && (
                                       <span className="text-xs text-accent-cyan whitespace-nowrap">
-                                        от {resume.desiredSalary.toLocaleString()} ₽
+                                        {t('candidates.salaryFrom', { salary: resume.desiredSalary.toLocaleString() })}
                                       </span>
                                     )}
                                   </div>
@@ -758,7 +759,7 @@ const CandidatesMap = () => {
                     {viewingResumes[currentResumeIndex].title}
                   </h2>
                   <p className="text-gray-400">
-                    {viewingResumes[currentResumeIndex].user?.username || 'Кандидат'}
+                    {viewingResumes[currentResumeIndex].user?.username || t('candidates.modal.candidate')}
                   </p>
                 </div>
                 <button
@@ -773,7 +774,7 @@ const CandidatesMap = () => {
               {viewingResumes.length > 1 && (
                 <div className="mb-6 pb-4 border-b border-dark-card">
                   <div className="text-sm text-gray-400">
-                    Резюме {currentResumeIndex + 1} из {viewingResumes.length}
+                    {t('candidates.modal.resumeCount', { current: currentResumeIndex + 1, total: viewingResumes.length })}
                   </div>
                 </div>
               )}
@@ -783,7 +784,7 @@ const CandidatesMap = () => {
                 {/* Описание */}
                 {viewingResumes[currentResumeIndex].description && (
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-3">Описание</h3>
+                    <h3 className="text-xl font-semibold text-white mb-3">{t('candidates.modal.description')}</h3>
                     <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
                       {viewingResumes[currentResumeIndex].description}
                     </p>
@@ -806,7 +807,7 @@ const CandidatesMap = () => {
                   )}
                   {viewingResumes[currentResumeIndex].desiredSalary && (
                     <div className="flex items-center gap-2 text-accent-cyan font-semibold">
-                      <span>от {viewingResumes[currentResumeIndex].desiredSalary.toLocaleString()} ₽</span>
+                      <span>{t('candidates.salaryFrom', { salary: viewingResumes[currentResumeIndex].desiredSalary.toLocaleString() })}</span>
                     </div>
                   )}
                 </div>
@@ -814,7 +815,7 @@ const CandidatesMap = () => {
                 {/* Навыки */}
                 {viewingResumes[currentResumeIndex].skillsArray && viewingResumes[currentResumeIndex].skillsArray.length > 0 && (
                   <div>
-                    <h3 className="text-xl font-semibold text-white mb-3">Навыки</h3>
+                    <h3 className="text-xl font-semibold text-white mb-3">{t('candidates.skillsTitle')}</h3>
                     <div className="flex flex-wrap gap-2">
                       {viewingResumes[currentResumeIndex].skillsArray.map((skill, i) => (
                         <span
@@ -833,7 +834,7 @@ const CandidatesMap = () => {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                       <Award className="h-5 w-5 text-accent-cyan" />
-                      Опыт работы
+                      {t('candidates.experience')}
                     </h3>
                     <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
                       {viewingResumes[currentResumeIndex].experience}
@@ -846,7 +847,7 @@ const CandidatesMap = () => {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                       <GraduationCap className="h-5 w-5 text-accent-cyan" />
-                      Образование
+                      {t('candidates.education')}
                     </h3>
                     <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
                       {viewingResumes[currentResumeIndex].education}
@@ -859,7 +860,7 @@ const CandidatesMap = () => {
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                       <Globe className="h-5 w-5 text-accent-cyan" />
-                      Портфолио
+                      {t('candidates.portfolio')}
                     </h3>
                     <a
                       href={viewingResumes[currentResumeIndex].portfolio}
@@ -881,7 +882,7 @@ const CandidatesMap = () => {
                         className="btn-primary flex items-center gap-2"
                       >
                         <ChevronLeft className="h-4 w-4" />
-                        Предыдущее резюме
+                        {t('candidates.navigation.prevResume')}
                       </button>
                     )}
                     {viewingResumes.length > 1 && currentResumeIndex < viewingResumes.length - 1 && (
@@ -889,7 +890,7 @@ const CandidatesMap = () => {
                         onClick={handleNextResume}
                         className="btn-primary flex items-center gap-2"
                       >
-                        Следующее резюме
+                        {t('candidates.navigation.nextResume')}
                         <ChevronRight className="h-4 w-4" />
                       </button>
                     )}
@@ -905,7 +906,7 @@ const CandidatesMap = () => {
                         className="btn-primary flex items-center gap-2"
                       >
                         <MessageSquare className="h-4 w-4" />
-                        Написать сообщение
+                        {t('candidates.navigation.sendMessage')}
                       </button>
                     )}
                   </div>

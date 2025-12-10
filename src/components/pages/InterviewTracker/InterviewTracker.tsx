@@ -1039,22 +1039,10 @@ const InterviewTracker = () => {
             >
               <Shield className="h-5 w-5" />
               <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-dark-surface text-gray-300 text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-dark-card">
-                Доступ
+                {t('interview.tracker.accessView')}
               </span>
             </button>
           </div>
-          {viewMode !== 'access' && (
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="bg-dark-surface border border-dark-card text-white rounded-lg px-4 py-2"
-            >
-              <option value="all">{t('interview.tracker.allStatuses')}</option>
-              <option value="scheduled">{t('interview.tracker.scheduledStatus')}</option>
-              <option value="completed">{t('interview.tracker.completedStatus')}</option>
-              <option value="cancelled">{t('interview.tracker.cancelledStatus')}</option>
-            </select>
-          )}
         </div>
 
         {viewMode === 'access' ? (
@@ -1062,7 +1050,7 @@ const InterviewTracker = () => {
             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-6 pr-2">
               {loadingAccess ? (
                 <div className="py-8">
-                  <p className="text-gray-400 text-center">Загрузка...</p>
+                  <p className="text-gray-400 text-center">{t('common.loading')}</p>
                 </div>
               ) : (
                 <>
@@ -1071,7 +1059,7 @@ const InterviewTracker = () => {
                     <Card className="border-2 border-dark-card hover:border-accent-cyan/50 transition-all duration-300">
                       <div className="p-4">
                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                          Поиск выпускника
+                          {t('interview.tracker.access.searchGraduate')}
                         </label>
                         <div className="relative z-10">
                           <input
@@ -1090,7 +1078,7 @@ const InterviewTracker = () => {
                                 setSelectedGraduateForAccess(null)
                               }
                             }}
-                            placeholder="Введите имя или фамилию выпускника..."
+                            placeholder={t('interview.tracker.access.searchGraduatePlaceholder')}
                             className="w-full bg-dark-surface border border-dark-card rounded-lg px-4 py-2 text-white"
                           />
                           {accessSearchQuery && !selectedGraduateForAccess && getFilteredGraduatesForAccess().length > 0 && (
@@ -1134,7 +1122,7 @@ const InterviewTracker = () => {
                         </div>
                         {accessSearchQuery && getFilteredGraduatesForAccess().length === 0 && allGraduates.length > 0 && (
                           <p className="text-xs text-gray-400 mt-1">
-                            Выпускники не найдены или уже имеют доступ
+                            {t('interview.tracker.access.graduatesNotFound')}
                           </p>
                         )}
                         {selectedGraduateForAccess && (
@@ -1173,14 +1161,14 @@ const InterviewTracker = () => {
                                 if (selectedGraduateForAccess) {
                                   handleGrantAccess(selectedGraduateForAccess)
                                 } else {
-                                  toast.error('Выберите выпускника')
+                                  toast.error(t('interview.tracker.access.selectGraduate'))
                                 }
                               }}
                               disabled={!selectedGraduateForAccess}
                               className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <Shield className="h-4 w-4" />
-                              Разрешить доступ
+                              {t('interview.tracker.access.grantAccess')}
                             </button>
                           </div>
                         )}
@@ -1193,7 +1181,7 @@ const InterviewTracker = () => {
                     <Card className="border-2 border-dark-card hover:border-accent-cyan/50 transition-all duration-300 mb-6">
                       <div className="p-4">
                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                          Поиск компании
+                          {t('interview.tracker.access.searchCompany')}
                         </label>
                         <div className="relative z-10">
                           <input
@@ -1210,7 +1198,7 @@ const InterviewTracker = () => {
                                 setSelectedEmployerForAccess(null)
                               }
                             }}
-                            placeholder="Введите название компании..."
+                            placeholder={t('interview.tracker.access.searchCompanyPlaceholder')}
                             className="w-full bg-dark-surface border border-dark-card rounded-lg px-4 py-2 text-white"
                           />
                           {accessCompanySearchQuery && !selectedEmployerForAccess && getFilteredEmployersForAccess().length > 0 && (
@@ -1252,7 +1240,7 @@ const InterviewTracker = () => {
                         </div>
                         {accessCompanySearchQuery && getFilteredEmployersForAccess().length === 0 && employers.length > 0 && (
                           <p className="text-xs text-gray-400 mt-1">
-                            Компании не найдены или уже имеют доступ
+                            {t('interview.tracker.access.companiesNotFound')}
                           </p>
                         )}
                         {selectedEmployerForAccess && (
@@ -1290,7 +1278,7 @@ const InterviewTracker = () => {
                               className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <Shield className="h-4 w-4" />
-                              Разрешить доступ
+                              {t('interview.tracker.access.grantAccess')}
                             </button>
                           </div>
                         )}
@@ -1302,17 +1290,17 @@ const InterviewTracker = () => {
                   <Card className="border-2 border-dark-card hover:border-accent-cyan/50 transition-all duration-300">
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-4">
-                        Я разрешаю доступ:
+                        {t('interview.tracker.access.iGrantAccess')}
                       </h3>
                       {grantedByMe.length === 0 ? (
-                        <p className="text-gray-400 text-sm">Нет пользователей с предоставленным доступом</p>
+                        <p className="text-gray-400 text-sm">{t('interview.tracker.access.noGrantedByMe')}</p>
                       ) : (
                         <div className="space-y-3">
                           {grantedByMe.map((access) => {
                             const user = isEmployer ? access.graduate : access.employer
                             const name = isEmployer
-                              ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.username || 'Неизвестно'
-                              : user?.companyName || user?.username || 'Неизвестно'
+                              ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.username || t('interview.tracker.access.unknown')
+                              : user?.companyName || user?.username || t('interview.tracker.access.unknown')
                             return (
                               <div
                                 key={access.id}
@@ -1349,7 +1337,7 @@ const InterviewTracker = () => {
                                   onClick={() => handleDeleteAccess(access.id)}
                                   className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-sm"
                                 >
-                                  Запретить доступ
+                                  {t('interview.tracker.access.revokeAccess')}
                                 </button>
                               </div>
                             )
@@ -1363,17 +1351,17 @@ const InterviewTracker = () => {
                   <Card className="border-2 border-dark-card hover:border-accent-cyan/50 transition-all duration-300">
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-4">
-                        Мне разрешили доступ:
+                        {t('interview.tracker.access.grantedToMe')}
                       </h3>
                       {grantedToMe.length === 0 ? (
-                        <p className="text-gray-400 text-sm">Нет пользователей, которые разрешили вам доступ</p>
+                        <p className="text-gray-400 text-sm">{t('interview.tracker.access.noGrantedToMe')}</p>
                       ) : (
                         <div className="space-y-3">
                           {grantedToMe.map((access) => {
                             const user = isEmployer ? access.graduate : access.employer
                             const name = isEmployer
-                              ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.username || 'Неизвестно'
-                              : user?.companyName || user?.username || 'Неизвестно'
+                              ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.username || t('interview.tracker.access.unknown')
+                              : user?.companyName || user?.username || t('interview.tracker.access.unknown')
                             return (
                               <div
                                 key={access.id}
@@ -1409,7 +1397,7 @@ const InterviewTracker = () => {
                                   <button
                                     onClick={() => handleViewCalendar(user.id, name)}
                                     className="p-2 text-accent-cyan hover:bg-accent-cyan/10 rounded-lg transition-colors"
-                                    title="Просмотреть календарь"
+                                    title={t('interview.tracker.access.viewCalendar')}
                                   >
                                     <Eye className="h-5 w-5" />
                                   </button>
@@ -1611,7 +1599,7 @@ const InterviewTracker = () => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-card rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-dark-card rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-white">
@@ -1996,9 +1984,9 @@ const InterviewTracker = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
               {loadingCalendar ? (
-                <div className="text-center py-8 text-gray-400">Загрузка календаря...</div>
+                <div className="text-center py-8 text-gray-400">{t('common.loading')}</div>
               ) : (
                 <Card className="h-full flex flex-col min-h-0">
                   {/* Calendar Header */}

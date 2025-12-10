@@ -148,6 +148,82 @@
       "avgProgress": "Average progress",
       "answered": "Answers",
       "correctRate": "Correct"
+    },
+    "recommendations": {
+      "codebattle": {
+        "title": "Solve tasks in Code Battle",
+        "description": "Solve at least 10 tasks to improve programming and algorithmic skills"
+      },
+      "resume": {
+        "title": "Fill out your resume",
+        "description": "Add description, work experience and portfolio for more accurate skill assessment"
+      },
+      "interview": {
+        "title": "Take an AI interview",
+        "description": "AI interview will help assess your technical knowledge and communication"
+      },
+      "roadmap": {
+        "title": "Start a career roadmap",
+        "description": "Choose a development roadmap and track your progress"
+      },
+      "improve": {
+        "programming": {
+          "title": "Improve programming",
+          "description": "Solve more Code Battle tasks and add technologies to your resume"
+        },
+        "algorithms": {
+          "title": "Improve algorithms",
+          "description": "Solve medium and hard algorithmic problems"
+        },
+        "databases": {
+          "title": "Improve databases",
+          "description": "Learn SQL and NoSQL databases, add them to your resume"
+        },
+        "cloud": {
+          "title": "Improve cloud technologies",
+          "description": "Start learning AWS/GCP/Azure through career roadmaps"
+        },
+        "devops": {
+          "title": "Improve DevOps",
+          "description": "Master Docker and CI/CD through career roadmaps"
+        },
+        "testing": {
+          "title": "Improve testing",
+          "description": "Solve tasks without hints and on the first try"
+        },
+        "networking": {
+          "title": "Improve networking",
+          "description": "Learn networking basics through career roadmaps"
+        },
+        "security": {
+          "title": "Improve security",
+          "description": "Take a web application security course"
+        },
+        "ai_ml": {
+          "title": "Improve ML & AI",
+          "description": "Start learning Machine Learning through career roadmaps"
+        },
+        "data_science": {
+          "title": "Improve Data Science",
+          "description": "Master Python for data analysis"
+        },
+        "management": {
+          "title": "Improve project management",
+          "description": "Learn Agile/Scrum methodologies"
+        },
+        "ui_ux": {
+          "title": "Improve UI/UX",
+          "description": "Master Figma and design basics"
+        },
+        "mobile": {
+          "title": "Improve mobile development",
+          "description": "Start learning React Native or Flutter"
+        },
+        "communication": {
+          "title": "Improve communication",
+          "description": "Take audio interviews to develop soft skills"
+        }
+      }
     }
   },
   "graduates": {
@@ -206,6 +282,10 @@
       "minutes": "min",
       "availableLanguages": "Available languages:",
       "points": "pts"
+    },
+    "leaderboard": {
+      "title": "🏆 Leaderboard",
+      "subtitle": "Top 30 Code Battle Arena players"
     }
   },
   "navbar": {
@@ -217,6 +297,7 @@
     "interviewTracker": "Interview Tracker",
     "candidates": "Candidates",
     "candidatesMap": "Candidates Map",
+    "companiesRating": "Company Ratings",
     "profile": "Profile",
     "logout": "Logout",
     "login": "Login",
@@ -429,6 +510,7 @@
       "addInterview": "Add interview",
       "calendarView": "Calendar",
       "listView": "Interview list",
+      "accessView": "Access",
       "allStatuses": "All statuses",
       "scheduledStatus": "Scheduled",
       "completedStatus": "Completed",
@@ -540,6 +622,23 @@
         "online": "Online",
         "offline": "Office",
         "phone": "Phone"
+      },
+      "access": {
+        "searchGraduate": "Search graduate",
+        "searchGraduatePlaceholder": "Enter graduate's name...",
+        "graduatesNotFound": "Graduates not found or already have access",
+        "searchCompany": "Search company",
+        "searchCompanyPlaceholder": "Enter company name...",
+        "companiesNotFound": "Companies not found or already have access",
+        "grantAccess": "Grant access",
+        "revokeAccess": "Revoke access",
+        "iGrantAccess": "I grant access to:",
+        "noGrantedByMe": "No users with granted access",
+        "grantedToMe": "Granted access to me:",
+        "noGrantedToMe": "No users who granted you access",
+        "viewCalendar": "View calendar",
+        "selectGraduate": "Select a graduate",
+        "unknown": "Unknown"
       }
     }
   },
@@ -678,7 +777,6 @@
     "subtitle": "Find the perfect employee",
     "mapTitle": "Candidates Map",
     "mapSubtitle": "Interactive map with candidate locations across cities worldwide",
-    "search": "Search by skills, cities, name...",
     "listView": "List View",
     "mapView": "Map View",
     "topCities": "Top Cities",
@@ -688,7 +786,60 @@
     "viewResume": "View CV",
     "goToMoscow": "Moscow",
     "resetFilters": "Reset filters",
-    "totalInCity": "Total candidates"
+    "totalInCity": "Total candidates",
+    "salaryFrom": "from {{salary}} ₽",
+    "experience": "Work Experience",
+    "education": "Education",
+    "portfolio": "Portfolio",
+    "skillsTitle": "Skills",
+    "creatingChat": "Creating...",
+    "loading": "Loading resumes...",
+    "noResults": "No candidates found",
+    "noResultsHint": "Try changing search parameters",
+    "search": {
+      "placeholder": "Search by skills, cities, name...",
+      "filters": "Filters"
+    },
+    "filters": {
+      "level": "Level",
+      "allLevels": "All levels",
+      "city": "City",
+      "allCities": "All cities",
+      "salaryFrom": "Salary from",
+      "salaryTo": "Salary to",
+      "minPlaceholder": "Minimum",
+      "maxPlaceholder": "Maximum",
+      "skills": "Skills",
+      "selected": "Selected:",
+      "clearAll": "Clear all filters",
+      "reset": "Reset filters"
+    },
+    "stats": {
+      "total": "Total candidates",
+      "filtered": "Found",
+      "cities": "Cities",
+      "skills": "Skills"
+    },
+    "modal": {
+      "candidate": "Candidate",
+      "description": "Description",
+      "resumeCount": "Resume {{current}} of {{total}}"
+    },
+    "navigation": {
+      "prevResume": "Previous Resume",
+      "nextResume": "Next Resume",
+      "sendMessage": "Send Message"
+    },
+    "errors": {
+      "loginRequired": "Please log in to send a message",
+      "employerOnly": "Only employers can message candidates",
+      "noResumes": "User has no resumes",
+      "loadError": "Error loading resumes",
+      "chatError": "Error creating chat"
+    },
+    "success": {
+      "chatCreated": "Chat created!"
+    }
   },
   "cities": {
     "Москва": "Moscow",
@@ -1434,7 +1585,13 @@
     "tabs": {
       "profile": "Profile",
       "vacancies": "My Vacancies",
-      "responses": "Applications"
+      "responses": "Applications",
+      "reputation": "Reputation"
+    },
+    "reputation": {
+      "title": "Company Reputation",
+      "description": "View company ratings and employee reviews. This will help you understand how your company is perceived in the market.",
+      "viewRating": "View Company Ratings"
     },
     "companyAvatar": "Company Avatar",
     "selectIndustry": "Select industry",
@@ -1537,7 +1694,13 @@
     "statusUpdated": "Vacancy status updated",
     "loadError": "Error loading vacancies",
     "deleteError": "Error deleting vacancy",
-    "statusError": "Error updating vacancy status"
+    "statusError": "Error updating vacancy status",
+    "viewDetails": "View Details",
+    "modal": {
+      "description": "Description",
+      "requirements": "Requirements",
+      "skills": "Skills"
+    }
   },
   "responses": {
     "title": "Applications",
@@ -1770,66 +1933,6 @@
         "text": "Now you're ready to go! If you have questions — I'm always here. Good luck finding talent! 🐕",
         "voice": "Now you're ready to go! If you have questions, I'm always here. Good luck finding talent!"
       }
-    }
-  },
-  "candidates": {
-    "title": "Candidates",
-    "subtitle": "Browse resumes and find suitable candidates",
-    "candidatesMap": "Candidates Map",
-    "stats": {
-      "total": "Total candidates",
-      "filtered": "Filtered",
-      "cities": "Cities",
-      "skills": "Skills"
-    },
-    "search": {
-      "placeholder": "Search by skills, cities, name...",
-      "filters": "Filters"
-    },
-    "filters": {
-      "level": "Level",
-      "allLevels": "All levels",
-      "city": "City",
-      "allCities": "All cities",
-      "salaryFrom": "Salary from",
-      "salaryTo": "Salary to",
-      "minPlaceholder": "min",
-      "maxPlaceholder": "max",
-      "skills": "Skills",
-      "selected": "Selected:",
-      "clearAll": "Clear all filters",
-      "reset": "Reset filters"
-    },
-    "loading": "Loading resumes...",
-    "noResults": "No candidates found",
-    "noResultsHint": "Try changing search parameters",
-    "salaryFrom": "from {{salary}}",
-    "experience": "Work Experience",
-    "education": "Education",
-    "portfolio": "Portfolio",
-    "skillsTitle": "Skills",
-    "viewResume": "View CV",
-    "writeMessage": "Message",
-    "creatingChat": "Creating...",
-    "modal": {
-      "candidate": "Candidate",
-      "description": "Description",
-      "resumeCount": "CV {{current}} of {{total}}"
-    },
-    "navigation": {
-      "prevResume": "Previous CV",
-      "nextResume": "Next CV",
-      "sendMessage": "Send Message"
-    },
-    "errors": {
-      "loginRequired": "Please log in to send a message",
-      "employerOnly": "Only employers can message candidates",
-      "noResumes": "User has no resumes",
-      "loadError": "Error loading resumes",
-      "chatError": "Error creating chat"
-    },
-    "success": {
-      "chatCreated": "Chat created!"
     }
   },
   "pvpBattle": {

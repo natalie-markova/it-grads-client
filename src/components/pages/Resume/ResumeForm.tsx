@@ -56,7 +56,7 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
       if (onClose) {
         onClose();
       } else {
-        navigate('/profile/graduate');
+        navigate('/profile/graduate?tab=resumes');
       }
     } finally {
       setIsLoading(false);
@@ -111,7 +111,7 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
       if (onClose) {
         onClose();
       } else {
-        navigate('/profile/graduate');
+        navigate('/profile/graduate?tab=resumes');
       }
     } catch (error: any) {
       console.error(`Error ${isEditing ? 'updating' : 'creating'} resume:`, error);
@@ -268,7 +268,7 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
             </button>
           )}
           {!onClose && (
-            <button type="button" onClick={() => navigate('/profile/graduate')} className="btn-secondary">
+            <button type="button" onClick={() => navigate('/profile/graduate?tab=resumes')} className="btn-secondary">
               Отмена
             </button>
           )}

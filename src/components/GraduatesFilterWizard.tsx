@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import Card from './ui/Card'
 
 export interface GraduateFilterData {
@@ -24,6 +25,7 @@ interface GraduatesFilterWizardProps {
 }
 
 const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: GraduatesFilterWizardProps) => {
+  const { t } = useTranslation()
   const [currentStep, setCurrentStep] = useState(0)
   const [customSkillInput, setCustomSkillInput] = useState('')
   const [validationError, setValidationError] = useState(false)
@@ -700,7 +702,7 @@ const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: Gra
                     className="btn-secondary flex items-center gap-2"
                   >
                     <ChevronLeft className="h-5 w-5" />
-                    Назад
+                    {t('common.back')}
                   </button>
                 )}
                 {currentStep < steps.length - 1 ? (
@@ -708,7 +710,7 @@ const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: Gra
                     onClick={handleNext}
                     className="btn-primary flex items-center gap-2"
                   >
-                    Далее
+                    {t('common.next')}
                     <ChevronRight className="h-5 w-5" />
                   </button>
                 ) : (
@@ -716,7 +718,7 @@ const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: Gra
                     onClick={handleApply}
                     className="btn-primary flex items-center gap-2"
                   >
-                    Применить фильтры
+                    {t('common.filter')}
                     <Check className="h-5 w-5" />
                   </button>
                 )}

@@ -146,11 +146,17 @@ const router = createBrowserRouter([
       },
       {
         path: "/roadmap",
-        element: <RoadmapList />,
+        element:
+        <ProtectedRoute>
+          <RoadmapList />
+        </ProtectedRoute>,
       },
       {
         path: "/roadmap/:slug",
-        element: <RoadmapDetail />,
+        element:
+        <ProtectedRoute>
+          <RoadmapDetail />
+        </ProtectedRoute>,
       },
       {
         path: "/candidates",

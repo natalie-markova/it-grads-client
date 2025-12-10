@@ -70,8 +70,10 @@ interface QuizMetrics {
 interface Recommendation {
   type: string
   area: string
-  title: string
-  description: string
+  title?: string
+  description?: string
+  titleKey?: string
+  descriptionKey?: string
   priority: string
   icon: string
 }
@@ -1023,8 +1025,8 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
                   <div className="flex items-start gap-3">
                     <span className="text-2xl">{rec.icon}</span>
                     <div>
-                      <p className="text-white font-medium">{rec.title}</p>
-                      <p className="text-gray-400 text-sm mt-1">{rec.description}</p>
+                      <p className="text-white font-medium">{rec.titleKey ? t(rec.titleKey) : rec.title}</p>
+                      <p className="text-gray-400 text-sm mt-1">{rec.descriptionKey ? t(rec.descriptionKey) : rec.description}</p>
                     </div>
                   </div>
                 </div>

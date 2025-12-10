@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Типы состояний Пармы
 export type ParmaState =
@@ -101,6 +102,7 @@ const defaultTourState: TourState = {
 };
 
 export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { i18n } = useTranslation();
   const [state, setStateInternal] = useState<ParmaState>('idle');
   const [message, setMessage] = useState<ParmaMessage | null>(null);
   const [isVisible, setIsVisible] = useState(true);
@@ -111,6 +113,8 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const idleTimeoutRef = useRef<NodeJS.Timeout>();
   const previousStateRef = useRef<ParmaState>('idle');
 
+  const isRu = i18n.language === 'ru';
+
   // Сброс таймера бездействия
   const resetActivity = useCallback(() => {
     if (idleTimeoutRef.current) {
@@ -120,7 +124,7 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Если спала - проснуться с приветствием
     if (state === 'sleeping') {
       setStateInternal('greeting');
-      setMessage({ text: 'С возвращением!', duration: 2000 });
+      setMessage({ text: isRu ? 'С возвращением!' : 'Welcome back!', duration: 2000 });
 
       setTimeout(() => {
         setStateInternal('idle');
@@ -136,7 +140,7 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setMessage({ text: 'Zzz...', duration: 0 });
       }, settings.idleTimeout);
     }
-  }, [state, settings.enabled, settings.idleTimeout]);
+  }, [state, settings.enabled, settings.idleTimeout, isRu]);
 
   // Отслеживание активности пользователя
   useEffect(() => {

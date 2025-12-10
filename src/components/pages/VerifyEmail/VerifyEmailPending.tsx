@@ -53,12 +53,6 @@ const VerifyEmailPending: React.FC = () => {
               {email}
             </p>
 
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-              <p className="text-sm text-yellow-400">
-                <strong>Важно:</strong> Ссылка действительна в течение 24 часов.
-                Проверьте папку "Спам", если не видите письмо во входящих.
-              </p>
-            </div>
 
             <div className="space-y-3 pt-4">
               <button
