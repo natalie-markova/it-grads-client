@@ -27,6 +27,7 @@ export default defineConfig({
     define: {
       'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || '/api'),
       'import.meta.env.VITE_DOMAIN': JSON.stringify(process.env.VITE_DOMAIN || 'itgrads.ru'),
+      'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(process.env.VITE_GOOGLE_CLIENT_ID || ''),
     },
   },
 });
