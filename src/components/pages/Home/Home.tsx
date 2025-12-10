@@ -138,7 +138,7 @@ const Home = () => {
       icon: <Building2 className="h-6 w-6" />,
       title: t('home.employerFeatures.reputation.title'),
       description: t('home.employerFeatures.reputation.description'),
-      link: '/profile/employer',
+      link: '/companies',
     },
   ]
 
@@ -347,7 +347,8 @@ const Home = () => {
         </Section>
       )}
 
-      {/* Для работодателей - Cards Grid */}
+      {/* Для работодателей - Cards Grid (показывается только работодателям и неавторизованным) */}
+      {(user?.role === 'employer' || !user) && (
       <Section className={user?.role === 'employer' ? "bg-dark-surface" : "bg-dark-bg"}>
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
@@ -413,6 +414,7 @@ const Home = () => {
           )}
         </div>
       </Section>
+      )}
 
       {/* Радар навыков - Showcase */}
       {user?.role !== 'employer' && (
