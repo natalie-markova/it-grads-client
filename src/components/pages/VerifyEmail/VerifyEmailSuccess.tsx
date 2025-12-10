@@ -35,7 +35,22 @@ const VerifyEmailSuccess: React.FC = () => {
 
         // Определяем куда редиректить
         const isLoggedIn = !!localStorage.getItem('accessToken');
-        const redirectPath = isLoggedIn ? '/profile' : '/login';
+        let redirectPath = '/login';
+
+        if (isLoggedIn) {
+          // Получаем роль пользователя из localStorage
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            try {
+              const user = JSON.parse(userStr);
+              redirectPath = `/profile/${user.role || 'graduate'}`;
+            } catch {
+              redirectPath = '/profile/graduate';
+            }
+          } else {
+            redirectPath = '/profile/graduate';
+          }
+        }
 
         // Автоматический редирект через 3 секунды
         setTimeout(() => {
@@ -96,7 +111,23 @@ const VerifyEmailSuccess: React.FC = () => {
   }
 
   const isLoggedIn = !!localStorage.getItem('accessToken');
-  const redirectPath = isLoggedIn ? '/profile' : '/login';
+  let redirectPath = '/login';
+
+  if (isLoggedIn) {
+    // Получаем роль пользователя из localStorage
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        redirectPath = `/profile/${user.role || 'graduate'}`;
+      } catch {
+        redirectPath = '/profile/graduate';
+      }
+    } else {
+      redirectPath = '/profile/graduate';
+    }
+  }
+
   const redirectText = isLoggedIn
     ? 'Вы будете автоматически перенаправлены в личный кабинет через 3 секунды...'
     : 'Вы будете автоматически перенаправлены на страницу входа через 3 секунды...';
