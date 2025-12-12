@@ -28,11 +28,12 @@ export const useParmaRouteWatcher = () => {
     }
   }, [i18n]);
 
-  const isRu = i18n.language === 'ru';
-
   useEffect(() => {
     // Не показывать приветствие пока i18n не готов
     if (!i18nReady) return;
+
+    // Определяем язык внутри useEffect, когда i18n точно инициализирован
+    const isRu = i18n.language?.startsWith('ru') ?? true;
 
     const path = location.pathname;
     const prevPath = prevPathRef.current;
@@ -149,7 +150,7 @@ export const useParmaRouteWatcher = () => {
 
     // For all other pages - normal state
     setState('idle');
-  }, [location.pathname, setTemporaryState, setState, isRu, i18nReady]);
+  }, [location.pathname, setTemporaryState, setState, i18n.language, i18nReady]);
 };
 
 export default useParmaRouteWatcher;

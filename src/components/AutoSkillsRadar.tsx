@@ -1002,7 +1002,7 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
           >
             <h4 className="text-lg font-bold text-white flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-accent-cyan" />
-              {t('autoRadar.recommendations')}
+              {t('autoRadar.recommendationsTitle')}
             </h4>
             {showRecommendations ? (
               <ChevronUp className="h-5 w-5 text-gray-400" />
