@@ -120,9 +120,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
     return location.pathname.startsWith(path)
   }
 
-    const baseNavLinks = [
-        { path: '/jobs', label: t('navbar.vacancies') },
-    ]
+    const baseNavLinks: { path: string; label: string }[] = []
 
     // Ссылки для выпадающего меню "Области тьмы"
     const darkZonesLinks = [
@@ -132,7 +130,7 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
     ]
 
     const graduateNavLinks = [
-        ...baseNavLinks,
+        { path: '/jobs', label: t('navbar.vacancies') },
         { path: '/interview/tracker', label: t('navbar.interviewTracker') },
     ]
 
