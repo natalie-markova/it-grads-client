@@ -68,7 +68,24 @@ const Interview = () => {
     const categoryQuestions = allQuestions.filter(q => q.category === category)
     // Локализуем вопросы
     const localizedQuestions = categoryQuestions.map(q => getLocalizedQuestion(q, currentLang))
-    setShuffledQuestions(shuffleArray(localizedQuestions))
+
+    // Перемешиваем ответы внутри каждого вопроса и корректируем индекс правильного ответа
+    const questionsWithShuffledOptions = localizedQuestions.map(q => {
+      // Создаём массив с индексами для отслеживания позиции правильного ответа
+      const optionsWithIndices = q.options.map((option, idx) => ({ option, originalIndex: idx }))
+      const shuffledOptions = shuffleArray(optionsWithIndices)
+
+      // Находим новый индекс правильного ответа после перемешивания
+      const newCorrectAnswerIndex = shuffledOptions.findIndex(o => o.originalIndex === q.correctAnswer)
+
+      return {
+        ...q,
+        options: shuffledOptions.map(o => o.option),
+        correctAnswer: newCorrectAnswerIndex
+      }
+    })
+
+    setShuffledQuestions(shuffleArray(questionsWithShuffledOptions))
     setIsStarted(true)
     setIsFinished(false)
     setCurrentQuestionIndex(0)
