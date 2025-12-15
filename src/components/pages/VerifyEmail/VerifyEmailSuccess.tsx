@@ -17,7 +17,6 @@ const VerifyEmailSuccess: React.FC = () => {
         const response = await $api.get(`/auth/verify-email/${token}`);
 
         if (response.data.user) {
-          // Обновляем данные пользователя в localStorage
           const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
           const updatedUser = {
             ...currentUser,
@@ -25,7 +24,6 @@ const VerifyEmailSuccess: React.FC = () => {
           };
           localStorage.setItem('user', JSON.stringify(updatedUser));
 
-          // Обновляем контекст если пользователь залогинен
           if (context?.setUser) {
             context.setUser(updatedUser);
           }
@@ -33,12 +31,10 @@ const VerifyEmailSuccess: React.FC = () => {
 
         setStatus('success');
 
-        // Определяем куда редиректить
         const isLoggedIn = !!localStorage.getItem('accessToken');
         let redirectPath = '/login';
 
         if (isLoggedIn) {
-          // Получаем роль пользователя из localStorage
           const userStr = localStorage.getItem('user');
           if (userStr) {
             try {
@@ -52,7 +48,6 @@ const VerifyEmailSuccess: React.FC = () => {
           }
         }
 
-        // Автоматический редирект через 3 секунды
         setTimeout(() => {
           navigate(redirectPath);
         }, 3000);
@@ -114,7 +109,6 @@ const VerifyEmailSuccess: React.FC = () => {
   let redirectPath = '/login';
 
   if (isLoggedIn) {
-    // Получаем роль пользователя из localStorage
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {

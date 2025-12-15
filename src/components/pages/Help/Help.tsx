@@ -16,7 +16,6 @@ const Help = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Здесь будет отправка формы на сервер
     console.log('Form submitted:', formData)
     setSubmitted(true)
     setTimeout(() => {

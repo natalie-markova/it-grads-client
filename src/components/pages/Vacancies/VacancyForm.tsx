@@ -15,7 +15,6 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
   const [skillInput, setSkillInput] = useState('');
 
   const handleNumberInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Блокируем ввод минуса, точки и запятой
     if (e.key === '-' || e.key === '.' || e.key === ',' || e.key === 'e' || e.key === 'E' || e.key === '+') {
       e.preventDefault();
     }
@@ -24,16 +23,13 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
   const handleNumberInputInput = (e: React.FormEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
     const value = input.value;
-    
-    // Разрешаем пустую строку
+
     if (value === '') {
       return;
     }
-    
-    // Проверяем, что значение - целое положительное число
+
     const numValue = parseFloat(value);
     if (isNaN(numValue) || numValue < 0 || !Number.isInteger(numValue)) {
-      // Если значение невалидно, очищаем поле или оставляем только цифры
       const validValue = value.replace(/[^0-9]/g, '');
       input.value = validValue;
     }
@@ -95,7 +91,6 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Название */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-2">
             Название вакансии *
@@ -111,7 +106,6 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
           />
         </div>
 
-        {/* Описание */}
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
             Описание *
@@ -127,7 +121,6 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
           />
         </div>
 
-        {/* Требования */}
         <div>
           <label htmlFor="requirements" className="block text-sm font-medium text-gray-300 mb-2">
             Требования
@@ -142,7 +135,6 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
           />
         </div>
 
-        {/* Навыки */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Требуемые навыки
@@ -183,7 +175,6 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
           </div>
         </div>
 
-        {/* Зарплата и локация */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="salary" className="block text-sm font-medium text-gray-300 mb-2">
@@ -220,7 +211,6 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
           </div>
         </div>
 
-        {/* Тип занятости и уровень */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="employmentType" className="block text-sm font-medium text-gray-300 mb-2">
@@ -258,7 +248,6 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
           </div>
         </div>
 
-        {/* Бенефиты */}
         <div>
           <label htmlFor="benefits" className="block text-sm font-medium text-gray-300 mb-2">
             <FileText className="h-4 w-4 inline mr-1" />
@@ -274,7 +263,6 @@ export default function VacancyForm({ vacancy, onSubmit, onCancel }: VacancyForm
           />
         </div>
 
-        {/* Кнопки */}
         <div className="flex gap-4 pt-4">
           <button
             type="submit"

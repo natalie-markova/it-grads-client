@@ -38,7 +38,6 @@ const Candidates = () => {
   const [currentResumeIndex, setCurrentResumeIndex] = useState<number>(0);
   const [showResumeModal, setShowResumeModal] = useState<boolean>(false);
 
-  // Фильтры
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [selectedLevel, setSelectedLevel] = useState<string>('');
@@ -49,7 +48,6 @@ const Candidates = () => {
   useEffect(() => {
     loadResumes();
   }, []);
-
 
   const loadResumes = async () => {
     setLoading(true);
@@ -67,7 +65,6 @@ const Candidates = () => {
     }
   };
 
-  // Получаем все уникальные значения для фильтров
   const filterOptions = useMemo(() => {
     const skills = new Set<string>();
     const locations = new Set<string>();
@@ -83,10 +80,8 @@ const Candidates = () => {
     };
   }, [resumes]);
 
-  // Фильтруем резюме
   const filteredResumes = useMemo(() => {
     return resumes.filter(resume => {
-      // Поиск по тексту
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         const matchesSearch =
@@ -98,7 +93,6 @@ const Candidates = () => {
         if (!matchesSearch) return false;
       }
 
-      // Фильтр по навыкам
       if (selectedSkills.length > 0) {
         const hasSkills = selectedSkills.some(skill =>
           resume.skillsArray?.includes(skill)
@@ -106,17 +100,14 @@ const Candidates = () => {
         if (!hasSkills) return false;
       }
 
-      // Фильтр по уровню
       if (selectedLevel && resume.level !== selectedLevel) {
         return false;
       }
 
-      // Фильтр по локации
       if (selectedLocation && resume.location !== selectedLocation) {
         return false;
       }
 
-      // Фильтр по зарплате
       if (salaryRange.min && resume.desiredSalary && resume.desiredSalary < salaryRange.min) {
         return false;
       }
@@ -206,7 +197,6 @@ const Candidates = () => {
 
   const hasActiveFilters = searchTerm || selectedSkills.length > 0 || selectedLevel || selectedLocation || salaryRange.min || salaryRange.max;
 
-  // Статистика
   const stats = useMemo(() => ({
     total: resumes.length,
     filtered: filteredResumes.length,
@@ -217,7 +207,6 @@ const Candidates = () => {
     <div className="bg-dark-bg min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Section title="" className="bg-dark-bg py-0">
-          {/* Header */}
           <div className="mb-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
@@ -236,7 +225,6 @@ const Candidates = () => {
             </div>
           </div>
 
-          {/* Статистика */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card className="text-center py-4">
               <Users className="h-8 w-8 text-accent-cyan mx-auto mb-2" />
@@ -260,7 +248,6 @@ const Candidates = () => {
             </Card>
           </div>
 
-          {/* Поиск и фильтры */}
           <Card className="mb-6">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col md:flex-row gap-4">
@@ -288,11 +275,9 @@ const Candidates = () => {
                 </button>
               </div>
 
-              {/* Развернутые фильтры */}
               {showFilters && (
                 <div className="pt-4 border-t border-dark-card">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Уровень */}
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.level')}</label>
                       <select
@@ -308,7 +293,6 @@ const Candidates = () => {
                       </select>
                     </div>
 
-                    {/* Локация */}
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.city')}</label>
                       <select
@@ -323,7 +307,6 @@ const Candidates = () => {
                       </select>
                     </div>
 
-                    {/* Зарплата от */}
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.salaryFrom')}</label>
                       <input
@@ -340,7 +323,6 @@ const Candidates = () => {
                       />
                     </div>
 
-                    {/* Зарплата до */}
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.salaryTo')}</label>
                       <input
@@ -358,7 +340,6 @@ const Candidates = () => {
                     </div>
                   </div>
 
-                  {/* Навыки */}
                   <div className="mt-4">
                     <label className="block text-sm font-medium text-gray-300 mb-2">{t('candidates.filters.skills')}</label>
                     <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 bg-dark-surface rounded-lg custom-scrollbar">
@@ -378,7 +359,6 @@ const Candidates = () => {
                     </div>
                   </div>
 
-                  {/* Выбранные навыки */}
                   {selectedSkills.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
                       <span className="text-sm text-gray-400">{t('candidates.filters.selected')}</span>
@@ -396,7 +376,6 @@ const Candidates = () => {
                     </div>
                   )}
 
-                  {/* Кнопка сброса */}
                   {hasActiveFilters && (
                     <button
                       onClick={clearFilters}
@@ -410,7 +389,6 @@ const Candidates = () => {
             </div>
           </Card>
 
-          {/* Список резюме */}
           {loading ? (
             <Card>
               <div className="text-center py-12">
@@ -556,7 +534,6 @@ const Candidates = () => {
         </Section>
       </div>
 
-      {/* Модальное окно просмотра резюме */}
       {showResumeModal && viewingResumes.length > 0 && (
         <div 
           className="fixed inset-0 bg-black/75 flex items-center justify-center z-[100] p-4"
@@ -584,7 +561,6 @@ const Candidates = () => {
                 </button>
               </div>
 
-              {/* Счетчик резюме */}
               {viewingResumes.length > 1 && (
                 <div className="mb-6 pb-4 border-b border-dark-card">
                   <div className="text-sm text-gray-400">
@@ -593,9 +569,7 @@ const Candidates = () => {
                 </div>
               )}
 
-              {/* Содержимое резюме */}
               <div className="space-y-6">
-                {/* Описание */}
                 {viewingResumes[currentResumeIndex].description && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3">{t('candidates.modal.description')}</h3>
@@ -605,7 +579,6 @@ const Candidates = () => {
                   </div>
                 )}
 
-                {/* Основная информация */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {viewingResumes[currentResumeIndex].location && (
                     <div className="flex items-center gap-2 text-gray-300">
@@ -626,7 +599,6 @@ const Candidates = () => {
                   )}
                 </div>
 
-                {/* Навыки */}
                 {viewingResumes[currentResumeIndex].skillsArray && viewingResumes[currentResumeIndex].skillsArray.length > 0 && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3">{t('candidates.skillsTitle')}</h3>
@@ -643,7 +615,6 @@ const Candidates = () => {
                   </div>
                 )}
 
-                {/* Опыт работы */}
                 {viewingResumes[currentResumeIndex].experience && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
@@ -656,7 +627,6 @@ const Candidates = () => {
                   </div>
                 )}
 
-                {/* Образование */}
                 {viewingResumes[currentResumeIndex].education && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
@@ -669,7 +639,6 @@ const Candidates = () => {
                   </div>
                 )}
 
-                {/* Портфолио */}
                 {viewingResumes[currentResumeIndex].portfolio && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
@@ -687,7 +656,6 @@ const Candidates = () => {
                   </div>
                 )}
 
-                {/* Кнопки навигации и написать сообщение */}
                 <div className="pt-4 border-t border-dark-card">
                   <div className="flex gap-3 flex-wrap">
                     {viewingResumes.length > 1 && currentResumeIndex > 0 && (

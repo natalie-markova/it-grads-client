@@ -26,7 +26,6 @@ const CompaniesRating = () => {
       const response = await fetch(`${apiUrl}/companies/ratings`)
       if (response.ok) {
         const data = await response.json()
-        // Сортируем по рейтингу (от большего к меньшему)
         const sorted = data
           .map((company: any) => ({
             id: company.id.toString(),
@@ -37,7 +36,6 @@ const CompaniesRating = () => {
           .sort((a: Company, b: Company) => b.averageRating - a.averageRating)
         setCompanies(sorted)
       } else if (response.status === 404) {
-        // Если эндпоинт не найден, используем моковые данные
         setCompanies(getMockCompanies())
       }
     } catch (error) {
@@ -104,7 +102,6 @@ const CompaniesRating = () => {
                   className="flex items-center justify-between p-6 hover:bg-dark-surface/50 transition-colors rounded-lg"
                 >
                   <div className="flex items-center gap-6 flex-1">
-                    {/* Место в рейтинге */}
                     <div className="flex items-center justify-center w-12 h-12 rounded-full bg-dark-surface border border-accent-cyan/30">
                       {medal ? (
                         <span className="text-2xl">{medal}</span>
@@ -113,20 +110,17 @@ const CompaniesRating = () => {
                       )}
                     </div>
 
-                    {/* Название компании */}
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-white mb-2">
                         {company.name}
                       </h3>
                       <div className="flex items-center gap-4">
-                        {/* Звезды */}
                         <div className="flex items-center gap-1">
                           {renderStars(company.averageRating)}
                           <span className="ml-2 text-gray-300 font-medium">
                             {company.averageRating.toFixed(1)}
                           </span>
                         </div>
-                        {/* Количество отзывов */}
                         <span className="text-gray-400 text-sm">
                           {company.reviewCount} {company.reviewCount === 1 ? 'отзыв' : company.reviewCount < 5 ? 'отзыва' : 'отзывов'}
                         </span>
@@ -134,7 +128,6 @@ const CompaniesRating = () => {
                     </div>
                   </div>
 
-                  {/* Кнопка подробнее */}
                   <div className="flex items-center gap-2 text-accent-cyan hover:text-accent-gold transition-colors">
                     <span className="font-medium">Подробнее</span>
                     <ChevronRight className="h-5 w-5" />

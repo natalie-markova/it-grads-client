@@ -54,7 +54,6 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
   const [showFilterWizard, setShowFilterWizard] = useState(false)
   const [isCreatingChat, setIsCreatingChat] = useState(false)
 
-  // Scroll-driven animation setup
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -78,13 +77,10 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
     }
   }, [jobs])
 
-  // Блокировка прокрутки и обработчик Escape для модального окна
   useEffect(() => {
     if (selectedJob) {
-      // Блокируем прокрутку фона
       document.body.style.overflow = 'hidden'
-      
-      // Обработчик Escape
+
       const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           setSelectedJob(null)
@@ -121,47 +117,32 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
   }
 
   const filteredJobs = jobs.filter(job => {
-    // Поиск по тексту
     const matchesSearch = 
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.description.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    // Фильтр по типу занятости
-    // API возвращает: 'full-time', 'part-time', 'contract', 'internship'
-    // Фильтр может содержать: 'full-time', 'part-time', 'remote', 'freelance', 'internship'
+
     const matchesEmploymentType = filters.employmentType.length === 0 || 
       filters.employmentType.some(filterType => {
-        // Маппинг значений фильтра на значения из API
         if (filterType === 'remote' || filterType === 'freelance') {
-          // Эти значения не существуют в API, но могут быть в workFormat
-          // Пропускаем проверку по employmentType для этих значений
           return true
         }
         return job.type === filterType
       })
-    
-    // Фильтр по формату работы (workFormat не приходит из API, всегда 'office' по умолчанию)
+
     const matchesWorkFormat = filters.workFormat.length === 0 || 
       (job.workFormat && filters.workFormat.includes(job.workFormat))
-    
-    // Фильтр по региону
+
     const matchesRegion = !filters.region || 
       (job.location && job.location.toLowerCase().includes(filters.region.toLowerCase()))
-    
-    // Фильтр по опыту
-    // API возвращает: 'junior', 'middle', 'senior', 'lead'
-    // Фильтр может содержать: 'no-experience', 'junior', 'middle', 'senior', 'lead'
+
     const matchesExperience = !filters.experience || 
       (filters.experience === 'no-experience' ? false : job.experience === filters.experience)
-    
-    // Фильтр по зарплате
+
     const matchesSalary = filters.salaryUnlimited || 
       !filters.salary ||
       (job.salary && job.salary.toLowerCase().includes(filters.salary.toLowerCase()))
-    
-    // Фильтр по навыкам (skills из API используется для всех категорий)
-    // Проверяем, есть ли хотя бы один навык из фильтра в массиве skills вакансии
+
     const jobSkills = job.technology || job.programmingLanguages || job.additionalSkills || []
     const allFilterSkills = [
       ...filters.technology,
@@ -176,16 +157,13 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
           filterSkill.toLowerCase().includes(jobSkill.toLowerCase())
         )
       ))
-    
-    // Фильтр по английскому (если есть в данных)
+
     const matchesEnglish = !filters.englishLevel || 
       (job.englishLevel && job.englishLevel === filters.englishLevel)
-    
-    // Фильтр по размеру компании (если есть в данных)
+
     const matchesCompanySize = !filters.companySize || 
       (job.companySize && job.companySize === filters.companySize)
-    
-    // Фильтр по отрасли (если есть в данных)
+
     const matchesIndustry = !filters.industry || 
       (job.industry && job.industry.toLowerCase().includes(filters.industry.toLowerCase()))
     
@@ -204,7 +182,6 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
     if (onApply) {
       onApply(jobId)
     }
-    // Toast notification will be shown in Jobs.tsx
   }
 
   const clearFilters = () => {
@@ -565,7 +542,6 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
             </div>
 
             <div className="space-y-6">
-              {/* Основная информация */}
               <div className="grid grid-cols-2 gap-4 pb-4 border-b border-dark-surface">
                 {selectedJobData.salary && (
                   <div>
@@ -603,7 +579,6 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                 )}
               </div>
 
-              {/* Навыки и технологии */}
               {(selectedJobData.technology && selectedJobData.technology.length > 0) ||
                (selectedJobData.programmingLanguages && selectedJobData.programmingLanguages.length > 0) ||
                (selectedJobData.additionalSkills && selectedJobData.additionalSkills.length > 0) ? (
@@ -659,7 +634,6 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                 </div>
               ) : null}
 
-              {/* Совпадающие навыки и путь обучения */}
               {((selectedJobData.matchingSkills && selectedJobData.matchingSkills.length > 0) ||
                 (selectedJobData.learningPathSkills && selectedJobData.learningPathSkills.length > 0)) && (
                 <div className="space-y-4">
@@ -704,7 +678,6 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                 </div>
               )}
 
-              {/* Дополнительная информация */}
               {(selectedJobData.englishLevel || selectedJobData.companySize || selectedJobData.industry) && (
                 <div className="grid grid-cols-2 gap-4">
                   {selectedJobData.englishLevel && (
@@ -732,13 +705,11 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                 </div>
               )}
 
-              {/* Описание */}
               <div>
                 <h3 className="text-lg font-semibold text-white mb-2">{t('vacancies.modal.description')}</h3>
                 <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{selectedJobData.description}</p>
               </div>
 
-              {/* Требования */}
               {selectedJobData.requirements && (
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-2">{t('vacancies.modal.requirements')}</h3>
@@ -746,7 +717,6 @@ const JobsList = ({ jobs, onApply, favoriteIds = new Set(), onToggleFavorite, ap
                 </div>
               )}
 
-              {/* Кнопки действий */}
               <div className="flex justify-between items-center pt-4 border-t border-dark-surface">
                 {onToggleFavorite && (
                   <button

@@ -1,8 +1,3 @@
-/**
- * Сервис синтеза речи через Yandex SpeechKit
- * Голос: alena (женский, дружелюбный) - подходит для маскота-собаки
- */
-
 interface SpeechOptions {
   text: string;
   voice?: 'alena' | 'jane' | 'omazh' | 'zahar' | 'ermil' | 'marina';
@@ -27,9 +22,6 @@ class SpeechService {
     this.preloadVoices();
   }
 
-  /**
-   * Предзагрузка голосов Web Speech API
-   */
   private preloadVoices(): void {
     if (!('speechSynthesis' in window)) {
       this.voicesLoaded = true;
@@ -45,7 +37,6 @@ class SpeechService {
         return;
       }
 
-      // Голоса загружаются асинхронно
       const onVoicesChanged = () => {
         const loadedVoices = window.speechSynthesis.getVoices();
         if (loadedVoices.length > 0) {
@@ -58,7 +49,6 @@ class SpeechService {
 
       window.speechSynthesis.onvoiceschanged = onVoicesChanged;
 
-      // Таймаут на случай, если голоса так и не загрузятся
       setTimeout(() => {
         if (!this.voicesLoaded) {
           this.voicesLoaded = true;
@@ -68,30 +58,21 @@ class SpeechService {
     });
   }
 
-  /**
-   * Кеширование женских голосов для каждого языка
-   */
   private cacheVoices(voices: SpeechSynthesisVoice[]): void {
-    // Кешируем женские голоса для русского и английского
     this.cachedFemaleVoices.set('ru', this.findFemaleVoice(voices, 'ru'));
     this.cachedFemaleVoices.set('en', this.findFemaleVoice(voices, 'en'));
   }
 
-  /**
-   * Поиск женского голоса для указанного языка
-   */
   private findFemaleVoice(voices: SpeechSynthesisVoice[], langCode: string): SpeechSynthesisVoice | null {
     const femaleNames = langCode === 'ru'
       ? ['Milena', 'Irina', 'Алёна', 'Алена', 'Мария', 'Катерина', 'Oksana', 'Tatyana']
       : ['Samantha', 'Victoria', 'Karen', 'Moira', 'Tessa', 'Fiona', 'Veena', 'Zira', 'Hazel', 'Susan'];
 
-    // Ищем женский голос по имени
     let femaleVoice = voices.find(v =>
       v.lang.startsWith(langCode) &&
       femaleNames.some(name => v.name.includes(name))
     );
 
-    // Если не нашли по имени, ищем по ключевым словам
     if (!femaleVoice) {
       femaleVoice = voices.find(v =>
         v.lang.startsWith(langCode) &&
@@ -101,7 +82,6 @@ class SpeechService {
       );
     }
 
-    // Если всё ещё не нашли, просто берём первый голос с нужным языком
     if (!femaleVoice) {
       femaleVoice = voices.find(v => v.lang.startsWith(langCode));
     }
@@ -109,9 +89,6 @@ class SpeechService {
     return femaleVoice || null;
   }
 
-  /**
-   * Ожидание загрузки голосов
-   */
   private async waitForVoices(): Promise<void> {
     if (this.voicesLoaded) return;
     if (this.voicesLoadedPromise) {
@@ -119,16 +96,10 @@ class SpeechService {
     }
   }
 
-  /**
-   * Проверка доступности сервиса
-   */
   isAvailable(): boolean {
     return !!(this.apiKey && this.folderId);
   }
 
-  /**
-   * Синтез речи через Yandex SpeechKit API
-   */
   async synthesize(options: SpeechOptions): Promise<string | null> {
     const {
       text,
@@ -138,13 +109,11 @@ class SpeechService {
       lang = 'ru-RU'
     } = options;
 
-    // Проверяем кеш
     const cacheKey = `${text}_${voice}_${emotion}_${speed}`;
     if (this.audioCache.has(cacheKey)) {
       return this.audioCache.get(cacheKey)!;
     }
 
-    // Если API недоступен, используем fallback
     if (!this.isAvailable()) {
       console.warn('Yandex SpeechKit не настроен, используем Web Speech API');
       return null;
@@ -175,7 +144,6 @@ class SpeechService {
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
 
-      // Кешируем результат
       this.audioCache.set(cacheKey, audioUrl);
 
       return audioUrl;
@@ -185,17 +153,12 @@ class SpeechService {
     }
   }
 
-  /**
-   * Воспроизведение аудио
-   */
   async speak(options: SpeechOptions): Promise<void> {
-    // Останавливаем предыдущее воспроизведение
     this.stop();
 
     const audioUrl = await this.synthesize(options);
 
     if (audioUrl) {
-      // Yandex SpeechKit
       return new Promise((resolve, reject) => {
         this.currentAudio = new Audio(audioUrl);
         this.currentAudio.onended = () => resolve();
@@ -203,37 +166,30 @@ class SpeechService {
         this.currentAudio.play().catch(reject);
       });
     } else {
-      // Fallback на Web Speech API
       return this.speakWithWebSpeech(options.text, options.lang || 'ru-RU');
     }
   }
 
-  /**
-   * Fallback: Web Speech API
-   */
   private async speakWithWebSpeech(text: string, lang: string): Promise<void> {
     if (!('speechSynthesis' in window)) {
       console.warn('Web Speech API не поддерживается');
       return;
     }
 
-    // Ждём загрузки голосов перед первым использованием
     await this.waitForVoices();
 
     return new Promise((resolve, reject) => {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang;
       utterance.rate = 1.0;
-      utterance.pitch = 1.2; // Чуть выше для более дружелюбного тона
+      utterance.pitch = 1.2;
 
-      // Используем закешированный женский голос
       const langCode = lang.split('-')[0];
       const cachedVoice = this.cachedFemaleVoices.get(langCode);
 
       if (cachedVoice) {
         utterance.voice = cachedVoice;
       } else {
-        // Попробуем найти голос, если кеш пуст
         const voices = window.speechSynthesis.getVoices();
         const femaleVoice = this.findFemaleVoice(voices, langCode);
         if (femaleVoice) {
@@ -249,9 +205,6 @@ class SpeechService {
     });
   }
 
-  /**
-   * Остановка воспроизведения
-   */
   stop(): void {
     if (this.currentAudio) {
       this.currentAudio.pause();
@@ -263,9 +216,6 @@ class SpeechService {
     }
   }
 
-  /**
-   * Очистка кеша
-   */
   clearCache(): void {
     this.audioCache.forEach(url => URL.revokeObjectURL(url));
     this.audioCache.clear();

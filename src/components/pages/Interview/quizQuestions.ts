@@ -11,7 +11,6 @@ export interface Question {
 }
 
 export const questions: Question[] = [
-  // JavaScript - 10 вопросов
   {
     id: 1,
     category: 'JavaScript',
@@ -213,7 +212,6 @@ export const questions: Question[] = [
     explanationEn: 'The spread operator (...) allows you to expand an iterable (array, string) in places where zero or more arguments or elements are expected.',
   },
 
-  // React - 10 вопросов
   {
     id: 11,
     category: 'React',
@@ -425,7 +423,6 @@ export const questions: Question[] = [
     explanationEn: 'React.memo is a higher-order component (HOC) that prevents unnecessary re-renders of a component if its props have not changed.',
   },
 
-  // Алгоритмы - 10 вопросов
   {
     id: 21,
     category: 'Algorithms',
@@ -597,7 +594,6 @@ export const questions: Question[] = [
     explanationEn: 'Dynamic programming is a method for solving complex problems by breaking them into simpler subproblems and storing results to avoid repeated calculations.',
   },
 
-  // Базы данных - 10 вопросов
   {
     id: 31,
     category: 'Databases',
@@ -809,7 +805,6 @@ export const questions: Question[] = [
     explanationEn: 'Denormalization is the intentional addition of redundancy to a database to improve read performance by reducing the number of JOIN operations.',
   },
 
-  // Системный дизайн - 10 вопросов
   {
     id: 41,
     category: 'System Design',
@@ -1021,7 +1016,6 @@ export const questions: Question[] = [
     explanationEn: 'Sharding is a horizontal scaling method where data is distributed across multiple servers (shards) to improve performance.',
   },
 
-  // TypeScript - 10 вопросов
   {
     id: 51,
     category: 'TypeScript',
@@ -1233,7 +1227,6 @@ export const questions: Question[] = [
     explanationEn: 'The readonly modifier makes a property read-only. After initialization, its value cannot be changed.',
   },
 
-  // Node.js - 10 вопросов
   {
     id: 61,
     category: 'Node.js',
@@ -1445,7 +1438,6 @@ export const questions: Question[] = [
     explanationEn: 'The cluster module allows creating child processes (workers) that share a single server port, utilizing all CPU cores.',
   },
 
-  // CSS - 10 вопросов
   {
     id: 71,
     category: 'CSS',
@@ -1657,7 +1649,6 @@ export const questions: Question[] = [
     explanationEn: 'position: absolute positions an element relative to its closest positioned ancestor (not static). The element is removed from the normal document flow.',
   },
 
-  // Git - 10 вопросов
   {
     id: 81,
     category: 'Git',
@@ -1870,7 +1861,6 @@ export const questions: Question[] = [
   },
 ]
 
-// Категории для отображения (русский и английский)
 export const categoryNames: Record<string, { ru: string; en: string }> = {
   'JavaScript': { ru: 'JavaScript', en: 'JavaScript' },
   'React': { ru: 'React', en: 'React' },
@@ -1883,7 +1873,6 @@ export const categoryNames: Record<string, { ru: string; en: string }> = {
   'Git': { ru: 'Git', en: 'Git' },
 }
 
-// Функция для получения локализованного вопроса
 export const getLocalizedQuestion = (question: Question, lang: string) => {
   const isEn = lang === 'en'
   return {
@@ -1894,7 +1883,6 @@ export const getLocalizedQuestion = (question: Question, lang: string) => {
   }
 }
 
-// Функция для получения локализованного названия категории
 export const getLocalizedCategoryName = (category: string, lang: string) => {
   const names = categoryNames[category]
   if (!names) return category

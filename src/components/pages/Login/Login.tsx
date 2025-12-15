@@ -19,8 +19,7 @@ function Login() {
     const [rememberMe, setRememberMe] = useState<boolean>(false);
     const [savedEmail, setSavedEmail] = useState<string>('');
     const [savedPassword, setSavedPassword] = useState<string>('');
-    
-    // Загружаем сохраненные данные при монтировании компонента
+
     useEffect(() => {
         const rememberedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY);
         const rememberedPassword = localStorage.getItem(REMEMBERED_PASSWORD_KEY);
@@ -31,13 +30,11 @@ function Login() {
         }
 
         if (rememberedPassword) {
-            // Декодируем пароль из base64
             try {
                 const decodedPassword = atob(rememberedPassword);
                 setSavedPassword(decodedPassword);
             } catch (error) {
                 console.error('Error decoding password:', error);
-                // Если не удалось декодировать, удаляем невалидные данные
                 localStorage.removeItem(REMEMBERED_PASSWORD_KEY);
             }
         }
@@ -85,15 +82,12 @@ function Login() {
             toast.success(t('toasts.loginSuccess'));
             setAccessToken(data.data.accessToken)
             setUser(data.data.user)
-            
-            // Сохраняем email и пароль, если чекбокс "Запомнить меня" отмечен
+
             if (rememberMe) {
                 localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
-                // Кодируем пароль в base64 для минимальной защиты (не настоящая защита, но лучше чем открытый текст)
                 const encodedPassword = btoa(password);
                 localStorage.setItem(REMEMBERED_PASSWORD_KEY, encodedPassword);
             } else {
-                // Удаляем сохраненные данные, если чекбокс не отмечен
                 localStorage.removeItem(REMEMBERED_EMAIL_KEY);
                 localStorage.removeItem(REMEMBERED_PASSWORD_KEY);
             }

@@ -27,7 +27,6 @@ const MessengerPage = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Функция загрузки списка чатов
   const loadChats = useCallback(async () => {
     try {
       const data = await chatAPI.getChats();
@@ -40,7 +39,6 @@ const MessengerPage = () => {
     }
   }, []);
 
-  // Загрузка списка чатов
   useEffect(() => {
     if (!user) {
       navigate('/login');
@@ -49,23 +47,19 @@ const MessengerPage = () => {
     loadChats();
   }, [user, loadChats, navigate]);
 
-  // Загрузка конкретного чата
   useEffect(() => {
     if (chatId) {
       loadChat(Number(chatId));
     }
   }, [chatId]);
 
-  // Автоскролл к последнему сообщению
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-    // WebSocket подключение
     useEffect(() => {
     if (!user) return;
-    
-    // Получить токен из localStorage или cookies
+
     const token = localStorage.getItem('accessToken') || '';
     
     if (token) {
@@ -77,32 +71,26 @@ const MessengerPage = () => {
     };
     }, [user]);
 
-    // Глобальный обработчик для обновления списка чатов при получении новых сообщений и создании чатов
     useEffect(() => {
       if (!user) return;
 
       const handleNotificationUnread = (data: any) => {
         console.log('📬 Получено уведомление о новом сообщении:', data);
-        // Обновляем список чатов для получения актуальных данных, включая счетчик непрочитанных
         loadChats();
       };
 
       const handleNewMessageGlobal = (message: any) => {
         console.log('📨 Глобальное новое сообщение получено:', message);
-        // Обновляем список чатов для обновления lastMessageAt и счетчика непрочитанных
-        // Это сработает для всех чатов, включая активный
         loadChats();
       };
 
       const handleChatCreated = (data: { chat: any }) => {
         console.log('💬 Создан новый чат:', data.chat);
-        // Обновляем список чатов, чтобы новый чат появился в списке
         loadChats();
       };
 
       const handleMessagesRead = (data: { chatId: number }) => {
         console.log('✅ Сообщения отмечены как прочитанные в чате:', data.chatId);
-        // Обновляем список чатов для обновления счетчика непрочитанных
         loadChats();
       };
 
@@ -115,32 +103,25 @@ const MessengerPage = () => {
         socketService.off('notification-unread');
         socketService.off('chat-created');
         socketService.off('messages-read');
-        // Не отписываемся от 'new-message' здесь полностью, так как это используется в активном чате
-        // Отписка от 'new-message' происходит в useEffect для активного чата
       };
     }, [user, loadChats]);
 
-    // Обработчик удаления чата другим пользователем
     useEffect(() => {
       if (!user) return;
 
       const handleChatDeleted = (data: { chatId: number }) => {
         console.log('Чат удален другим пользователем:', data.chatId);
-        
-        // Проверяем, был ли удаленный чат активным
+
         const currentChatId = chatId ? Number(chatId) : null;
         const isActiveChat = (currentChatId === data.chatId) || (activeChat && activeChat.id === data.chatId);
-        
-        // Очищаем состояние перед перенаправлением
+
         setActiveChat(null);
         setMessages([]);
-        
-        // Если удаленный чат был активным, всегда перенаправляем на список чатов
+
         if (isActiveChat) {
           navigate('/messenger', { replace: true });
         }
-        
-        // Перезагружаем список чатов с сервера для получения актуальных данных
+
         loadChats().catch(err => {
           console.error('Error reloading chats after deletion:', err);
         });
@@ -153,7 +134,6 @@ const MessengerPage = () => {
       };
     }, [user, chatId, activeChat, navigate, loadChats]);
 
-    // Подписка на новые сообщения в активном чате
     useEffect(() => {
     if (!chatId || !user) return;
 
@@ -163,12 +143,10 @@ const MessengerPage = () => {
         console.log('Новое сообщение получено в активном чате:', message);
         setMessages((prev) => [...prev, message]);
 
-        // Если сообщение от другого пользователя, автоматически отмечаем как прочитанное
         if (message.senderId !== user.id) {
             chatAPI.markAsRead(Number(chatId))
                 .then(() => {
                     console.log('Сообщение автоматически отмечено как прочитанное');
-                    // Обновляем список чатов для обновления счетчика непрочитанных
                     loadChats();
                 })
                 .catch(err => console.error('Error auto-marking as read:', err));
@@ -197,15 +175,12 @@ const MessengerPage = () => {
       const chat = await chatAPI.getChatById(id);
       setActiveChat(chat);
       setMessages(chat.messages || []);
-      
-      // Отметить сообщения как прочитанные
+
       await chatAPI.markAsRead(id);
-      
-      // Обновить список чатов
+
       loadChats();
     } catch (error: any) {
       console.error('Error loading chat:', error);
-      // Если чат не найден (404), перенаправляем на список чатов
       if (error.response?.status === 404) {
         setActiveChat(null);
         setMessages([]);
@@ -226,12 +201,9 @@ const MessengerPage = () => {
     setSending(true);
 
     try {
-      // Попытка отправить через WebSocket
       if (socketService.isConnected()) {
-        // Отправляем через WebSocket
         socketService.sendMessage(activeChat.id, messageText);
 
-        // Подписываемся на ошибку однократно
         const errorHandler = (error: any) => {
           console.error('Ошибка отправки сообщения:', error);
           toast.error('Не удалось отправить сообщение');
@@ -241,9 +213,6 @@ const MessengerPage = () => {
 
         socketService.onMessageError(errorHandler);
 
-        // Очищаем поле только после успешной отправки (когда получим new-message с нашим senderId)
-        // Сообщение появится через обработчик onNewMessage из useEffect
-        // Просто очистим поле и состояние через небольшую задержку
         setTimeout(() => {
           setNewMessage('');
           socketService.off('message-error');
@@ -252,7 +221,6 @@ const MessengerPage = () => {
 
         console.log('Сообщение отправлено через WebSocket');
       } else {
-        // Fallback на HTTP если WebSocket не подключен
         console.log('WebSocket отключен, используем HTTP API');
         const message = await chatAPI.sendMessage(activeChat.id, messageText);
         setMessages([...messages, message]);
@@ -260,7 +228,6 @@ const MessengerPage = () => {
         setSending(false);
       }
 
-      // Обновить список чатов
       loadChats();
     } catch (error: any) {
       console.error('Error sending message:', error);
@@ -285,18 +252,15 @@ const MessengerPage = () => {
     try {
       await chatAPI.deleteChat(deleteConfirmChatId);
       toast.success('Чат успешно удален');
-      
-      // Очищаем состояние перед перенаправлением
+
       setActiveChat(null);
       setMessages([]);
-      
-      // Если удаленный чат был активным, перенаправляем на список чатов
+
       const currentChatId = chatId ? Number(chatId) : null;
       if (currentChatId === deleteConfirmChatId || (activeChat && activeChat.id === deleteConfirmChatId)) {
         navigate('/messenger', { replace: true });
       }
-      
-      // Обновляем список чатов
+
       loadChats();
       setDeleteConfirmChatId(null);
     } catch (error: any) {
@@ -311,14 +275,12 @@ const MessengerPage = () => {
     return null;
   }
 
-  // Определяем собеседника
   const otherUser = activeChat
     ? activeChat.user1Id === user.id ? activeChat.user2 : activeChat.user1
     : null;
 
   return (
     <div className="h-[calc(100vh-64px)] bg-dark-bg flex">
-      {/* Список чатов */}
       <div className={`w-full md:w-80 lg:w-96 border-r border-dark-card flex flex-col bg-dark-bg ${chatId ? 'hidden md:flex' : 'flex'}`}>
         <div className="h-[73px] px-4 border-b border-dark-card flex items-center bg-gradient-to-r from-dark-surface to-dark-bg">
           <MessageCircle className="h-6 w-6 text-accent-cyan mr-3 animate-pulse" />
@@ -357,11 +319,9 @@ const MessengerPage = () => {
         </div>
       </div>
 
-      {/* Окно чата */}
       <div className={`flex-1 flex flex-col ${!chatId ? 'hidden md:flex' : 'flex'}`}>
         {activeChat && otherUser ? (
           <>
-            {/* Шапка чата */}
             <div className="h-[73px] px-4 border-b border-dark-card flex items-center gap-3 bg-gradient-to-r from-dark-surface to-dark-bg">
               <button
                 onClick={() => navigate('/messenger')}
@@ -385,7 +345,6 @@ const MessengerPage = () => {
                     <UserIcon className="h-5 w-5 text-accent-cyan" />
                   </div>
                 )}
-                {/* Online status indicator */}
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-dark-surface" />
               </div>
 
@@ -401,7 +360,6 @@ const MessengerPage = () => {
               </div>
             </div>
 
-            {/* Сообщения */}
             <div ref={messagesContainerRef} className="flex-1 overflow-y-auto custom-scrollbar p-4 bg-dark-surface">
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
@@ -422,7 +380,6 @@ const MessengerPage = () => {
               )}
             </div>
 
-            {/* Поле ввода */}
             <form onSubmit={handleSendMessage} className="p-4 border-t border-dark-card bg-dark-surface">
               <div className="flex gap-3">
                 <input
@@ -449,17 +406,13 @@ const MessengerPage = () => {
           </>
         ) : (
           <div className="flex items-center justify-center h-full bg-dark-surface relative overflow-hidden">
-            {/* Animated background elements */}
             <div className="absolute inset-0 opacity-[0.03]">
               <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent-cyan rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
               <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-blue rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }} />
             </div>
 
-            {/* Content */}
             <div className="text-center relative z-10 max-w-md px-8">
-              {/* Animated chat bubbles illustration */}
               <div className="relative w-48 h-48 mx-auto mb-8">
-                {/* Left bubble */}
                 <div className="absolute top-8 left-0 w-32 h-20 bg-gradient-to-br from-dark-card to-dark-surface rounded-2xl rounded-bl-sm border border-dark-surface shadow-lg animate-float" style={{ animationDelay: '0s' }}>
                   <div className="p-3">
                     <div className="h-2 bg-gray-700 rounded w-3/4 mb-2" />
@@ -467,7 +420,6 @@ const MessengerPage = () => {
                   </div>
                 </div>
 
-                {/* Right bubble */}
                 <div className="absolute top-20 right-0 w-36 h-24 bg-gradient-to-br from-accent-cyan to-accent-blue rounded-2xl rounded-br-sm shadow-lg shadow-accent-cyan/20 animate-float" style={{ animationDelay: '0.5s' }}>
                   <div className="p-3">
                     <div className="h-2 bg-white/40 rounded w-2/3 mb-2" />
@@ -476,12 +428,10 @@ const MessengerPage = () => {
                   </div>
                 </div>
 
-                {/* Floating icons */}
                 <MessageCircle className="absolute top-0 right-8 h-8 w-8 text-accent-cyan/30 animate-float" style={{ animationDelay: '1s', animationDuration: '5s' }} />
                 <div className="absolute bottom-0 left-8 h-6 w-6 rounded-full bg-accent-blue/20 animate-float" style={{ animationDelay: '1.5s', animationDuration: '4s' }} />
               </div>
 
-              {/* Text content */}
               <div className="space-y-3">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                   {t('messenger.selectChat')}
@@ -491,7 +441,6 @@ const MessengerPage = () => {
                 </p>
               </div>
 
-              {/* Decorative dots */}
               <div className="flex justify-center gap-2 mt-6">
                 <div className="w-2 h-2 rounded-full bg-accent-cyan/50 animate-bounce" style={{ animationDelay: '0s' }} />
                 <div className="w-2 h-2 rounded-full bg-accent-cyan/50 animate-bounce" style={{ animationDelay: '0.2s' }} />
@@ -502,7 +451,6 @@ const MessengerPage = () => {
         )}
       </div>
 
-      {/* Модальное окно подтверждения удаления */}
       {deleteConfirmChatId && (
         <div 
           className="fixed inset-0 bg-black/75 flex items-center justify-center z-[100] p-4"

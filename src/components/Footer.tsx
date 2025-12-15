@@ -14,7 +14,6 @@ const Footer = ({ user }: FooterProps) => {
   const handlePhoneClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault()
     toast.success(t('toasts.phoneAppOpening'))
-    // Открываем звонок после небольшой задержки, чтобы показать toast
     setTimeout(() => {
       window.location.href = 'tel:+79991234567'
     }, 500)

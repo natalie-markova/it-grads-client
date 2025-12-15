@@ -76,12 +76,11 @@ export default function PvPBattle() {
   const [searchTime, setSearchTime] = useState(0);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
-  // Автоматический лимит времени в зависимости от сложности
   const getTimeLimit = (difficulty: 'easy' | 'medium' | 'hard') => {
     switch (difficulty) {
-      case 'easy': return 180;    // 3 минуты
-      case 'medium': return 300;  // 5 минут
-      case 'hard': return 600;    // 10 минут
+      case 'easy': return 180;
+      case 'medium': return 300;
+      case 'hard': return 600;
     }
   };
 

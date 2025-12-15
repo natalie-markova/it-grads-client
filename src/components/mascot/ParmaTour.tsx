@@ -24,7 +24,6 @@ export const ParmaTourOverlay: React.FC = () => {
 
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Поддержка клавиатуры
   useEffect(() => {
     if (!isActive) return;
 
@@ -63,7 +62,6 @@ export const ParmaTourOverlay: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isActive, nextStep, prevStep, skipTour, currentStepIndex, repeatCurrentStep, toggleMute]);
 
-  // Фокус на панель при активации
   useEffect(() => {
     if (isActive && panelRef.current) {
       panelRef.current.focus();
@@ -72,7 +70,6 @@ export const ParmaTourOverlay: React.FC = () => {
 
   if (!isActive || !currentStep) return null;
 
-  // Иконка для текущего шага
   const getStepIcon = () => {
     switch (currentStep.id) {
       case 'welcome': return '👋';
@@ -91,17 +88,14 @@ export const ParmaTourOverlay: React.FC = () => {
 
   return (
     <>
-      {/* Оверлей с градиентом */}
       <div className="fixed inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/10 z-[999] pointer-events-none" />
 
-      {/* Панель управления туром */}
       <div
         ref={panelRef}
         tabIndex={-1}
         className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1002] animate-fade-in outline-none"
       >
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[360px] max-w-[440px]">
-          {/* Заголовок с градиентом */}
           <div className="bg-gradient-to-r from-accent-cyan to-accent-blue px-5 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -120,14 +114,11 @@ export const ParmaTourOverlay: React.FC = () => {
             </div>
           </div>
 
-          {/* Контент */}
           <div className="p-5">
-            {/* Текст */}
             <p className="text-gray-600 dark:text-gray-300 mb-5 leading-relaxed text-base">
               {currentStep?.text}
             </p>
 
-            {/* Прогресс */}
             <div className="flex items-center gap-1.5 mb-5">
               {Array.from({ length: totalSteps }).map((_, i) => (
                 <div
@@ -143,15 +134,12 @@ export const ParmaTourOverlay: React.FC = () => {
               ))}
             </div>
 
-            {/* Кнопки */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {/* Счётчик шагов */}
                 <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
                   {currentStepIndex + 1} из {totalSteps}
                 </span>
 
-                {/* Кнопка повтора озвучки */}
                 <button
                   onClick={repeatCurrentStep}
                   className="p-1.5 text-gray-400 hover:text-accent-cyan hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -160,7 +148,6 @@ export const ParmaTourOverlay: React.FC = () => {
                   <RotateCcw size={16} />
                 </button>
 
-                {/* Кнопка вкл/выкл звука */}
                 <button
                   onClick={toggleMute}
                   className={`p-1.5 rounded-lg transition-colors ${
@@ -175,7 +162,6 @@ export const ParmaTourOverlay: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Назад */}
                 <button
                   onClick={prevStep}
                   disabled={currentStepIndex === 0}
@@ -189,7 +175,6 @@ export const ParmaTourOverlay: React.FC = () => {
                   <ChevronLeft size={22} />
                 </button>
 
-                {/* Далее / Завершить */}
                 <button
                   onClick={nextStep}
                   className="px-5 py-2.5 bg-gradient-to-r from-accent-cyan to-accent-blue hover:from-accent-blue hover:to-accent-cyan text-white rounded-xl font-medium transition-all flex items-center gap-2 shadow-lg shadow-accent-cyan/25 active:scale-95"
@@ -213,7 +198,6 @@ export const ParmaTourOverlay: React.FC = () => {
               </div>
             </div>
 
-            {/* Подсказка по клавиатуре */}
             <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
               <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
                 {t('parmaTour.keyboardHint', 'Клавиши: ← → для навигации, Esc для выхода, R для повтора')}
@@ -251,7 +235,6 @@ export const ParmaTour: React.FC<ParmaTourProps> = ({
 
   const tourStartedRef = useRef(false);
 
-  // Автозапуск тура (один раз)
   useEffect(() => {
     if (autoStart && !tourStartedRef.current && !isTourCompleted(role) && !isActive) {
       tourStartedRef.current = true;
@@ -260,7 +243,6 @@ export const ParmaTour: React.FC<ParmaTourProps> = ({
     }
   }, [autoStart, role, isTourCompleted, getGraduateSteps, getEmployerSteps, startTour, isActive]);
 
-  // Этот компонент не рендерит UI - UI рендерится через ParmaTourOverlay в App.tsx
   return null;
 };
 

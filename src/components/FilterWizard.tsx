@@ -32,7 +32,6 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
   const [currentStep, setCurrentStep] = useState(0)
   const [customSkillInput, setCustomSkillInput] = useState('')
 
-  // Блокируем скролл body при открытии модального окна
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -139,13 +138,11 @@ const FilterWizard = ({ isOpen, onClose, onApply, initialFilters }: FilterWizard
   useEffect(() => {
     if (isOpen) {
       if (initialFilters) {
-        // Если initialFilters имеет старую структуру, конвертируем в новую
         const convertedFilters: FilterData = {
           ...initialFilters,
           salary: initialFilters.salary || (initialFilters as any).salaryMin || '',
           additionalSkillsCustom: initialFilters.additionalSkillsCustom || '',
         }
-        // Удаляем старые поля если они есть
         if ((initialFilters as any).salaryMin) {
           delete (convertedFilters as any).salaryMin
           delete (convertedFilters as any).salaryMax

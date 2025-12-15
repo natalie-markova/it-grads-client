@@ -98,7 +98,6 @@ interface AutoSkillsRadarProps {
   showSources?: boolean
 }
 
-// Категории радара с метаданными
 const RADAR_CATEGORIES = [
   { key: 'programming', nameKey: 'autoRadar.categories.programming', icon: '💻', color: '#00a8c4' },
   { key: 'algorithms', nameKey: 'autoRadar.categories.algorithms', icon: '🧮', color: '#00d9ff' },
@@ -137,7 +136,6 @@ const SOURCE_ICONS: Record<string, string> = {
   quiz: '❓',
 }
 
-// Описания категорий для тултипов
 const CATEGORY_DESCRIPTIONS: Record<string, { descKey: string; sourcesKeys: string[] }> = {
   programming: {
     descKey: 'autoRadar.tooltips.programming',
@@ -391,7 +389,7 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
     if (value >= 50) return t('autoRadar.levels.intermediate')
     if (value >= 30) return t('autoRadar.levels.basic')
     if (value >= 10) return t('autoRadar.levels.beginner')
-    return '' // Не показываем "не определён"
+    return ''
   }
 
   const getSkillLevelColor = (value: number): string => {
@@ -416,7 +414,6 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
     return date.toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')
   }
 
-  // Получить детали источника для категории с расчётом баллов
   const getSourceDetails = (source: string, category: string, sourcePoints: number) => {
     if (!data) return null
 
@@ -500,7 +497,6 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
     return details
   }
 
-  // Обработчик движения мыши по canvas
   const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
     if (!canvas || !data) return
@@ -516,30 +512,25 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
     const outerRadius = Math.min(centerX, centerY) - 60
     const innerRadius = outerRadius * 0.25
 
-    // Расстояние от центра
     const dx = x - centerX
     const dy = y - centerY
     const distance = Math.sqrt(dx * dx + dy * dy)
 
-    // Координаты относительно canvas (в пикселях canvas, потом переведём в проценты для позиционирования)
     const canvasDisplayWidth = rect.width
     const canvasDisplayHeight = rect.height
 
-    // Проверяем центр
     if (distance <= innerRadius) {
-      // Координаты центра относительно canvas контейнера
       setTooltip({
         x: e.clientX,
         y: e.clientY,
         category: null,
         isCenter: true,
-        sectorX: canvasDisplayWidth / 2, // относительно canvas
+        sectorX: canvasDisplayWidth / 2,
         sectorY: canvasDisplayHeight / 2
       })
       return
     }
 
-    // Проверяем секторы
     if (distance <= outerRadius) {
       let angle = Math.atan2(dy, dx) + Math.PI / 2
       if (angle < 0) angle += 2 * Math.PI
@@ -549,13 +540,11 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
       const categoryIndex = Math.floor(angle / angleStep)
 
       if (categoryIndex >= 0 && categoryIndex < numCategories) {
-        // Вычисляем центр сектора
         const midAngle = (categoryIndex + 0.5) * angleStep - Math.PI / 2
         const value = data.radar[RADAR_CATEGORIES[categoryIndex].key] || 0
         const normalizedValue = Math.max(0.1, value / 100)
         const sectorRadius = innerRadius + (outerRadius - innerRadius) * normalizedValue * 0.7
 
-        // Координаты относительно canvas контейнера (не экрана!)
         const screenScale = rect.width / canvas.width
         const localCenterX = canvasDisplayWidth / 2
         const localCenterY = canvasDisplayHeight / 2
@@ -581,12 +570,10 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
     setTooltip(null)
   }
 
-  // Получить данные для тултипа
   const getTooltipContent = () => {
     if (!tooltip || !data) return null
 
     if (tooltip.isCenter) {
-      // Тултип для центра - общий уровень
       const totalAverage = Object.values(data.radar).reduce((a, b) => a + b, 0) / Object.keys(data.radar).length
       const activeCategories = Object.entries(data.radar).filter(([_, v]) => v > 0)
 
@@ -723,12 +710,10 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
               const content = getTooltipContent()
               if (!content) return null
 
-              // Получаем цвет категории
               const categoryColor = tooltip.category
                 ? RADAR_CATEGORIES.find(c => c.key === tooltip.category)?.color || '#00a8c4'
                 : '#00a8c4'
 
-              // Тултип над точкой, позиционирование относительно контейнера
               const tooltipWidth = 220
 
               return (
@@ -745,7 +730,6 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
                       className="bg-dark-card/95 backdrop-blur-sm border rounded-lg p-2.5 shadow-xl"
                       style={{ borderColor: categoryColor + '80' }}
                     >
-                      {/* Header компактный */}
                       <div className="flex items-center gap-1.5 mb-1.5 pb-1.5 border-b border-gray-700/50">
                         {'icon' in content && content.icon && (
                           <span className="text-base">{content.icon}</span>
@@ -764,12 +748,10 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
                         </div>
                       </div>
 
-                      {/* Description */}
                       {content.description && (
                         <p className="text-gray-400 text-[10px] mb-1.5 line-clamp-2">{content.description}</p>
                       )}
 
-                      {/* Sources компактно */}
                       {content.sources && content.sources.length > 0 && (
                         <div className="space-y-px">
                           {content.sources.slice(0, 3).map((source, idx) => (
@@ -789,7 +771,6 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
                         </div>
                       )}
 
-                      {/* Expected sources */}
                       {'expectedSources' in content && content.sources?.length === 0 && content.expectedSources && content.expectedSources.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {content.expectedSources.slice(0, 3).map((source, idx) => (
@@ -800,7 +781,6 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
                         </div>
                       )}
 
-                      {/* Stats для центра */}
                       {'stats' in content && content.stats && (
                         <div className="flex justify-around pt-1.5 border-t border-gray-700/50 mt-1.5">
                           {content.stats.map((stat, idx) => (
@@ -817,7 +797,6 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
             })()}
           </div>
 
-          {/* Categories list */}
           <div className="space-y-2 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
             {RADAR_CATEGORIES.map((category) => {
               const value = data.radar[category.key] || 0
@@ -859,7 +838,6 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
                     </div>
                   </button>
 
-                  {/* Breakdown */}
                   {showSources && isExpanded && (
                     <div className="px-3 pb-3 border-t border-dark-card">
                       <p className="text-gray-500 text-xs mt-2 mb-2">{t('autoRadar.sourcesLabel')}:</p>
@@ -887,7 +865,6 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
                                   <span className="text-accent-cyan font-medium">+{Math.round(sourceValue)} {t('autoRadar.tooltip.points')}</span>
                                 </button>
 
-                                {/* Детали источника с баллами */}
                                 {isSourceExpanded && details && details.length > 0 && (
                                   <div className="ml-6 mt-1 mb-2 p-2 bg-dark-card/50 rounded-lg space-y-1.5 border-l-2 border-accent-cyan/30">
                                     {details.map((detail, idx) => (
@@ -915,7 +892,6 @@ const AutoSkillsRadar: React.FC<AutoSkillsRadarProps> = ({
                     </div>
                   )}
 
-                  {/* Progress bar */}
                   <div className="h-1 bg-dark-card">
                     <div
                       className="h-full transition-all duration-500"

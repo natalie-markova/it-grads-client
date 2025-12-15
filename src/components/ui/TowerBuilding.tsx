@@ -14,7 +14,6 @@ const TowerBuilding = ({ isActive }: TowerBuildingProps) => {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Устанавливаем размеры канваса
     const resizeCanvas = () => {
       const parent = canvas.parentElement
       if (parent) {
@@ -28,7 +27,6 @@ const TowerBuilding = ({ isActive }: TowerBuildingProps) => {
     let animationId: number
     let animationProgress = 0
 
-    // Данные для столбцов (восходящий тренд) - 5 столбцов
     const bars = [
       { value: 0.3 },
       { value: 0.4 },
@@ -39,7 +37,6 @@ const TowerBuilding = ({ isActive }: TowerBuildingProps) => {
       { value: 4.7 },
     ]
 
-    // Состояние для каждого столбца
     const barStates = bars.map(() => ({
       progress: 0,
       opacity: 0,
@@ -49,7 +46,6 @@ const TowerBuilding = ({ isActive }: TowerBuildingProps) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       if (!isActive) {
-        // Плавное затухание
         animationProgress = Math.max(0, animationProgress - 0.025)
         if (animationProgress <= 0) {
           barStates.forEach(state => {
@@ -59,7 +55,6 @@ const TowerBuilding = ({ isActive }: TowerBuildingProps) => {
           return
         }
       } else {
-        // Плавное нарастание
         animationProgress = Math.min(1, animationProgress + 0.012)
       }
 
@@ -69,10 +64,8 @@ const TowerBuilding = ({ isActive }: TowerBuildingProps) => {
       const barSpacing = 38
       const maxBarHeight = canvas.height * 0.5
       const totalWidth = bars.length * barSpacing - (barSpacing - barWidth)
-      // Смещаем вправо от центра
       const startX = centerX - totalWidth / 2 + canvas.width * 0.25
 
-      // Обновление состояния каждого столбца
       barStates.forEach((state, index) => {
         const delay = index * 0.15
         const barProgress = Math.max(0, Math.min(1, (animationProgress - delay) / 0.3))
@@ -81,7 +74,6 @@ const TowerBuilding = ({ isActive }: TowerBuildingProps) => {
         state.opacity = barProgress
       })
 
-      // Рисуем базовую линию (ось X)
       ctx.save()
       ctx.globalAlpha = animationProgress * 0.3
       ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)'
@@ -92,7 +84,6 @@ const TowerBuilding = ({ isActive }: TowerBuildingProps) => {
       ctx.stroke()
       ctx.restore()
 
-      // Рисуем столбцы
       barStates.forEach((state, index) => {
         if (state.opacity > 0) {
           const bar = bars[index]
@@ -104,11 +95,9 @@ const TowerBuilding = ({ isActive }: TowerBuildingProps) => {
           ctx.save()
           ctx.globalAlpha = state.opacity
 
-          // Основной столбец с простой заливкой
           ctx.fillStyle = 'rgba(59, 130, 246, 0.6)'
           ctx.fillRect(x, barTop, barWidth, barHeight)
 
-          // Тонкая граница столбца
           ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)'
           ctx.lineWidth = 1
           ctx.strokeRect(x, barTop, barWidth, barHeight)

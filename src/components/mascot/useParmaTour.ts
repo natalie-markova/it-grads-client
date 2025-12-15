@@ -9,7 +9,6 @@ export interface TourStep extends TourStepData {}
 const TOUR_STORAGE_KEY = 'parma_tour_completed';
 const TOUR_MUTE_KEY = 'parma_tour_muted';
 
-// Загрузка настройки звука
 const loadMuteState = (): boolean => {
   try {
     return localStorage.getItem(TOUR_MUTE_KEY) === 'true';
@@ -36,7 +35,6 @@ export const useParmaTour = () => {
     localStorage.removeItem(`${TOUR_STORAGE_KEY}_${role}`);
   }, []);
 
-  // Переключение звука
   const toggleMute = useCallback(() => {
     setIsMuted(prev => {
       const newValue = !prev;
@@ -48,9 +46,6 @@ export const useParmaTour = () => {
     });
   }, []);
 
-  /**
-   * Озвучить текст (если звук включен)
-   */
   const speak = useCallback((text: string): void => {
     if (isMuted) return;
 
@@ -64,16 +59,12 @@ export const useParmaTour = () => {
     }).catch(console.error);
   }, [i18n.language, isMuted]);
 
-  /**
-   * Повторить озвучку текущего шага
-   */
   const repeatCurrentStep = useCallback(() => {
     if (tour.isActive && tour.steps[tour.currentIndex]) {
       const step = tour.steps[tour.currentIndex];
       const voiceText = step.voiceText || step.text;
 
       const isEn = i18n.language === 'en';
-      // Принудительно озвучить даже если muted (для кнопки повтора)
       speechService.speak({
         text: voiceText,
         voice: isEn ? 'jane' : 'alena',
@@ -84,30 +75,21 @@ export const useParmaTour = () => {
     }
   }, [tour, i18n.language]);
 
-  /**
-   * Показать шаг
-   */
   const showStep = useCallback((steps: TourStepData[], index: number) => {
     if (index < 0 || index >= steps.length) return;
 
     const step = steps[index];
 
-    // Устанавливаем состояние маскота
     setState(step.state, { text: step.text });
 
-    // Навигация если нужен другой роут
     if (step.route) {
       navigate(step.route);
     }
 
-    // Озвучиваем
     const voiceText = step.voiceText || step.text;
     speak(voiceText);
   }, [setState, navigate, speak]);
 
-  /**
-   * Следующий шаг
-   */
   const nextStep = useCallback(() => {
     setTour(prev => {
       if (!prev.isActive) return prev;
@@ -115,11 +97,9 @@ export const useParmaTour = () => {
       const nextIndex = prev.currentIndex + 1;
 
       if (nextIndex < prev.steps.length) {
-        // Показываем следующий шаг
         setTimeout(() => showStep(prev.steps, nextIndex), 100);
         return { ...prev, currentIndex: nextIndex };
       } else {
-        // Тур завершён
         speechService.stop();
         setTemporaryState('celebration', {
           text: t('parmaTour.complete', 'Тур завершён! Удачи! 🎉')
@@ -134,9 +114,6 @@ export const useParmaTour = () => {
     });
   }, [setTour, showStep, setTemporaryState, t, markTourCompleted]);
 
-  /**
-   * Предыдущий шаг
-   */
   const prevStep = useCallback(() => {
     setTour(prev => {
       if (!prev.isActive || prev.currentIndex <= 0) return prev;
@@ -147,9 +124,6 @@ export const useParmaTour = () => {
     });
   }, [setTour, showStep]);
 
-  /**
-   * Пропустить тур
-   */
   const skipTour = useCallback(() => {
     speechService.stop();
     setState('idle');
@@ -162,9 +136,6 @@ export const useParmaTour = () => {
     });
   }, [setState, setTour, markTourCompleted]);
 
-  /**
-   * Завершить тур
-   */
   const completeTour = useCallback(() => {
     speechService.stop();
     setTemporaryState('celebration', {
@@ -179,9 +150,6 @@ export const useParmaTour = () => {
     });
   }, [setTemporaryState, t, setTour, markTourCompleted]);
 
-  /**
-   * Запустить тур
-   */
   const startTour = useCallback((role: 'graduate' | 'employer', steps: TourStepData[]) => {
     if (steps.length === 0) return;
 
@@ -192,13 +160,9 @@ export const useParmaTour = () => {
       role
     });
 
-    // Показываем первый шаг с задержкой
     setTimeout(() => showStep(steps, 0), 500);
   }, [setTour, showStep]);
 
-  /**
-   * Шаги для выпускника
-   */
   const getGraduateSteps = useCallback((): TourStepData[] => [
     {
       id: 'welcome',
@@ -257,9 +221,6 @@ export const useParmaTour = () => {
     }
   ], [t]);
 
-  /**
-   * Шаги для работодателя
-   */
   const getEmployerSteps = useCallback((): TourStepData[] => [
     {
       id: 'welcome',
@@ -330,7 +291,6 @@ export const useParmaTour = () => {
     markTourCompleted,
     resetTourStatus,
 
-    // Управление звуком
     isMuted,
     toggleMute,
     repeatCurrentStep

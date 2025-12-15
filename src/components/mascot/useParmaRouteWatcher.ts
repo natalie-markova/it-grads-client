@@ -15,7 +15,6 @@ export const useParmaRouteWatcher = () => {
   const isFirstRenderRef = useRef(true);
   const [i18nReady, setI18nReady] = useState(i18n.isInitialized);
 
-  // Ждём инициализации i18n
   useEffect(() => {
     if (i18n.isInitialized) {
       setI18nReady(true);
@@ -29,10 +28,8 @@ export const useParmaRouteWatcher = () => {
   }, [i18n]);
 
   useEffect(() => {
-    // Не показывать приветствие пока i18n не готов
     if (!i18nReady) return;
 
-    // Определяем язык внутри useEffect, когда i18n точно инициализирован
     const isRu = i18n.language?.startsWith('ru') ?? true;
 
     const path = location.pathname;

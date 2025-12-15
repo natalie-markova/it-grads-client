@@ -65,17 +65,14 @@ const ResumeForm = ({ onClose, onSuccess }: ResumeFormProps) => {
 
   const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Разрешаем пустую строку для очистки поля
     if (value === '') {
       setFormData({ ...formData, desiredSalary: '' });
       return;
     }
-    // Проверяем, что значение - целое положительное число
     const numValue = parseFloat(value);
     if (!isNaN(numValue) && numValue >= 0 && Number.isInteger(numValue)) {
       setFormData({ ...formData, desiredSalary: value });
     }
-    // Если значение невалидно (отрицательное или дробное), просто игнорируем его
   };
 
   const handleSubmit = async (e: FormEvent) => {

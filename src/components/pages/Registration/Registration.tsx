@@ -22,108 +22,91 @@ function Registration() {
     const [passwordValue, setPasswordValue] = useState<string>('');
     
     function validateEmail(email: string): boolean {
-        // Убираем пробелы в начале и конце
         const trimmedEmail = email.trim();
-        
-        // Проверка на пустой email
+
         if (!trimmedEmail) {
             setEmailError('');
             return false;
         }
-        
-        // Проверка на пробелы внутри email
+
         if (email.includes(' ')) {
             setEmailError('Email не должен содержать пробелы');
             return false;
         }
-        
-        // Проверка на наличие символа @
+
         if (!trimmedEmail.includes('@')) {
             setEmailError('Email должен содержать символ @');
             return false;
         }
-        
-        // Проверка на количество символов @ (должен быть только один)
+
         const atCount = (trimmedEmail.match(/@/g) || []).length;
         if (atCount > 1) {
             setEmailError('Email должен содержать только один символ @');
             return false;
         }
-        
-        // Разделяем на локальную и доменную части
+
         const [localPart, domainPart] = trimmedEmail.split('@');
-        
-        // Проверка локальной части (до @)
+
         if (!localPart || localPart.length === 0) {
             setEmailError('Введите адрес домена почтовой платформы (например, gmail)');
             return false;
         }
-        
+
         if (localPart.length > 64) {
             setEmailError('Часть до символа @ слишком длинная (максимум 64 символа)');
             return false;
         }
-        
-        // Проверка на недопустимые символы в локальной части
+
         const invalidLocalChars = /[<>()[\]\\,;:"\s]/;
         if (invalidLocalChars.test(localPart)) {
             setEmailError('Часть до символа @ содержит недопустимые символы (<>()[]\\,;:")');
             return false;
         }
-        
-        // Проверка доменной части (после @)
+
         if (!domainPart || domainPart.length === 0) {
             setEmailError('Введите адрес домена почтовой платформы (например, gmail)');
             return false;
         }
-        
-        // Проверка на точку в доменной части
+
         if (!domainPart.includes('.')) {
             setEmailError('Введите . и доменную зону (например, .com)');
             return false;
         }
-        
-        // Проверка на точку в начале или конце домена
+
         if (domainPart.startsWith('.') || domainPart.endsWith('.')) {
             setEmailError('Домен не может начинаться или заканчиваться точкой');
             return false;
         }
-        
-        // Проверка на две точки подряд
+
         if (domainPart.includes('..')) {
             setEmailError('Домен не может содержать две точки подряд');
             return false;
         }
-        
-        // Разделяем домен на части по точкам
+
         const domainParts = domainPart.split('.');
         const tld = domainParts[domainParts.length - 1];
-        
-        // Проверка TLD (последняя часть после последней точки)
+
         if (!tld || tld.length < 2) {
             setEmailError('Доменное расширение (после последней точки) должно быть не менее 2 символов');
             return false;
         }
-        
+
         if (tld.length > 63) {
             setEmailError('Доменное расширение слишком длинное');
             return false;
         }
-        
-        // Проверка на недопустимые символы в домене
+
         const invalidDomainChars = /[<>()[\]\\,;:"\s@]/;
         if (invalidDomainChars.test(domainPart)) {
             setEmailError('Домен содержит недопустимые символы');
             return false;
         }
-        
-        // Проверка на дефисы в начале или конце домена
+
         if (domainPart.startsWith('-') || domainPart.endsWith('-')) {
             setEmailError('Домен не может начинаться или заканчиваться дефисом');
             return false;
         }
-        
-        // Если все проверки пройдены
+
         setEmailError('');
         return true;
     }
@@ -163,7 +146,7 @@ function Registration() {
         try {
             const response = await $api.post('/users/google', {
                 credential: credentialResponse.credential,
-                role: role // передаём выбранную роль
+                role: role
             });
 
             console.log("Google registration response:", response.data);
@@ -190,23 +173,19 @@ function Registration() {
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
         const confirmPassword = formData.get('confirmPassword') as string;
-        
-        // Сбрасываем предыдущие ошибки
+
         setEmailError('');
         setPasswordError('');
         setConfirmPasswordError('');
-        
-        // Валидация email
+
         if (!validateEmail(email)) {
             return;
         }
-        
-        // Валидация пароля
+
         if (!validatePassword(password)) {
             return;
         }
-        
-        // Валидация совпадения паролей
+
         if (!validatePasswordMatch(password, confirmPassword)) {
             return;
         }
@@ -217,37 +196,32 @@ function Registration() {
             password: password,
             role: role,
         };
-        
+
         $api.post("/users/registration", data)
         .then((response) => {
             console.log("Response:", response.data)
             if (response.status === 200) {
                 toast.success("Регистрация прошла успешно! Проверьте ваш email.")
 
-                // Сохраняем email для страницы верификации
                 localStorage.setItem('pendingVerificationEmail', data.email);
 
-                // Сохраняем токен для возможности переотправки письма
                 setAccessToken(response.data.accessToken);
                 setUser(response.data.user);
 
-                // Редирект на страницу проверки email
                 navigate('/verify-email-pending');
             }
         })
         .catch(error => {
             console.error("Что-то пошло не так:", error.response?.data || error.message);
-            
-            // Обработка различных типов ошибок
+
             const errorData = error.response?.data;
             const errorMessage = errorData?.message || errorData?.error || '';
             const statusCode = error.response?.status;
-            
-            // Проверка на ошибку формата email
+
             if (
-                statusCode === 400 || 
-                errorMessage.toLowerCase().includes('email') && 
-                (errorMessage.toLowerCase().includes('invalid') || 
+                statusCode === 400 ||
+                errorMessage.toLowerCase().includes('email') &&
+                (errorMessage.toLowerCase().includes('invalid') ||
                 errorMessage.toLowerCase().includes('format') ||
                 errorMessage.toLowerCase().includes('некорректн'))
             ) {
@@ -255,10 +229,9 @@ function Registration() {
                 toast.error('Пожалуйста, введите корректный email адрес');
                 return;
             }
-            
-            // Проверка на существующего пользователя
+
             if (
-                statusCode === 409 || 
+                statusCode === 409 ||
                 errorMessage.toLowerCase().includes('уже существует') ||
                 errorMessage.toLowerCase().includes('already exists') ||
                 errorMessage.toLowerCase().includes('зарегестрирован')
@@ -266,8 +239,7 @@ function Registration() {
                 toast.error('Пользователь с такими данными уже зарегистрирован');
                 return;
             }
-            
-            // Общая ошибка
+
             toast.error(errorMessage || 'Ошибка регистрации. Попробуйте еще раз.');
         });
 
@@ -363,7 +335,6 @@ function Registration() {
                                         setPasswordTouched(true);
                                         if (password) {
                                             validatePassword(password);
-                                            // Проверяем совпадение с подтверждением, если оно уже введено
                                             const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement)?.value || '';
                                             if (confirmPassword) {
                                                 validatePasswordMatch(password, confirmPassword);

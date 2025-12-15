@@ -13,10 +13,8 @@ const App = () => {
   const [user, setUser] = useState<User | null>(null);
   const location = useLocation();
 
-  // Скрываем footer на полноэкранных страницах (CodeBattle Playground)
   const hideFooter = location.pathname.startsWith('/codebattle/play/');
-  
-  // Сохраняем пользователя в localStorage при изменении
+
   useEffect(() => {
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
@@ -27,48 +25,38 @@ const App = () => {
   
   useEffect(() => {
     const checkAuth = async () => {
-      // Сначала загружаем пользователя из localStorage (основной источник авторизации)
       const savedUser = localStorage.getItem('user');
       const savedAccessToken = localStorage.getItem('accessToken');
-      
+
       if (savedUser && savedAccessToken) {
         try {
           const parsedUser = JSON.parse(savedUser);
-          // Устанавливаем пользователя из localStorage - это основной источник авторизации
           setUser(parsedUser);
           setIsLoading(false);
-          
-          // Проверяем на сервере в фоне ТОЛЬКО для обновления токена
-          // НЕ используем результат для определения авторизации
+
           try {
             const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
             const response = await axios.get(`${apiUrl}/tokens/refresh`,
               {
                 withCredentials: true,
-                timeout: 3000 // Короткий таймаут для Safari
+                timeout: 3000
               }
             );
             if (response.status === 200 && response.data.user) {
-              // Обновляем пользователя и токен с сервера, если запрос успешен
               setUser(response.data.user);
               if (response.data.accessToken) {
                 localStorage.setItem('accessToken', response.data.accessToken);
               }
             }
           } catch (error: any) {
-            // ИГНОРИРУЕМ все ошибки при проверке на сервере
-            // Пользователь остается залогиненным с данными из localStorage
-            // Это критично для Safari, где cookies могут не работать
           }
-          return; // Выходим, так как пользователь уже залогинен
+          return;
         } catch (e) {
-          // Если не удалось распарсить, удаляем
           localStorage.removeItem('user');
           localStorage.removeItem('accessToken');
         }
       }
-      
-      // Если нет данных в localStorage, проверяем на сервере
+
       try {
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
         const response = await axios.get(`${apiUrl}/tokens/refresh`,
@@ -86,7 +74,6 @@ const App = () => {
           setUser(null);
         }
       } catch (error: any) {
-        // Если нет данных в localStorage и ошибка, разлогиниваем
         setUser(null);
       } finally {
         setIsLoading(false);

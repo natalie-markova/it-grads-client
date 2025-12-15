@@ -90,26 +90,20 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
     setLoading(true)
     try {
       const response = await $api.get('/interview-tracker/access')
-      // Для работодателя ответ содержит два списка: grantedByMe и grantedToMe
       if (userRole === 'employer' && response.data.grantedByMe && response.data.grantedToMe) {
-        // Объединяем оба списка для отображения
         setAccesses([...response.data.grantedByMe, ...response.data.grantedToMe])
-        // Сохраняем разделенные списки для отображения
         setGrantedByMe(response.data.grantedByMe)
         setGrantedToMe(response.data.grantedToMe)
       } else {
-        // Для выпускника ответ может быть объектом с двумя списками или обычным массивом
         if (response.data && response.data.grantedByMe && response.data.grantedToMe) {
-          // Если ответ - объект с двумя списками
-          setAccesses(response.data.grantedByMe) // Те, кому выпускник разрешил доступ
+          setAccesses(response.data.grantedByMe)
           setGrantedByMe(response.data.grantedByMe)
-          setGrantedToMe(response.data.grantedToMe) // Те, кто разрешил доступ выпускнику (компании)
+          setGrantedToMe(response.data.grantedToMe)
         } else {
-          // Если ответ - обычный массив (это те, кому он разрешил доступ)
           const accesses = Array.isArray(response.data) ? response.data : []
           setAccesses(accesses)
           setGrantedByMe(accesses)
-          setGrantedToMe([]) // Для обратной совместимости
+          setGrantedToMe([])
         }
       }
     } catch (error) {
@@ -216,12 +210,10 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
     }
   }
 
-  // Фильтрация выпускников для работодателя (по аналогии с поиском кандидата)
   const getFilteredGraduatesForAccess = () => {
     const query = searchQuery.toLowerCase().trim()
-    
+
     if (query.length === 0) {
-      // Если запрос пустой, возвращаем всех выпускников, исключая уже добавленных
       const addedGraduateIds = new Set(grantedByMe.map(a => a.graduateId).filter(Boolean))
       return graduates
         .filter(graduate => !addedGraduateIds.has(graduate.id))
@@ -236,28 +228,23 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
           return firstNameA.localeCompare(firstNameB)
         })
     }
-    
-    // Получаем уже добавленные ID
+
     const addedGraduateIds = new Set(grantedByMe.map(a => a.graduateId).filter(Boolean))
-    
-    // Исключаем уже добавленных из всех выпускников
+
     let availableGraduates = graduates.filter(graduate => !addedGraduateIds.has(graduate.id))
-    
-    // Фильтруем по запросу
+
     const filtered = availableGraduates.filter(graduate => {
       const lastName = (graduate.lastName || '').toLowerCase()
       const firstName = (graduate.firstName || '').toLowerCase()
       const username = (graduate.username || '').toLowerCase()
       const fullName = `${lastName} ${firstName}`.trim().toLowerCase()
-      
-      // Поиск по вхождению в фамилию, имя, username или полное имя
+
       return lastName.includes(query) || 
              firstName.includes(query) || 
              username.includes(query) ||
              fullName.includes(query)
     })
-    
-    // Сортируем по фамилии, затем по имени
+
     return filtered.sort((a, b) => {
       const lastNameA = (a.lastName || a.username || '').toLowerCase()
       const lastNameB = (b.lastName || b.username || '').toLowerCase()
@@ -270,66 +257,53 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
     })
   }
 
-  // Фильтрация по первой букве или поиск (для модального окна)
   const getFilteredItems = () => {
     const query = searchQuery.toLowerCase().trim()
-    
+
     if (userRole === 'graduate') {
-      // Получаем уже добавленные ID
       const addedEmployerIds = new Set(accesses.map(a => a.employerId).filter(Boolean))
-      
-      // Исключаем уже добавленных из всех компаний
+
       let availableEmployers = employers.filter(employer => !addedEmployerIds.has(employer.id))
-      
-      // Если есть поисковый запрос, фильтруем
+
       if (query.length > 0) {
         availableEmployers = availableEmployers.filter(employer => {
           const companyName = (employer.companyName || employer.username || '').toLowerCase()
-          // Если введена только одна буква - ищем по первой букве
           if (query.length === 1) {
             return companyName.length > 0 && companyName[0] === query[0]
           }
-          // Если больше одной буквы - обычный поиск по вхождению
           return companyName.includes(query)
         })
       }
-      
-      // Сортируем по названию
+
       return availableEmployers.sort((a, b) => {
         const nameA = (a.companyName || a.username || '').toLowerCase()
         const nameB = (b.companyName || b.username || '').toLowerCase()
         return nameA.localeCompare(nameB)
       })
     } else {
-      // Получаем уже добавленные ID
       const addedGraduateIds = new Set(accesses.map(a => a.graduateId))
-      
-      // Исключаем уже добавленных из всех выпускников
+
       let availableGraduates = graduates.filter(graduate => !addedGraduateIds.has(graduate.id))
-      
-      // Если есть поисковый запрос, фильтруем
+
       if (query.length > 0) {
         availableGraduates = availableGraduates.filter(graduate => {
           const lastName = (graduate.lastName || '').toLowerCase()
           const firstName = (graduate.firstName || '').toLowerCase()
           const username = (graduate.username || '').toLowerCase()
           const fullName = `${lastName} ${firstName}`.trim().toLowerCase()
-          
-          // Если введена только одна буква - ищем по первой букве фамилии, имени или username
+
           if (query.length === 1) {
             return (lastName.length > 0 && lastName[0] === query[0]) ||
                    (firstName.length > 0 && firstName[0] === query[0]) ||
                    (username.length > 0 && username[0] === query[0])
           }
-          // Если больше одной буквы - обычный поиск по вхождению в фамилию, имя, username или полное имя
           return lastName.includes(query) || 
                  firstName.includes(query) || 
                  username.includes(query) ||
                  fullName.includes(query)
         })
       }
-      
-      // Сортируем по фамилии, затем по имени
+
       return availableGraduates.sort((a, b) => {
         const lastNameA = (a.lastName || a.username || '').toLowerCase()
         const lastNameB = (b.lastName || b.username || '').toLowerCase()
@@ -344,8 +318,7 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
   }
 
   const filteredItems = getFilteredItems()
-  
-  // Отладочная информация для выпускников
+
   useEffect(() => {
     if (userRole === 'employer') {
       console.log('=== DEBUG INFO ===')
@@ -393,7 +366,6 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
             : t('trackerAccess.employerDescription')}
         </p>
 
-        {/* Блок поиска выпускников для работодателя */}
         {userRole === 'employer' && (
           <div className="mb-6 p-4 bg-dark-surface border border-dark-card rounded-lg">
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -412,7 +384,6 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                   const value = e.target.value
                   setSearchQuery(value)
                   setSelectedGraduateId(null)
-                  // Если поле очищено, сбрасываем выбранного выпускника
                   if (value === '') {
                     setSelectedGraduateId(null)
                   }
@@ -510,7 +481,6 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
         {loading ? (
           <div className="text-center py-8 text-gray-400">{t('trackerAccess.loading')}</div>
         ) : (userRole === 'employer' ? (
-          // Для работодателя показываем два отдельных списка
           <>
             {grantedByMe.length === 0 && grantedToMe.length === 0 ? (
               <div className="text-center py-8">
@@ -522,7 +492,6 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Выпускники, которым я разрешаю доступ */}
                 {grantedByMe.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -597,7 +566,6 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                   </div>
                 )}
 
-                {/* Выпускники, которые разрешили доступ мне */}
                 {grantedToMe.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -675,7 +643,6 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
             )}
           </>
         ) : (
-          // Для выпускника показываем два отдельных списка
           <>
             {grantedByMe.length === 0 && grantedToMe.length === 0 ? (
               <div className="text-center py-8">
@@ -687,7 +654,6 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Компании, которым я разрешил доступ */}
                 {grantedByMe.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -760,7 +726,6 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
                   </div>
                 )}
 
-                {/* Компании, которые разрешили доступ мне */}
                 {grantedToMe.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -831,7 +796,6 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
         ))}
       </Card>
 
-      {/* Модальное окно добавления (только для выпускника) */}
       {isModalOpen && userRole === 'graduate' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-dark-card rounded-xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -983,7 +947,6 @@ const InterviewTrackerAccess: React.FC<InterviewTrackerAccessProps> = ({ userRol
         onCancel={() => setDeleteConfirm({ isOpen: false, id: null, name: '' })}
       />
 
-      {/* Модальное окно просмотра календаря */}
       {viewingCalendar.isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-dark-card rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">

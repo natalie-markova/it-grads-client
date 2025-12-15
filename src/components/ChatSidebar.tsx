@@ -24,7 +24,6 @@ const ChatSidebar = ({ userId }: ChatSidebarProps) => {
 
     fetchChats();
 
-    // Инициализация WebSocket
     const token = document.cookie
       .split('; ')
       .find(row => row.startsWith('accessToken='))
@@ -63,7 +62,6 @@ const ChatSidebar = ({ userId }: ChatSidebarProps) => {
   }, [userId]);
 
   useEffect(() => {
-    // Подсчет непрочитанных сообщений
     const total = chats.reduce((acc, chat) => acc + (chat.unreadCount || 0), 0);
     setUnreadCount(total);
   }, [chats]);

@@ -53,19 +53,16 @@ export default function InterviewResultsPage() {
       try {
         const session = await interviewAPI.getSession(Number(sessionId));
 
-        // Проверяем, что интервью завершено
         if (session.status !== 'completed') {
           setError(t('aiInterviewResults.errors.notCompleted'));
           return;
         }
 
-        // Проверяем наличие данных обратной связи
         if (session.totalScore === undefined || session.totalScore === null) {
           setError(t('aiInterviewResults.errors.resultsNotFound'));
           return;
         }
 
-        // Формируем объект feedback из данных сессии
         const feedbackData = {
           totalScore: session.totalScore || 0,
           strengths: session.strengths || [],

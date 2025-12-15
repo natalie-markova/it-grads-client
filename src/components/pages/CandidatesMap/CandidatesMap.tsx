@@ -41,14 +41,12 @@ const createCustomIcon = (count: number = 1) => {
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     ">${count > 1 ? count : ''}</div>`,
     iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2], // Центр иконки
+    iconAnchor: [size / 2, size / 2],
     popupAnchor: [0, -size / 2],
   });
 };
 
-// Координаты городов мира
 const CITY_COORDINATES: Record<string, [number, number]> = {
-  // Россия
   'Москва': [55.7558, 37.6173],
   'Санкт-Петербург': [59.9343, 30.3351],
   'Новосибирск': [55.0084, 82.9357],
@@ -125,7 +123,6 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
   'Псков': [57.8136, 28.3496],
   'Южно-Сахалинск': [46.9641, 142.7285],
   'Петропавловск-Камчатский': [53.0452, 158.6511],
-  // СНГ
   'Минск': [53.9045, 27.5615],
   'Киев': [50.4501, 30.5234],
   'Алматы': [43.2220, 76.8512],
@@ -138,7 +135,6 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
   'Бишкек': [42.8746, 74.5698],
   'Душанбе': [38.5598, 68.7740],
   'Ашхабад': [37.9601, 58.3261],
-  // Европа
   'Лондон': [51.5074, -0.1278],
   'Париж': [48.8566, 2.3522],
   'Берлин': [52.5200, 13.4050],
@@ -161,7 +157,6 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
   'Цюрих': [47.3769, 8.5417],
   'Женева': [46.2044, 6.1432],
   'Брюссель': [50.8503, 4.3517],
-  // Азия
   'Токио': [35.6762, 139.6503],
   'Пекин': [39.9042, 116.4074],
   'Шанхай': [31.2304, 121.4737],
@@ -175,7 +170,6 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
   'Бангалор': [12.9716, 77.5946],
   'Тель-Авив': [32.0853, 34.7818],
   'Стамбул': [41.0082, 28.9784],
-  // Северная Америка
   'Нью-Йорк': [40.7128, -74.0060],
   'Лос-Анджелес': [34.0522, -118.2437],
   'Сан-Франциско': [37.7749, -122.4194],
@@ -188,17 +182,14 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
   'Майами': [25.7617, -80.1918],
   'Остин': [30.2672, -97.7431],
   'Денвер': [39.7392, -104.9903],
-  // Южная Америка
   'Сан-Паулу': [-23.5505, -46.6333],
   'Буэнос-Айрес': [-34.6037, -58.3816],
   'Сантьяго': [-33.4489, -70.6693],
   'Богота': [4.7110, -74.0721],
   'Лима': [-12.0464, -77.0428],
-  // Океания
   'Сидней': [-33.8688, 151.2093],
   'Мельбурн': [-37.8136, 144.9631],
   'Окленд': [-36.8509, 174.7645],
-  // Африка
   'Кейптаун': [-33.9249, 18.4241],
   'Каир': [30.0444, 31.2357],
   'Лагос': [6.5244, 3.3792],
@@ -229,7 +220,6 @@ interface CandidateMarker {
   city: string;
 }
 
-// Компонент для управления картой
 const MapController = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
   const map = useMap();
   useEffect(() => {
@@ -238,7 +228,6 @@ const MapController = ({ center, zoom }: { center: [number, number]; zoom: numbe
   return null;
 };
 
-// Кнопка "Домой" для карты (навести на Москву)
 const HomeButton = () => {
   const map = useMap();
 
@@ -299,17 +288,14 @@ const CandidatesMap = () => {
     }
   };
 
-  // Получаем все уникальные навыки
   const allSkills = useMemo(() => {
     const skills = new Set<string>();
     resumes.forEach(r => r.skillsArray?.forEach(s => skills.add(s)));
     return Array.from(skills).sort();
   }, [resumes]);
 
-  // Фильтруем резюме
   const filteredResumes = useMemo(() => {
     return resumes.filter(resume => {
-      // Поиск по тексту
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         const matchesSearch =
@@ -321,7 +307,6 @@ const CandidatesMap = () => {
         if (!matchesSearch) return false;
       }
 
-      // Фильтр по навыкам
       if (selectedSkills.length > 0) {
         const hasSkills = selectedSkills.some(skill =>
           resume.skillsArray?.includes(skill)
@@ -329,7 +314,6 @@ const CandidatesMap = () => {
         if (!hasSkills) return false;
       }
 
-      // Фильтр по уровню
       if (selectedLevel && resume.level !== selectedLevel) {
         return false;
       }
@@ -338,14 +322,12 @@ const CandidatesMap = () => {
     });
   }, [resumes, searchTerm, selectedSkills, selectedLevel]);
 
-  // Группируем резюме по городам для карты
   const markers = useMemo<CandidateMarker[]>(() => {
     const cityGroups: Record<string, Resume[]> = {};
 
     filteredResumes.forEach(resume => {
       const city = resume.location || resume.user?.city;
       if (city) {
-        // Нормализуем название города
         const normalizedCity = Object.keys(CITY_COORDINATES).find(
           c => c.toLowerCase() === city.toLowerCase() || city.toLowerCase().includes(c.toLowerCase())
         );
@@ -442,7 +424,6 @@ const CandidatesMap = () => {
     );
   };
 
-  // Статистика по городам
   const cityStats = useMemo(() => {
     const stats: Record<string, number> = {};
     markers.forEach(m => {
@@ -457,7 +438,6 @@ const CandidatesMap = () => {
     <div className="bg-dark-bg min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Section title="" className="bg-dark-bg py-0">
-          {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-4 mb-4">
               <button
@@ -473,7 +453,6 @@ const CandidatesMap = () => {
             </p>
           </div>
 
-          {/* Поиск и фильтры */}
           <Card className="mb-6">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col md:flex-row gap-4">
@@ -508,11 +487,9 @@ const CandidatesMap = () => {
                 </button>
               </div>
 
-              {/* Фильтры */}
               {showFilters && (
                 <div className="pt-4 border-t border-dark-card">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Уровень */}
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">{t('interview.level')}</label>
                       <select
@@ -528,7 +505,6 @@ const CandidatesMap = () => {
                       </select>
                     </div>
 
-                    {/* Навыки */}
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">{t('profile.skills')}</label>
                       <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
@@ -549,7 +525,6 @@ const CandidatesMap = () => {
                     </div>
                   </div>
 
-                  {/* Кнопка сброса */}
                   {(selectedSkills.length > 0 || selectedLevel) && (
                     <button
                       onClick={() => {
@@ -566,9 +541,7 @@ const CandidatesMap = () => {
             </div>
           </Card>
 
-          {/* Основной контент: карта + статистика */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Статистика по городам */}
             <Card className="lg:col-span-1 h-[600px] flex flex-col">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Users className="h-5 w-5 text-accent-cyan" />
@@ -601,7 +574,6 @@ const CandidatesMap = () => {
               </div>
             </Card>
 
-            {/* Карта */}
             <Card className="lg:col-span-3 p-0 overflow-hidden h-[600px] relative z-0">
               {loading ? (
                 <div className="h-full flex items-center justify-center">
@@ -733,7 +705,6 @@ const CandidatesMap = () => {
         </Section>
       </div>
 
-      {/* Кнопка вернуться в начало */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         className="fixed bottom-6 right-6 p-3 bg-accent-cyan hover:bg-accent-cyan/80 text-dark-bg rounded-full shadow-lg transition-all z-50"
@@ -742,7 +713,6 @@ const CandidatesMap = () => {
         <ChevronUp className="h-6 w-6" />
       </button>
 
-      {/* Модальное окно просмотра резюме */}
       {showResumeModal && viewingResumes.length > 0 && (
         <div 
           className="fixed inset-0 bg-black/75 flex items-center justify-center z-[100] p-4"
@@ -770,7 +740,6 @@ const CandidatesMap = () => {
                 </button>
               </div>
 
-              {/* Счетчик резюме */}
               {viewingResumes.length > 1 && (
                 <div className="mb-6 pb-4 border-b border-dark-card">
                   <div className="text-sm text-gray-400">
@@ -779,9 +748,7 @@ const CandidatesMap = () => {
                 </div>
               )}
 
-              {/* Содержимое резюме */}
               <div className="space-y-6">
-                {/* Описание */}
                 {viewingResumes[currentResumeIndex].description && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3">{t('candidates.modal.description')}</h3>
@@ -791,7 +758,6 @@ const CandidatesMap = () => {
                   </div>
                 )}
 
-                {/* Основная информация */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {viewingResumes[currentResumeIndex].location && (
                     <div className="flex items-center gap-2 text-gray-300">
@@ -812,7 +778,6 @@ const CandidatesMap = () => {
                   )}
                 </div>
 
-                {/* Навыки */}
                 {viewingResumes[currentResumeIndex].skillsArray && viewingResumes[currentResumeIndex].skillsArray.length > 0 && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3">{t('candidates.skillsTitle')}</h3>
@@ -829,7 +794,6 @@ const CandidatesMap = () => {
                   </div>
                 )}
 
-                {/* Опыт работы */}
                 {viewingResumes[currentResumeIndex].experience && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
@@ -842,7 +806,6 @@ const CandidatesMap = () => {
                   </div>
                 )}
 
-                {/* Образование */}
                 {viewingResumes[currentResumeIndex].education && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
@@ -855,7 +818,6 @@ const CandidatesMap = () => {
                   </div>
                 )}
 
-                {/* Портфолио */}
                 {viewingResumes[currentResumeIndex].portfolio && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
@@ -873,7 +835,6 @@ const CandidatesMap = () => {
                   </div>
                 )}
 
-                {/* Кнопки навигации и написать сообщение */}
                 <div className="pt-4 border-t border-dark-card">
                   <div className="flex gap-3 flex-wrap">
                     {viewingResumes.length > 1 && currentResumeIndex > 0 && (

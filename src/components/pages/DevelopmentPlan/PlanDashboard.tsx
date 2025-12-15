@@ -64,13 +64,11 @@ const PlanDashboard: React.FC = () => {
     }
   };
 
-  // Исправление бага с заблокированными шагами
   const handleFixUnlock = async () => {
     try {
       const { $api } = await import('../../../utils/axios.instance');
       const response = await $api.post('/development-plan/fix-unlock');
       console.log('[FixUnlock] Response:', response.data);
-      // Перезагружаем статус плана
       dispatch(fetchPlanStatus());
     } catch (error) {
       console.error('Error fixing unlock:', error);
@@ -99,7 +97,6 @@ const PlanDashboard: React.FC = () => {
       case 'roadmap':
         return '🗺️';
       case 'interview':
-        // Разные иконки для разных типов тренажера
         if (interviewType === 'practice') return '📝';
         if (interviewType === 'ai') return '🤖';
         if (interviewType === 'audio') return '🎧';
@@ -128,7 +125,6 @@ const PlanDashboard: React.FC = () => {
     }
   };
 
-  // Получить URL для шага
   const getStepUrl = (step: PlanStep): string | null => {
     switch (step.type) {
       case 'codebattle':
@@ -136,23 +132,20 @@ const PlanDashboard: React.FC = () => {
       case 'roadmap':
         return step.roadmapSlug ? `/roadmap/${step.roadmapSlug}` : '/roadmap';
       case 'interview':
-        // Перенаправляем на соответствующий тип тренажера
         if (step.interviewType === 'practice') return '/interview';
         if (step.interviewType === 'ai') return '/interview';
         if (step.interviewType === 'audio') return '/interview';
         return '/interview';
       case 'project':
-        return null; // Проекты пока не имеют страницы
+        return null;
       case 'course':
-        return null; // Курсы пока не имеют страницы
+        return null;
       default:
         return null;
     }
   };
 
-  // Обработчик клика на шаг
   const handleStepClick = (step: PlanStep) => {
-    // Не переходим для заблокированных шагов
     if (step.status === 'locked') return;
 
     const url = getStepUrl(step);
@@ -223,15 +216,12 @@ const PlanDashboard: React.FC = () => {
                 )}
                 {' '}{t('developmentPlan.sync', 'Синхронизировать')}
               </button>
-              {/* Кнопка для исправления разблокировки - показываем если есть проблемы */}
               {(() => {
-                // Проверяем есть ли roadmap шаги с полным прогрессом, но не completed
                 const hasRoadmapBug = steps?.some(
                   (s: PlanStep) => s.type === 'roadmap' &&
                   (s.currentProgress || 0) >= (s.requiredProgress || 100) &&
                   s.status !== 'completed'
                 );
-                // Или есть completed шаги и locked, но нет in_progress
                 const hasUnlockBug = stepsStats && stepsStats.completed > 0 && stepsStats.locked > 0 && stepsStats.inProgress === 0;
 
                 if (hasRoadmapBug || hasUnlockBug) {
@@ -265,7 +255,6 @@ const PlanDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Progress Bar */}
           <div className="mt-6">
             <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-400">
@@ -290,9 +279,7 @@ const PlanDashboard: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content - Steps */}
           <div className="lg:col-span-2">
-            {/* Current Step Highlight */}
             {currentStep && (
               <div className="bg-accent-cyan/10 border border-accent-cyan/30 rounded-xl p-6 mb-6">
                 <div className="flex items-center gap-2 text-accent-cyan text-sm font-medium mb-2">
@@ -389,7 +376,6 @@ const PlanDashboard: React.FC = () => {
               </div>
             )}
 
-            {/* All Steps */}
             <div className="bg-dark-surface rounded-xl p-6 border border-dark-card">
               <h2 className="text-lg font-semibold text-white mb-4">
                 {t('developmentPlan.planSteps', 'Шаги плана')}
@@ -466,9 +452,7 @@ const PlanDashboard: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    {/* Кнопка завершения для roadmap */}
                     {step.status === 'in_progress' && step.type !== 'codebattle' && step.type !== 'interview' && (
-                      // Для roadmap показываем кнопку только если прогресс >= 100%
                       step.type === 'roadmap' ? (
                         (step.currentProgress || 0) >= 100 && (
                           <button
@@ -494,7 +478,6 @@ const PlanDashboard: React.FC = () => {
                         </button>
                       )
                     )}
-                    {/* Иконка перехода для незаблокированных шагов */}
                     {step.status !== 'locked' && getStepUrl(step) && (
                       <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     )}
@@ -504,9 +487,7 @@ const PlanDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Skill Progress */}
             {skillProgress && Object.keys(skillProgress).length > 0 && (
               <div className="bg-dark-surface rounded-xl p-6 border border-dark-card">
                 <h2 className="text-lg font-semibold text-white mb-4">
@@ -541,7 +522,6 @@ const PlanDashboard: React.FC = () => {
               </div>
             )}
 
-            {/* Recommended Tasks */}
             {recommendedTasks.length > 0 && (
               <div className="bg-dark-surface rounded-xl p-6 border border-dark-card">
                 <h2 className="text-lg font-semibold text-white mb-4">
@@ -583,7 +563,6 @@ const PlanDashboard: React.FC = () => {
               </div>
             )}
 
-            {/* Actions */}
             <div className="bg-dark-surface rounded-xl p-6 border border-dark-card">
               <h2 className="text-lg font-semibold text-white mb-4">
                 {t('developmentPlan.actions', 'Действия')}

@@ -29,7 +29,6 @@ const CLICK_PHRASES_EN = [
   "Poo-poo-poo!",
 ];
 
-// Импорт видео (webm с прозрачным фоном)
 import idleVideo from "../../assets/mascot/idle.webm";
 import greetingVideo from "../../assets/mascot/greeting.webm";
 import thinkingVideo from "../../assets/mascot/thinking.webm";
@@ -37,7 +36,6 @@ import pointingVideo from "../../assets/mascot/pointing.webm";
 import celebrationVideo from "../../assets/mascot/celebration.webm";
 import sleepingVideo from "../../assets/mascot/sleeping.webm";
 
-// Маппинг состояний на видео
 const videoMap: Record<ParmaState, string> = {
   idle: idleVideo,
   greeting: greetingVideo,
@@ -47,21 +45,18 @@ const videoMap: Record<ParmaState, string> = {
   sleeping: sleepingVideo,
 };
 
-// Размеры маскота
 const sizeMap = {
   sm: { container: "w-24 h-24", video: "w-24 h-24", pixels: 96 },
   md: { container: "w-32 h-32", video: "w-32 h-32", pixels: 128 },
   lg: { container: "w-40 h-40", video: "w-40 h-40", pixels: 160 },
 };
 
-// Ключ для localStorage (кастомная позиция)
 const POSITION_STORAGE_KEY = "parma_custom_position";
 
 interface ParmaProps {
   className?: string;
 }
 
-// Загрузка позиции из localStorage
 const loadCustomPosition = (): { x: number; y: number } | null => {
   try {
     const saved = localStorage.getItem(POSITION_STORAGE_KEY);
@@ -74,7 +69,6 @@ const loadCustomPosition = (): { x: number; y: number } | null => {
   return null;
 };
 
-// Сохранение позиции в localStorage
 const saveCustomPosition = (position: { x: number; y: number } | null) => {
   try {
     if (position) {
@@ -153,7 +147,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
       .catch(console.error);
   }, [isRu]);
 
-  // Drag-and-drop состояние
   const [isDragging, setIsDragging] = useState(false);
   const [customPosition, setCustomPosition] = useState<{
     x: number;
@@ -166,20 +159,16 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
     elemY: number;
   } | null>(null);
 
-  // Для различения клика и drag
   const hasDraggedRef = useRef(false);
 
-  // Перезапуск видео при смене состояния
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.load();
       videoRef.current.play().catch(() => {
-        // Автоплей может быть заблокирован браузером
       });
     }
   }, [state]);
 
-  // Обработчик начала перетаскивания
   const handleDragStart = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       e.preventDefault();
@@ -200,7 +189,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
         elemY: rect.top,
       };
 
-      // Сбрасываем флаг перетаскивания
       hasDraggedRef.current = false;
 
       setIsDragging(true);
@@ -208,7 +196,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
     []
   );
 
-  // Обработчик движения при перетаскивании
   const handleDragMove = useCallback(
     (e: MouseEvent | TouchEvent) => {
       if (!isDragging || !dragStartRef.current) return;
@@ -219,7 +206,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
       const deltaX = clientX - dragStartRef.current.mouseX;
       const deltaY = clientY - dragStartRef.current.mouseY;
 
-      // Если сдвинули больше 5px - это drag, не клик
       if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
         hasDraggedRef.current = true;
       }
@@ -227,7 +213,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
       let newX = dragStartRef.current.elemX + deltaX;
       let newY = dragStartRef.current.elemY + deltaY;
 
-      // Ограничение в пределах экрана
       const mascotSize = sizeMap[settings.size].pixels;
       const maxX = window.innerWidth - mascotSize;
       const maxY = window.innerHeight - mascotSize;
@@ -240,14 +225,11 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
     [isDragging, settings.size]
   );
 
-  // Обработчик окончания перетаскивания
   const handleDragEnd = useCallback(() => {
     if (isDragging) {
-      // Если не было реального перетаскивания - это клик, говорим рандомную фразу!
       if (!hasDraggedRef.current) {
         playRandomPhrase();
       } else if (customPosition) {
-        // Было перетаскивание - сохраняем позицию
         saveCustomPosition(customPosition);
       }
     }
@@ -255,13 +237,11 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
     dragStartRef.current = null;
   }, [isDragging, customPosition]);
 
-  // Сброс позиции к дефолтной
   const resetPosition = useCallback(() => {
     setCustomPosition(null);
     saveCustomPosition(null);
   }, []);
 
-  // Подписка на события мыши/тача
   useEffect(() => {
     if (isDragging) {
       const handleMove = (e: MouseEvent | TouchEvent) => handleDragMove(e);
@@ -285,13 +265,9 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
 
   const { position, size } = settings;
 
-  // Если pointing - Парма должна быть слева (чтобы указывать на контент справа)
-  // При pointing игнорируем customPosition и всегда показываем слева
   const isPointing = state === "pointing";
   const effectivePosition = isPointing ? "bottom-left" : position;
 
-  // Определяем стиль позиционирования
-  // При pointing всегда слева, игнорируем customPosition
   const positionStyle: React.CSSProperties = (customPosition && !isPointing)
     ? {
         position: "fixed",
@@ -307,7 +283,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
         right: effectivePosition === "bottom-right" ? 16 : "auto",
       };
 
-  // Определяем позицию сообщения (левее или правее центра экрана)
   const isOnLeftSide = isPointing
     ? true
     : customPosition
@@ -322,9 +297,7 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Основной контейнер */}
       <div className="relative">
-        {/* Кнопки управления (появляются при наведении) */}
         {isHovered && !isDragging && !showAIChat && (
           <div className="absolute -top-2 -right-2 flex gap-1 z-10">
             <button
@@ -351,7 +324,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
           </div>
         )}
 
-        {/* Облачко с сообщением */}
         {message && settings.showTips && (
           <div
             className={`absolute bottom-full mb-2 min-w-max max-w-xs animate-fade-in ${
@@ -362,7 +334,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
               <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                 {message.text}
               </p>
-              {/* Хвостик облачка */}
               <div
                 className={`absolute -bottom-2 w-0 h-0
                            border-l-[8px] border-r-[8px] border-t-[8px]
@@ -373,7 +344,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
           </div>
         )}
 
-        {/* Видео маскота (перетаскивается зажатием) */}
         <div
           onMouseDown={handleDragStart}
           onTouchStart={handleDragStart}
@@ -396,7 +366,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
           />
         </div>
 
-        {/* Панель настроек */}
         {showSettings && (
           <div
             className={`absolute bottom-full mb-12 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 animate-fade-in ${
@@ -407,7 +376,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
               Настройки Пармы
             </h4>
 
-            {/* Размер */}
             <div className="mb-3">
               <label className="text-sm text-gray-600 dark:text-gray-400 block mb-1">
                 Размер
@@ -429,7 +397,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
               </div>
             </div>
 
-            {/* Позиция по умолчанию */}
             <div className="mb-3">
               <label className="text-sm text-gray-600 dark:text-gray-400 block mb-1">
                 Позиция по умолчанию
@@ -462,7 +429,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
                   Справа
                 </button>
               </div>
-              {/* Кнопка сброса позиции */}
               {customPosition && (
                 <button
                   onClick={resetPosition}
@@ -473,7 +439,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
               )}
             </div>
 
-            {/* Показывать подсказки */}
             <div className="flex items-center justify-between">
               <label className="text-sm text-gray-600 dark:text-gray-400">
                 Подсказки
@@ -494,7 +459,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
               </button>
             </div>
 
-            {/* Отключить */}
             <button
               onClick={() => {
                 updateSettings({ enabled: false });
@@ -507,7 +471,6 @@ export const Parma: React.FC<ParmaProps> = ({ className = "" }) => {
           </div>
         )}
 
-        {/* AI Chat Panel */}
         {showAIChat && (
           <div
             className={`absolute bottom-full mb-12 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 animate-fade-in ${

@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { $api } from '../../utils/axios.instance';
 
-// ==================== ТИПЫ ====================
-
 export interface PositionSkills {
   [key: string]: number;
 }
@@ -43,23 +41,20 @@ export interface PlanStep {
   targetValue?: number;
   weight: number;
 
-  // Для codebattle
   requiredTasks?: number;
   completedTasks?: number;
   codebattleFilter?: CodeBattleFilter;
   solvedTaskIds?: number[];
 
-  // Для roadmap
   roadmapId?: number;
   roadmapSlug?: string;
   requiredProgress?: number;
   currentProgress?: number;
 
-  // Для interview
   requiredSessions?: number;
   completedSessions?: number;
   interviewType?: 'practice' | 'ai' | 'audio' | 'any';
-  minPassPercentage?: number; // Минимум для засчитывания (по умолчанию 70%)
+  minPassPercentage?: number;
   sessionsByType?: {
     ai: number;
     audio: number;
@@ -79,7 +74,6 @@ export interface PlanStep {
     };
   };
 
-  // Статус
   status: 'locked' | 'unlocked' | 'in_progress' | 'completed';
   unlockedAt?: string;
   startedAt?: string;
@@ -169,29 +163,23 @@ export interface PositionGap {
 }
 
 interface DevelopmentPlanState {
-  // Позиции
   positions: Position[];
   positionsLoading: boolean;
   categories: { [key: string]: { title: string; icon: string; color: string } };
   levels: { [key: string]: { title: string; order: number; color: string } };
 
-  // Рекомендуемые позиции
   recommendedPositions: Position[];
 
-  // Анализ GAP
   positionGap: PositionGap | null;
   gapLoading: boolean;
 
-  // Активный план
   planStatus: PlanStatus | null;
   planLoading: boolean;
   syncLoading: boolean;
 
-  // Рекомендуемые задачи
   recommendedTasks: any[];
   tasksLoading: boolean;
 
-  // Ошибки
   error: string | null;
 }
 
@@ -211,9 +199,6 @@ const initialState: DevelopmentPlanState = {
   error: null,
 };
 
-// ==================== ASYNC THUNKS ====================
-
-// Получить все позиции
 export const fetchPositions = createAsyncThunk(
   'developmentPlan/fetchPositions',
   async (params: { category?: string; level?: string } = {}, { rejectWithValue }) => {
@@ -221,12 +206,11 @@ export const fetchPositions = createAsyncThunk(
       const { data } = await $api.get('/development-plan/positions', { params });
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Ошибка загрузки позиций');
+      return rejectWithValue(error.response?.data?.error || 'Error loading positions');
     }
   }
 );
 
-// Получить рекомендуемые позиции
 export const fetchRecommendedPositions = createAsyncThunk(
   'developmentPlan/fetchRecommendedPositions',
   async (limit: number = 6, { rejectWithValue }) => {
@@ -236,12 +220,11 @@ export const fetchRecommendedPositions = createAsyncThunk(
       });
       return data.positions;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Ошибка загрузки рекомендаций');
+      return rejectWithValue(error.response?.data?.error || 'Error loading recommendations');
     }
   }
 );
 
-// Получить GAP анализ для позиции
 export const fetchPositionGap = createAsyncThunk(
   'developmentPlan/fetchPositionGap',
   async (positionId: string, { rejectWithValue }) => {
@@ -249,12 +232,11 @@ export const fetchPositionGap = createAsyncThunk(
       const { data } = await $api.get(`/development-plan/positions/${positionId}/gap`);
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Ошибка анализа GAP');
+      return rejectWithValue(error.response?.data?.error || 'Error analyzing GAP');
     }
   }
 );
 
-// Создать план развития
 export const createPlan = createAsyncThunk(
   'developmentPlan/createPlan',
   async (targetPosition: string, { rejectWithValue }) => {
@@ -262,12 +244,11 @@ export const createPlan = createAsyncThunk(
       const { data } = await $api.post('/development-plan', { targetPosition });
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Ошибка создания плана');
+      return rejectWithValue(error.response?.data?.error || 'Error creating plan');
     }
   }
 );
 
-// Получить статус активного плана
 export const fetchPlanStatus = createAsyncThunk(
   'developmentPlan/fetchPlanStatus',
   async (lang: string = 'ru', { rejectWithValue }) => {
@@ -275,12 +256,11 @@ export const fetchPlanStatus = createAsyncThunk(
       const { data } = await $api.get('/development-plan/active', { params: { lang } });
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Ошибка загрузки плана');
+      return rejectWithValue(error.response?.data?.error || 'Error loading plan');
     }
   }
 );
 
-// Синхронизировать план
 export const syncPlan = createAsyncThunk(
   'developmentPlan/syncPlan',
   async (lang: string = 'ru', { rejectWithValue }) => {
@@ -288,12 +268,11 @@ export const syncPlan = createAsyncThunk(
       const { data } = await $api.post('/development-plan/sync', {}, { params: { lang } });
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Ошибка синхронизации');
+      return rejectWithValue(error.response?.data?.error || 'Synchronization error');
     }
   }
 );
 
-// Отметить шаг как выполненный
 export const completeStep = createAsyncThunk(
   'developmentPlan/completeStep',
   async (stepId: string, { rejectWithValue }) => {
@@ -301,12 +280,11 @@ export const completeStep = createAsyncThunk(
       const { data } = await $api.post(`/development-plan/steps/${stepId}/complete`);
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Ошибка завершения шага');
+      return rejectWithValue(error.response?.data?.error || 'Error completing step');
     }
   }
 );
 
-// Приостановить план
 export const pausePlan = createAsyncThunk(
   'developmentPlan/pausePlan',
   async (planId: number, { rejectWithValue }) => {
@@ -314,12 +292,11 @@ export const pausePlan = createAsyncThunk(
       const { data } = await $api.put(`/development-plan/${planId}/pause`);
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Ошибка приостановки');
+      return rejectWithValue(error.response?.data?.error || 'Error pausing plan');
     }
   }
 );
 
-// Возобновить план
 export const resumePlan = createAsyncThunk(
   'developmentPlan/resumePlan',
   async (planId: number, { rejectWithValue }) => {
@@ -327,12 +304,11 @@ export const resumePlan = createAsyncThunk(
       const { data } = await $api.put(`/development-plan/${planId}/resume`);
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Ошибка возобновления');
+      return rejectWithValue(error.response?.data?.error || 'Error resuming plan');
     }
   }
 );
 
-// Отменить план
 export const abandonPlan = createAsyncThunk(
   'developmentPlan/abandonPlan',
   async (planId: number, { rejectWithValue }) => {
@@ -340,12 +316,11 @@ export const abandonPlan = createAsyncThunk(
       const { data } = await $api.delete(`/development-plan/${planId}`);
       return data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Ошибка отмены плана');
+      return rejectWithValue(error.response?.data?.error || 'Error abandoning plan');
     }
   }
 );
 
-// Получить рекомендуемые задачи CodeBattle
 export const fetchRecommendedTasks = createAsyncThunk(
   'developmentPlan/fetchRecommendedTasks',
   async (limit: number = 10, { rejectWithValue }) => {
@@ -355,12 +330,10 @@ export const fetchRecommendedTasks = createAsyncThunk(
       });
       return data.tasks;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Ошибка загрузки задач');
+      return rejectWithValue(error.response?.data?.error || 'Error loading tasks');
     }
   }
 );
-
-// ==================== SLICE ====================
 
 const developmentPlanSlice = createSlice({
   name: 'developmentPlan',
@@ -429,7 +402,6 @@ const developmentPlanSlice = createSlice({
       })
       .addCase(createPlan.fulfilled, (state, action) => {
         state.planLoading = false;
-        // После создания плана нужно обновить статус
       })
       .addCase(createPlan.rejected, (state, action) => {
         state.planLoading = false;
@@ -470,12 +442,10 @@ const developmentPlanSlice = createSlice({
     builder
       .addCase(completeStep.fulfilled, (state, action) => {
         if (state.planStatus) {
-          // Обновляем все шаги из ответа сервера
           if (action.payload.steps) {
             state.planStatus.steps = action.payload.steps;
           }
 
-          // Обновляем общий прогресс
           if (state.planStatus.plan) {
             state.planStatus.plan.overallProgress = action.payload.overallProgress;
             if (action.payload.planStatus) {
@@ -483,20 +453,16 @@ const developmentPlanSlice = createSlice({
             }
           }
 
-          // Обновляем currentStep - теперь это nextStep (который стал in_progress)
           if (action.payload.nextStep) {
             state.planStatus.currentStep = action.payload.nextStep;
           } else if (state.planStatus.steps) {
-            // Fallback: ищем текущий активный шаг из массива
             const activeStep = state.planStatus.steps.find(s => s.status === 'in_progress') ||
                                state.planStatus.steps.find(s => s.status === 'unlocked');
             state.planStatus.currentStep = activeStep;
           } else {
-            // Если нет следующего шага - план завершён
             state.planStatus.currentStep = undefined;
           }
 
-          // Обновляем статистику шагов
           if (state.planStatus.stepsStats && state.planStatus.steps) {
             const steps = state.planStatus.steps;
             state.planStatus.stepsStats = {
@@ -510,7 +476,6 @@ const developmentPlanSlice = createSlice({
         }
       });
 
-    // pausePlan, resumePlan, abandonPlan
     builder
       .addCase(pausePlan.fulfilled, (state) => {
         if (state.planStatus?.plan) {

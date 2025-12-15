@@ -7,7 +7,6 @@ import type {
 } from '../types';
 
 export const interviewAPI = {
-  // Создать новую сессию интервью
   createSession: async (config: InterviewConfig, lang: string = 'ru'): Promise<{
     session: InterviewSession;
     firstMessage: InterviewMessage;
@@ -19,13 +18,11 @@ export const interviewAPI = {
     return response.data;
   },
 
-  // Получить сессию по ID с историей сообщений
   getSession: async (sessionId: number): Promise<InterviewSession> => {
     const response = await $api.get<InterviewSession>(`/interviews/${sessionId}`);
     return response.data;
   },
 
-  // Отправить сообщение пользователя и получить ответ AI
   sendMessage: async (
     sessionId: number,
     content: string,
@@ -41,7 +38,6 @@ export const interviewAPI = {
     return response.data;
   },
 
-  // Завершить интервью и получить итоговую оценку
   completeSession: async (sessionId: number, lang: string = 'ru'): Promise<InterviewFeedback> => {
     const response = await $api.post<InterviewFeedback>(
       `/interviews/${sessionId}/complete`,
@@ -50,13 +46,11 @@ export const interviewAPI = {
     return response.data;
   },
 
-  // Получить все интервью пользователя
   getUserInterviews: async (): Promise<InterviewSession[]> => {
     const response = await $api.get<InterviewSession[]>('/interviews/my');
     return response.data;
   },
 
-  // Удалить сессию
   deleteSession: async (sessionId: number): Promise<void> => {
     await $api.delete(`/interviews/${sessionId}`);
   },

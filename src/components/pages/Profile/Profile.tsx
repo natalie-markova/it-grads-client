@@ -87,10 +87,8 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
   useEffect(() => {
     if (profile) {
       setFormData(profile)
-      // Устанавливаем превью с правильным URL
       const photoUrl = profile.photo ? getImageUrl(profile.photo) : null
       setPhotoPreview(photoUrl)
-      // Прокручиваем к верху формы при открытии редактирования
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }, [profile])
@@ -98,18 +96,15 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Проверяем тип файла
       if (!file.type.startsWith('image/')) {
         toast.error(t('profile.errors.selectImage'))
         return
       }
-      // Проверяем размер файла (5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error(t('profile.errors.fileTooLarge'))
         return
       }
       setPhotoFile(file)
-      // Создаем превью
       const reader = new FileReader()
       reader.onloadend = () => {
         setPhotoPreview(reader.result as string)
@@ -126,39 +121,32 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
       const uploadFormData = new FormData()
       uploadFormData.append('photo', photoFile)
 
-      // Не указываем Content-Type явно - axios автоматически установит правильный заголовок с boundary
       const response = await $api.post('/user/upload-photo', uploadFormData)
 
       const data = response.data
       const photoUrl = data.photo || data.avatar || ''
-      
+
       console.log('Photo uploaded successfully, URL:', photoUrl)
-      
-      // Сохраняем URL загруженного фото
+
       setUploadedPhotoUrl(photoUrl)
-      
-      // Обновляем форму с новым URL фото (сохраняем относительный путь)
+
       setFormData(prev => {
         const updated = { ...prev, photo: photoUrl }
         console.log('Updated formData with photo:', updated.photo)
         return updated
       })
-      // Обновляем превью с правильным URL
       setPhotoPreview(getImageUrl(photoUrl))
       setPhotoFile(null)
       toast.success(t('profile.success.photoUploaded'))
     } catch (error: any) {
       console.error('Error uploading photo:', error)
-      
-      // Более детальная обработка ошибок
+
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
         toast.error(t('profile.errors.serverConnection'))
       } else if (error.response) {
-        // Сервер ответил с ошибкой
         const errorMessage = error.response?.data?.error || error.response?.data?.message || t('profile.errors.uploadError')
         toast.error(errorMessage)
       } else {
-        // Другая ошибка
         const errorMessage = error.message || t('profile.errors.uploadError')
         toast.error(errorMessage)
       }
@@ -169,7 +157,6 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Убеждаемся, что если фото было загружено, оно включено в данные для сохранения
     const dataToSave = {
       ...formData,
       photo: formData.photo || uploadedPhotoUrl || formData.photo || ''
@@ -180,7 +167,6 @@ const ProfileEditForm = ({ profile, onSave, onCancel }: ProfileEditFormProps) =>
     onSave(dataToSave)
   }
 
-  // Ref для input file чтобы программно открывать диалог
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const handleSelectFromSystem = () => {
@@ -399,7 +385,6 @@ const GraduateProfile = () => {
     variant: 'info'
   })
 
-  // Функция для формирования полного URL изображения
   const [applications, setApplications] = useState<Application[]>([])
   const [favorites, setFavorites] = useState<any[]>([])
   const [resumes, setResumes] = useState<Resume[]>([])
@@ -411,7 +396,6 @@ const GraduateProfile = () => {
             navigate('/login')
       return
           }
-    // Этот компонент только для выпускников
     if (user.role !== 'graduate') {
         navigate('/login')
       return
@@ -427,8 +411,7 @@ const GraduateProfile = () => {
     try {
       const response = await $api.get('/user/profile')
       const data = response.data
-      
-      // Правильно обрабатываем null значения - преобразуем их в пустые строки или массивы
+
       const loadedProfile = {
         photo: data.photo || data.avatar || '',
         lastName: data.lastName ?? '',
@@ -458,8 +441,6 @@ const GraduateProfile = () => {
       setProfile({...loadedProfile})
     } catch (error: any) {
       console.error('Error loading profile:', error)
-      // При ошибке загрузки показываем пустой профиль для заполнения
-      // Не показываем демо-данные, чтобы пользователь заполнил свои
       if (!profile) {
         setProfile({
           photo: '',
@@ -579,23 +560,16 @@ const GraduateProfile = () => {
   const handleSaveProfile = async (newProfile: Profile) => {
     if (!user) return
     try {
-      // Логика сохранения фото:
-      // 1. Если пользователь загрузил новое фото - используем его
-      // 2. Если фото есть в текущем профиле - сохраняем его
-      // 3. Никогда не отправляем пустое/null значение, чтобы не затереть существующее фото на сервере
-
-      // Определяем фото для сохранения
       const photoToSave = (newProfile.photo && newProfile.photo.trim() !== '')
         ? newProfile.photo
         : (profile?.photo && profile.photo.trim() !== '')
           ? profile.photo
-          : undefined // Не отправляем поле вообще если фото нет
+          : undefined
 
       console.log('Saving profile with photo:', photoToSave)
       console.log('newProfile.photo:', newProfile.photo)
       console.log('profile?.photo:', profile?.photo)
 
-      // Формируем объект для отправки, включая photo только если оно есть
       const dataToSend: Record<string, unknown> = {
         lastName: newProfile.lastName || null,
         firstName: newProfile.firstName || null,
@@ -614,14 +588,12 @@ const GraduateProfile = () => {
         projects: newProfile.projects || [],
       }
 
-      // Добавляем photo только если оно определено
       if (photoToSave !== undefined) {
         dataToSend.photo = photoToSave
       }
 
       const response = await $api.put('/user/profile', dataToSend)
-      
-      // Обновляем профиль сразу из ответа сервера
+
       const savedData = response.data
       const updatedProfile = {
         photo: savedData.photo || savedData.avatar || photoToSave || '',
@@ -644,10 +616,9 @@ const GraduateProfile = () => {
 
       setProfile({...updatedProfile})
       setIsEditingProfile(false)
-      
+
       toast.success(t('profile.success.profileUpdated'))
 
-      // Прокручиваем страницу к верху
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }, 100)
@@ -668,13 +639,10 @@ const GraduateProfile = () => {
       onConfirm: async () => {
         try {
           await $api.delete('/user/profile')
-          // Очищаем токен авторизации
           clearAccessToken()
-          // Сбрасываем состояние пользователя
           setUser(null)
           setProfile(null)
           toast.success(t('profile.success.profileDeleted'))
-          // Переходим на главную страницу
           navigate('/')
         } catch (error: any) {
           console.error('Error deleting profile:', error)
@@ -737,11 +705,9 @@ const GraduateProfile = () => {
   useScrollAnimation()
 
   const [searchParams] = useSearchParams()
-  // Читаем активную вкладку напрямую из URL
   const activeTab = searchParams.get('tab') || 'profile'
 
   const handleTabChange = (tab: string) => {
-    // Мгновенный переход по нужному URL
     navigate(`/profile/graduate?tab=${tab}`, { replace: true })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -765,7 +731,6 @@ const GraduateProfile = () => {
                   <button
                     onClick={() => {
                       setIsEditingProfile(true)
-                      // Прокручиваем к верху страницы при открытии редактирования
                       setTimeout(() => {
                         window.scrollTo({ top: 0, behavior: 'smooth' })
                       }, 100)
@@ -1019,7 +984,6 @@ const GraduateProfile = () => {
               <button
                 onClick={() => {
                   setIsEditingProfile(true)
-                  // Прокручиваем к верху страницы при открытии редактирования
                   setTimeout(() => {
                     window.scrollTo({ top: 0, behavior: 'smooth' })
                   }, 100)
@@ -1033,7 +997,6 @@ const GraduateProfile = () => {
         </Section>
         )}
 
-        {/* Change Password Section - только на вкладке Профиль */}
         {activeTab === 'profile' && (
           <Section key="password" title="" className="bg-dark-bg py-0 scroll-animate-item">
             <ChangePassword />
@@ -1044,7 +1007,6 @@ const GraduateProfile = () => {
         {activeTab === 'radar' && (
           <Section key="radar" title={t('profile.skillsRadar')} subtitle={t('skills.autoSubtitle')} className="bg-dark-bg py-0 scroll-animate-item">
             <div className="space-y-6">
-              {/* Tab switcher */}
               <div className="flex gap-2 justify-center">
                 <button
                   onClick={() => setShowManualRadar(false)}
@@ -1068,7 +1030,6 @@ const GraduateProfile = () => {
                 </button>
               </div>
 
-              {/* Info banner for auto radar */}
               {!showManualRadar && (
                 <div className="bg-gradient-to-r from-accent-cyan/10 to-accent-blue/10 border border-accent-cyan/30 rounded-lg p-4">
                   <p className="text-gray-300 text-sm">
@@ -1084,7 +1045,6 @@ const GraduateProfile = () => {
                 </div>
               )}
 
-              {/* Radar */}
               {showManualRadar ? (
                 user && <SkillsRadarCompact user={user} />
               ) : (

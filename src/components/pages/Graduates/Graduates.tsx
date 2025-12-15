@@ -16,8 +16,7 @@ const Graduates = () => {
     try {
       setIsLoading(true)
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-      
-      // Пока загружаем всех выпускников (в будущем можно добавить фильтрацию на бэкенде)
+
       const response = await fetch(`${apiUrl}/graduates`, {
         credentials: 'include'
       })
@@ -44,13 +43,11 @@ const Graduates = () => {
           employmentType: grad.employmentType || grad.employment_type || [],
         })))
       } else if (response.status === 404) {
-        // Эндпоинт не найден - показываем пустой список
         console.log('Graduates endpoint not found, showing empty list')
         setGraduates([])
       }
     } catch (error) {
       console.error('Error loading graduates:', error)
-      // В случае ошибки показываем пустой список
       setGraduates([])
     } finally {
       setIsLoading(false)

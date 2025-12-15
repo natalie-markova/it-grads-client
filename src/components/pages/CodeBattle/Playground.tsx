@@ -18,7 +18,6 @@ const difficultyColors: Record<string, string> = {
   hard: 'bg-red-500/20 text-red-400 border-red-500/30'
 };
 
-// Время в зависимости от сложности задачи
 const difficultyTime: Record<string, { time: number; label: string }> = {
   easy: { time: 180, label: '3 мин' },
   medium: { time: 300, label: '5 мин' },
@@ -91,7 +90,6 @@ export default function Playground() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          // Отмечаем что время истекло
           timeExpiredRef.current = true;
           toast.error('⏱ Время истекло! Отправляем ваше решение...', { duration: 3000 });
           return 0;
@@ -103,7 +101,6 @@ export default function Playground() {
     return () => clearInterval(timer);
   }, [gameStarted, timeLeft > 0]);
 
-  // Автоматическая отправка при истечении времени
   useEffect(() => {
     if (timeExpiredRef.current && !submitting && code.trim() && session) {
       timeExpiredRef.current = false;
@@ -188,7 +185,6 @@ export default function Playground() {
           setCode(sessionData.starterCode);
         }
       }
-      // Время зависит от сложности задачи
       const taskDifficulty = task.difficulty as 'easy' | 'medium' | 'hard';
       setTimeLeft(difficultyTime[taskDifficulty]?.time || 300);
       setGameStarted(true);
@@ -221,13 +217,11 @@ export default function Playground() {
     setActiveTab('output');
 
     try {
-      // Запускаем пробное тестирование (только видимые тесты)
       const result = await testSolution(session.id, {
         code,
         language: selectedLanguage
       });
 
-      // Сохраняем результаты тестов для отображения (маппим к TestResult формату)
       setTestResults(result.testResults.map(r => ({
         ...r,
         expectedOutput: r.expected,
@@ -236,7 +230,6 @@ export default function Playground() {
         memory: 0
       })) as TestResult[]);
 
-      // Формируем вывод (с защитой от null/undefined)
       const execTime = result.executionTime ?? 0;
       const memUsed = result.memoryUsed ?? 0;
       const outputText = `Пробное тестирование (видимые тесты):\n` +
@@ -289,16 +282,13 @@ export default function Playground() {
       setSubmitResult(result);
       setTestResults(result.results);
 
-      // Завершаем игру и показываем экран результатов
       setGameStarted(false);
       setGameFinished(true);
       setTimeLeft(0);
 
       if (result.solved) {
-        // Обновляем сессию
         setSession((prev) => prev ? { ...prev, solved: true, status: 'completed' } : null);
 
-        // Показываем результат
         if (mode === 'vs_ai' && result.beatAi !== undefined) {
           if (result.beatAi) {
             toast.success('🎉 Поздравляем! Вы победили AI!', { duration: 5000 });
@@ -365,7 +355,6 @@ export default function Playground() {
     );
   }
 
-  // Экран результатов после завершения игры
   if (gameFinished && submitResult) {
     return (
       <div className="min-h-screen bg-dark-bg text-white">
@@ -549,7 +538,6 @@ export default function Playground() {
     );
   }
 
-  // Экран подготовки к игре
   if (!gameStarted) {
     return (
       <div className="min-h-screen bg-dark-bg text-white">
@@ -836,7 +824,6 @@ export default function Playground() {
           <div className="flex-1 overflow-auto p-4 custom-scrollbar">
             {activeTab === 'description' && (
               <div className="prose prose-invert max-w-none overflow-hidden">
-                {/* Заголовок и сложность задачи */}
                 <div className="flex items-start justify-between gap-4 mb-4 not-prose">
                   <h2 className="text-xl font-bold break-words flex-1 min-w-0">{task.title}</h2>
                   <span className={`px-2 py-1 rounded text-xs border flex-shrink-0 ${difficultyColors[task.difficulty]}`}>
@@ -844,12 +831,10 @@ export default function Playground() {
                   </span>
                 </div>
 
-                {/* Описание задачи */}
                 <div className="mb-6 overflow-hidden break-words">
                   <ReactMarkdown>{task.description || 'Описание задачи недоступно'}</ReactMarkdown>
                 </div>
 
-                {/* Примеры тестов */}
                 <div className="mt-6 not-prose">
                   <h4 className="text-sm font-semibold text-gray-400 mb-2">Примеры тестов:</h4>
                   {task.testCases && task.testCases.filter(tc => !tc.isHidden).length > 0 ? (
@@ -921,8 +906,6 @@ export default function Playground() {
                         </div>
                       )}
 
-                      {/* VS AI Result - Real AI Battle */}
-                      {/* Победа: beatAi === true */}
                       {mode === 'vs_ai' && submitResult.beatAi === true && (
                         <div className="mt-4 p-4 rounded-lg bg-green-500/20 border border-green-500/50">
                           <div className="flex items-center justify-between mb-3">
@@ -989,7 +972,6 @@ export default function Playground() {
                         </div>
                       )}
 
-                      {/* Поражение: beatAi === false (AI решил, игрок нет или медленнее) */}
                       {mode === 'vs_ai' && submitResult.beatAi === false && (
                         <div className="mt-4 p-4 rounded-lg bg-red-500/20 border border-red-500/50">
                           <div className="flex items-center justify-between mb-3">
@@ -1056,7 +1038,6 @@ export default function Playground() {
                         </div>
                       )}
 
-                      {/* Ожидание результата: beatAi === null (AI ещё думает, игрок не решил) */}
                       {mode === 'vs_ai' && submitResult.beatAi === null && !submitResult.solved && (
                         <div className="mt-4 p-4 rounded-lg bg-yellow-500/20 border border-yellow-500/50">
                           <div className="flex items-center justify-between">

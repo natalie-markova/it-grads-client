@@ -194,21 +194,17 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
         const response = await $api.get(`/skills/radar/${actualUserId}`)
         const data = response.data
 
-        // Если получили массив навыков, преобразуем в нужный формат
         if (Array.isArray(data.skills)) {
           const skillsMap: Record<string, Record<string, number>> = {}
           SKILL_CATEGORIES.forEach(category => {
             skillsMap[category.name] = {}
             category.skills.forEach(skill => {
-              // Проверяем, есть ли этот навык в массиве
               const hasSkill = data.skills.includes(skill.name)
-              // Если есть, ставим уровень 3 (средний), иначе 0
               skillsMap[category.name][skill.name] = hasSkill ? 3 : 0
             })
           })
           setSkills(skillsMap)
         } else {
-          // Старый формат с детальными уровнями
           const skillsMap: Record<string, Record<string, number>> = {}
           data.forEach((item: Skill & { skill: string }) => {
             if (!skillsMap[item.category]) {
@@ -269,16 +265,13 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
     const numCategories = SKILL_CATEGORIES.length
     const angleStep = (2 * Math.PI) / numCategories
 
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    // Draw background circle
     ctx.fillStyle = '#1a1a1a'
     ctx.beginPath()
     ctx.arc(centerX, centerY, outerRadius + 10, 0, 2 * Math.PI)
     ctx.fill()
 
-    // Draw inner circle (center)
     ctx.fillStyle = '#0a0a0a'
     ctx.beginPath()
     ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI)
@@ -287,7 +280,6 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
     ctx.lineWidth = 2
     ctx.stroke()
 
-    // Draw category sectors
     SKILL_CATEGORIES.forEach((category, index) => {
       const average = getCategoryAverage(category.name)
       const normalizedValue = Math.max(0.1, average / 5)
@@ -296,7 +288,6 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
       const startAngle = index * angleStep - Math.PI / 2
       const endAngle = (index + 1) * angleStep - Math.PI / 2
 
-      // Create gradient for each sector
       const gradient = ctx.createLinearGradient(
         centerX + Math.cos(startAngle) * innerRadius,
         centerY + Math.sin(startAngle) * innerRadius,
@@ -307,7 +298,6 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
       gradient.addColorStop(0, colors[colorIndex].start + '80')
       gradient.addColorStop(1, colors[colorIndex].end + 'CC')
 
-      // Draw sector
       ctx.fillStyle = gradient
       ctx.beginPath()
       ctx.moveTo(centerX, centerY)
@@ -316,19 +306,16 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
       ctx.closePath()
       ctx.fill()
 
-      // Draw sector border
       ctx.strokeStyle = colors[colorIndex].start
       ctx.lineWidth = 2
       ctx.beginPath()
       ctx.arc(centerX, centerY, sectorRadius, startAngle, endAngle)
       ctx.stroke()
 
-      // Draw inner border
       ctx.beginPath()
       ctx.arc(centerX, centerY, innerRadius, startAngle, endAngle)
       ctx.stroke()
 
-      // Draw radial lines
       ctx.strokeStyle = '#2a2a2a'
       ctx.lineWidth = 1
       ctx.beginPath()
@@ -342,7 +329,6 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
       )
       ctx.stroke()
 
-      // Draw average value inside sector
       if (average > 0) {
         const labelAngle = (startAngle + endAngle) / 2
         ctx.fillStyle = colors[colorIndex].start
@@ -353,7 +339,6 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
       }
     })
 
-    // Draw center text
     ctx.fillStyle = '#ffffff'
     ctx.font = 'bold 18px "Segoe UI"'
     ctx.textAlign = 'center'
@@ -380,7 +365,6 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
     }
 
     try {
-      // Сохраняем снимок canvas как изображение
       const canvas = canvasRef.current
       let radarImage = ''
       if (canvas) {
@@ -401,7 +385,6 @@ const SkillsRadar = ({ userId, user, onSave, redirectToJobs = false }: SkillsRad
         onSave(skillsArray)
       }
 
-      // Перенаправляем на страницу вакансий, если указано
       if (redirectToJobs) {
         toast.success(t('toasts.redirectToVacancies'))
         setTimeout(() => {

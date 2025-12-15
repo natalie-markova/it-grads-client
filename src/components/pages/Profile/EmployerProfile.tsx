@@ -114,7 +114,6 @@ const EmployerProfile = () => {
             navigate('/login')
       return
           }
-    // Этот компонент только для работодателей
     if (user.role !== 'employer') {
         navigate('/login')
       return
@@ -123,7 +122,6 @@ const EmployerProfile = () => {
       loadApplications()
   }, [user])
 
-  // Инициализируем avatarPreview при открытии редактирования
   useEffect(() => {
     if (isEditing && profile && !avatarPreview && !avatarFile) {
       setAvatarPreview(profile.avatar ? getImageUrl(profile.avatar) : null)
@@ -161,24 +159,14 @@ const EmployerProfile = () => {
     if (!user) return
 
     try {
-      // Логика сохранения аватара:
-      // 1. Если пользователь загрузил новый аватар - используем его (formData.avatar)
-      // 2. Если аватар есть в текущем профиле - сохраняем его
-      // 3. Никогда не отправляем пустое значение, чтобы не затереть существующий аватар на сервере
-
-      // Определяем аватар для сохранения (игнорируем data URL превью)
       let avatarToSave: string | undefined = undefined
 
       if (formData.avatar && formData.avatar.trim() !== '' && !formData.avatar.startsWith('data:')) {
-        // Новый аватар загружен (URL от сервера)
         avatarToSave = formData.avatar
       } else if (profile?.avatar && profile.avatar.trim() !== '') {
-        // Сохраняем существующий аватар
         avatarToSave = profile.avatar
       }
-      // Если avatarToSave остался undefined - поле avatar не отправляем
 
-      // Формируем данные, не включая avatar если его нет
       const dataToSave: Record<string, unknown> = {
         companyName: formData.companyName,
         companyDescription: formData.companyDescription,
@@ -190,7 +178,6 @@ const EmployerProfile = () => {
         email: formData.email,
       }
 
-      // Добавляем avatar только если он определён
       if (avatarToSave !== undefined) {
         dataToSave.avatar = avatarToSave
       }
@@ -198,7 +185,6 @@ const EmployerProfile = () => {
       console.log('Saving employer profile, avatar:', avatarToSave)
 
       const response = await $api.put('/user/profile', dataToSave)
-      // Обновляем профиль из ответа сервера, чтобы получить актуальные данные
       if (response.data) {
         const profileData: EmployerProfileData = {
           companyName: response.data.companyName || '',
@@ -222,8 +208,7 @@ const EmployerProfile = () => {
       toast.success(t('employerProfile.profileUpdated'))
     } catch (error: any) {
       console.error('Error saving profile:', error)
-      
-      // Обработка различных типов ошибок
+
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
         toast.error(t('employerProfile.connectionError'))
       } else if (error.response?.status === 401) {
@@ -234,7 +219,6 @@ const EmployerProfile = () => {
         const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || t('employerProfile.saveError')
         toast.error(errorMessage)
       }
-      // Не закрываем форму редактирования при ошибке, чтобы пользователь мог исправить данные
     }
   }
 
@@ -248,18 +232,15 @@ const EmployerProfile = () => {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Проверяем тип файла
       if (!file.type.startsWith('image/')) {
         toast.error(t('employerProfile.selectImageFile'))
         return
       }
-      // Проверяем размер файла (5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error(t('employerProfile.fileSizeLimit'))
         return
       }
       setAvatarFile(file)
-      // Создаем превью
       const reader = new FileReader()
       reader.onloadend = () => {
         setAvatarPreview(reader.result as string)
@@ -280,8 +261,7 @@ const EmployerProfile = () => {
 
       const data = response.data
       const avatarUrl = data.photo || data.avatar || ''
-      
-      // Обновляем форму с новым URL аватара
+
       setFormData(prev => ({
         ...prev,
         avatar: avatarUrl
@@ -292,7 +272,6 @@ const EmployerProfile = () => {
     } catch (error: any) {
       console.error('Error uploading avatar:', error)
 
-      // Более детальная обработка ошибок
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
         toast.error(t('employerProfile.connectionError'))
       } else if (error.response) {
@@ -328,13 +307,10 @@ const EmployerProfile = () => {
       onConfirm: async () => {
         try {
           await $api.delete('/user/profile')
-          // Очищаем токен авторизации
           clearAccessToken()
-          // Сбрасываем состояние пользователя
           setUser(null)
           setProfile(null)
           toast.success(t('profile.success.profileDeleted'))
-          // Переходим на главную страницу
           navigate('/')
         } catch (error: any) {
           console.error('Error deleting profile:', error)
@@ -727,7 +703,6 @@ const EmployerProfile = () => {
                 </div>
               </div>
 
-              {/* Empty State */}
               {!profile.companyName && !profile.companyDescription && (
                 <div className="text-center py-12">
                   <Building2 className="h-16 w-16 text-gray-600 mx-auto mb-4" />
@@ -885,11 +860,9 @@ const EmployerProfile = () => {
           </div>
         )}
 
-        {/* Change Password Section - только на вкладке Профиль */}
         {activeTab === 'profile' && <ChangePassword />}
       </div>
 
-      {/* Модальное окно просмотра резюме */}
       {showResumeModal && viewingResumes.length > 0 && (
         <div 
           className="fixed inset-0 bg-black/75 flex items-center justify-center z-[100] p-4"
@@ -917,7 +890,6 @@ const EmployerProfile = () => {
                 </button>
               </div>
 
-              {/* Счетчик резюме */}
               {viewingResumes.length > 1 && (
                 <div className="mb-6 pb-4 border-b border-dark-card">
                   <div className="text-sm text-gray-400">
@@ -926,9 +898,7 @@ const EmployerProfile = () => {
                 </div>
               )}
 
-              {/* Содержимое резюме */}
               <div className="space-y-6">
-                {/* Описание */}
                 {viewingResumes[currentResumeIndex].description && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3">{t('employerProfile.description')}</h3>
@@ -938,7 +908,6 @@ const EmployerProfile = () => {
                   </div>
                 )}
 
-                {/* Основная информация */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {viewingResumes[currentResumeIndex].location && (
                     <div className="flex items-center gap-2 text-gray-300">
@@ -959,7 +928,6 @@ const EmployerProfile = () => {
                   )}
                 </div>
 
-                {/* Навыки */}
                 {viewingResumes[currentResumeIndex].skillsArray && viewingResumes[currentResumeIndex].skillsArray.length > 0 && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3">{t('employerProfile.skills')}</h3>
@@ -976,7 +944,6 @@ const EmployerProfile = () => {
                   </div>
                 )}
 
-                {/* Опыт работы */}
                 {viewingResumes[currentResumeIndex].experience && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
@@ -989,7 +956,6 @@ const EmployerProfile = () => {
                   </div>
                 )}
 
-                {/* Образование */}
                 {viewingResumes[currentResumeIndex].education && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
@@ -1002,7 +968,6 @@ const EmployerProfile = () => {
                   </div>
                 )}
 
-                {/* Портфолио */}
                 {viewingResumes[currentResumeIndex].portfolio && (
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
@@ -1020,7 +985,6 @@ const EmployerProfile = () => {
                   </div>
                 )}
 
-                {/* Кнопки навигации и написать сообщение */}
                 <div className="pt-4 border-t border-dark-card">
                   <div className="flex gap-3 flex-wrap">
                     {viewingResumes.length > 1 && currentResumeIndex > 0 && (
@@ -1062,7 +1026,6 @@ const EmployerProfile = () => {
         </div>
       )}
 
-      {/* Модальное окно подтверждения */}
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}

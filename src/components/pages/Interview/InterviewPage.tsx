@@ -22,14 +22,12 @@ export default function InterviewPage() {
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Автоскролл только при первой загрузке
   useEffect(() => {
     if (messages.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }
   }, []);
 
-  // Загрузка истории сообщений при монтировании
   useEffect(() => {
     loadSession();
   }, [sessionId]);
@@ -67,7 +65,6 @@ export default function InterviewPage() {
         i18n.language
       );
 
-      // Добавляем оба сообщения в историю
       setMessages(prev => [...prev, userMessage, aiMessage]);
     } catch (err) {
       setError(t('aiInterview.errors.sendMessageFailed'));
@@ -108,7 +105,6 @@ export default function InterviewPage() {
         className="bg-dark-bg py-0 scroll-animate-item"
       >
         <Card className="max-w-4xl mx-auto scroll-animate-item" hover={false}>
-          {/* Сообщения об ошибках */}
           {error && (
             <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg flex items-center gap-2 text-red-400">
               <XCircle className="h-5 w-5" />
@@ -116,7 +112,6 @@ export default function InterviewPage() {
             </div>
           )}
 
-          {/* История сообщений */}
           <div className="mb-6 bg-dark-surface rounded-lg border border-dark-card overflow-hidden">
             <div className="p-4 border-b border-dark-card bg-dark-bg/50 flex items-center gap-2">
               <MessageCircle className="h-5 w-5 text-accent-cyan" />
@@ -148,10 +143,8 @@ export default function InterviewPage() {
             </div>
           </div>
 
-          {/* Поле ввода */}
           <ChatInput onSend={handleSendMessage} disabled={isSending} />
 
-          {/* Кнопки управления */}
           <div className="flex justify-between items-center pt-6 border-t border-dark-surface mt-6">
             <button
               onClick={() => navigate('/interview/ai/setup')}

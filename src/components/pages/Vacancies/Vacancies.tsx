@@ -53,7 +53,6 @@ const Vacancies = () => {
       const isFavorite = favoriteIds.has(vacancyId);
 
       if (isFavorite) {
-        // Удаляем из избранного
         await $api.delete(`/favorites/${vacancyId}`);
         setFavoriteIds(prev => {
           const newSet = new Set(prev);
@@ -62,7 +61,6 @@ const Vacancies = () => {
         });
         toast.success(t('toasts.removedFromFavorites'));
       } else {
-        // Добавляем в избранное
         await $api.post('/favorites', { vacancyId });
         setFavoriteIds(prev => new Set(prev).add(vacancyId));
         toast.success(t('toasts.addedToFavorites'));
@@ -95,7 +93,6 @@ const Vacancies = () => {
 
   const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Разрешаем пустую строку для очистки поля
     if (value === '') {
       setFormData({
         ...formData,
@@ -103,7 +100,6 @@ const Vacancies = () => {
       });
       return;
     }
-    // Проверяем, что значение - целое положительное число
     const numValue = parseFloat(value);
     if (!isNaN(numValue) && numValue >= 0 && Number.isInteger(numValue)) {
       setFormData({
@@ -111,7 +107,6 @@ const Vacancies = () => {
         [e.target.name]: value
       });
     }
-    // Если значение невалидно (отрицательное или дробное), просто игнорируем его
   };
 
   const handleCreateVacancy = async (e: React.FormEvent) => {

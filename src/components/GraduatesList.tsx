@@ -35,14 +35,12 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [showFilterWizard, setShowFilterWizard] = useState(false)
   const [selectedGraduate, setSelectedGraduate] = useState<Graduate | null>(null)
-  
-  // Функция для получения случайных выпускников (если нет фильтров)
+
   const getRandomGraduates = (grads: Graduate[], count: number = 10): Graduate[] => {
     const shuffled = [...grads].sort(() => 0.5 - Math.random())
     return shuffled.slice(0, count)
   }
 
-  // Scroll-driven animation setup
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -96,7 +94,6 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
     }
   }
 
-  // Определяем, применены ли фильтры
   const hasActiveFilters = 
     filters.workFormat.length > 0 || 
     filters.region !== '' || 
@@ -109,7 +106,6 @@ const GraduatesList = ({ graduates, onFiltersChange }: GraduatesListProps) => {
     filters.englishLevel !== '' ||
     searchTerm !== ''
 
-  // Если нет фильтров, показываем случайных выпускников
   const graduatesToFilter = hasActiveFilters ? graduates : getRandomGraduates(graduates, 10)
 
   const filteredGraduates = graduatesToFilter.filter(graduate => {

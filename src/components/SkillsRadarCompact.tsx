@@ -133,7 +133,6 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
         const response = await $api.get(`/skills/radar/${actualUserId}`)
         const data = response.data
 
-        // Инициализируем skillsMap со всеми категориями
         const skillsMap: Record<string, Record<string, number>> = {}
         SKILL_CATEGORIES.forEach(category => {
           skillsMap[category.name] = {}
@@ -142,11 +141,9 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
           })
         })
 
-        // Проверяем новый формат с уровнями (массив объектов {category, skill, level})
         const skillsData = data.skillsWithLevels || data.skills
 
         if (Array.isArray(skillsData) && skillsData.length > 0) {
-          // Новый формат - массив объектов с category, skill, level
           if (typeof skillsData[0] === 'object' && skillsData[0].level !== undefined) {
             skillsData.forEach((item: Skill) => {
               if (skillsMap[item.category] && item.skill in skillsMap[item.category]) {
@@ -154,12 +151,10 @@ const SkillsRadarCompact = ({ userId, user, onSave }: SkillsRadarCompactProps) =
               }
             })
           } else {
-            // Старый формат - массив строк (названия навыков)
             skillsData.forEach((skillName: string) => {
               SKILL_CATEGORIES.forEach(category => {
                 if (category.skills.includes(skillName)) {
-                  skillsMap[category.name][skillName] = 3  // Уровень по умолчанию для старого формата
-                }
+                  skillsMap[category.name][skillName] = 3
               })
             })
           }

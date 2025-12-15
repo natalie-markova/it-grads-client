@@ -63,7 +63,6 @@ const Jobs = () => {
       const isFavorite = favoriteIds.has(vacancyId)
 
       if (isFavorite) {
-        // Удаляем из избранного
         await $api.delete(`/favorites/${vacancyId}`)
         setFavoriteIds(prev => {
           const newSet = new Set(prev)
@@ -72,7 +71,6 @@ const Jobs = () => {
         })
         toast.success(t('vacancies.success.removedFromFavorites'))
       } else {
-        // Добавляем в избранное
         await $api.post('/favorites', { vacancyId })
         setFavoriteIds(prev => new Set(prev).add(vacancyId))
         toast.success(t('vacancies.success.addedToFavorites'))
@@ -88,7 +86,6 @@ const Jobs = () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
-      // Если пользователь авторизован и выбраны рекомендованные вакансии
       const endpoint = user && showRecommended
         ? `${apiUrl}/vacancies/recommended/${user.id}`
         : `${apiUrl}/vacancies`;
@@ -122,16 +119,13 @@ const Jobs = () => {
           employerId: job.employerId || (job.employer ? job.employer.id : undefined)
         })))
       } else if (response.status === 404) {
-        // Эндпоинт не найден - показываем пустой список
         console.log('Jobs endpoint not found, showing empty list')
         setJobs([])
       } else if (response.status === 200 && data.length === 0 && showRecommended) {
-        // Пустой массив для рекомендованных вакансий
         setJobs([])
       }
     } catch (error) {
       console.error('Error loading jobs:', error)
-      // В случае ошибки показываем пустой список
       setJobs([])
     }
   }

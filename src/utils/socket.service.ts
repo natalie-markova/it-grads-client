@@ -3,7 +3,6 @@ import { io, Socket } from 'socket.io-client';
 class SocketService {
   private socket: Socket | null = null;
 
-  // Инициализация подключения
   connect(token: string): void {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
     const socketUrl = API_URL.replace('/api', '');
@@ -16,19 +15,18 @@ class SocketService {
     });
 
     this.socket.on('connect', () => {
-      console.log('✅ WebSocket подключен:', this.socket?.id);
+      console.log('✅ WebSocket connected:', this.socket?.id);
     });
 
     this.socket.on('disconnect', () => {
-      console.log('❌ WebSocket отключен');
+      console.log('❌ WebSocket disconnected');
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('WebSocket ошибка подключения:', error);
+      console.error('WebSocket connection error:', error);
     });
   }
 
-  // Отключение
   disconnect(): void {
     if (this.socket) {
       this.socket.disconnect();
@@ -36,84 +34,72 @@ class SocketService {
     }
   }
 
-  // Присоединиться к чату
   joinChat(chatId: number): void {
     if (this.socket) {
       this.socket.emit('join-chat', chatId);
     }
   }
 
-  // Покинуть чат
   leaveChat(chatId: number): void {
     if (this.socket) {
       this.socket.emit('leave-chat', chatId);
     }
   }
 
-  // Отправить сообщение
   sendMessage(chatId: number, message: string): void {
     if (this.socket) {
       this.socket.emit('send-message', { chatId, message });
     }
   }
 
-  // Подписаться на новые сообщения
   onNewMessage(callback: (message: any) => void): void {
     if (this.socket) {
       this.socket.on('new-message', callback);
     }
   }
 
-  // Подписаться на уведомления о непрочитанных сообщениях
   onNotificationUnread(callback: (data: any) => void): void {
     if (this.socket) {
       this.socket.on('notification-unread', callback);
     }
   }
 
-  // Подписаться на событие прочтения сообщений
   onMessagesRead(callback: (data: any) => void): void {
     if (this.socket) {
       this.socket.on('messages-read', callback);
     }
   }
 
-  // Подписаться на событие удаления чата
   onChatDeleted(callback: (data: { chatId: number }) => void): void {
     if (this.socket) {
       this.socket.on('chat-deleted', callback);
     }
   }
 
-  // Подписаться на событие создания чата
   onChatCreated(callback: (data: { chat: any }) => void): void {
     if (this.socket) {
       this.socket.on('chat-created', callback);
     }
   }
 
-  // Подписаться на ошибки отправки сообщений
   onMessageError(callback: (error: any) => void): void {
     if (this.socket) {
       this.socket.on('message-error', callback);
     }
   }
 
-  // Подписаться на ошибки присоединения к чату
   onJoinChatError(callback: (error: any) => void): void {
     if (this.socket) {
       this.socket.on('join-chat-error', callback);
     }
   }
 
-  // Отписаться от событий
   off(event: string): void {
     if (this.socket) {
       this.socket.off(event);
     }
   }
 
-  // Проверка подключения
   isConnected(): boolean {
     return this.socket?.connected || false;
   }

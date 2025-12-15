@@ -1,32 +1,28 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-// Типы состояний Пармы
 export type ParmaState =
-  | 'idle'        // Спокойно стоит
-  | 'greeting'    // Приветствие
-  | 'thinking'    // Думает
-  | 'pointing'    // Указывает
-  | 'celebration' // Празднует
-  | 'sleeping';   // Спит
+  | 'idle'
+  | 'greeting'
+  | 'thinking'
+  | 'pointing'
+  | 'celebration'
+  | 'sleeping';
 
-// Сообщение маскота
 export interface ParmaMessage {
   text: string;
-  duration?: number; // 0 = пока не сменится состояние
+  duration?: number;
 }
 
-// Настройки маскота
 export interface ParmaSettings {
   enabled: boolean;
   position: 'bottom-right' | 'bottom-left';
   size: 'sm' | 'md' | 'lg';
   soundEnabled: boolean;
   showTips: boolean;
-  idleTimeout: number; // мс до засыпания
+  idleTimeout: number;
 }
 
-// Шаг тура
 export interface TourStepData {
   id: string;
   title: string;
@@ -36,7 +32,6 @@ export interface TourStepData {
   route?: string;
 }
 
-// Состояние тура
 export interface TourState {
   isActive: boolean;
   steps: TourStepData[];
@@ -44,7 +39,6 @@ export interface TourState {
   role: 'graduate' | 'employer' | null;
 }
 
-// Контекст
 interface ParmaContextType {
   state: ParmaState;
   message: ParmaMessage | null;
@@ -56,7 +50,6 @@ interface ParmaContextType {
   show: () => void;
   updateSettings: (settings: Partial<ParmaSettings>) => void;
   resetActivity: () => void;
-  // Тур
   tour: TourState;
   setTour: React.Dispatch<React.SetStateAction<TourState>>;
 }
@@ -67,12 +60,11 @@ const defaultSettings: ParmaSettings = {
   size: 'md',
   soundEnabled: false,
   showTips: true,
-  idleTimeout: 60000, // 1 минута до засыпания
+  idleTimeout: 60000,
 };
 
 const ParmaContext = createContext<ParmaContextType | null>(null);
 
-// Загрузка настроек из localStorage
 const loadSettings = (): ParmaSettings => {
   try {
     const saved = localStorage.getItem('parmaSettings');
@@ -85,7 +77,6 @@ const loadSettings = (): ParmaSettings => {
   return defaultSettings;
 };
 
-// Сохранение настроек в localStorage
 const saveSettings = (settings: ParmaSettings) => {
   try {
     localStorage.setItem('parmaSettings', JSON.stringify(settings));
@@ -115,13 +106,11 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const isRu = i18n.language === 'ru';
 
-  // Сброс таймера бездействия
   const resetActivity = useCallback(() => {
     if (idleTimeoutRef.current) {
       clearTimeout(idleTimeoutRef.current);
     }
 
-    // Если спала - проснуться с приветствием
     if (state === 'sleeping') {
       setStateInternal('greeting');
       setMessage({ text: isRu ? 'С возвращением!' : 'Welcome back!', duration: 2000 });
@@ -132,7 +121,6 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }, 2000);
     }
 
-    // Установить таймер засыпания
     if (settings.enabled && settings.idleTimeout > 0) {
       idleTimeoutRef.current = setTimeout(() => {
         previousStateRef.current = state;
@@ -142,19 +130,16 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [state, settings.enabled, settings.idleTimeout, isRu]);
 
-  // Отслеживание активности пользователя
   useEffect(() => {
     const handleActivity = () => {
       resetActivity();
     };
 
-    // Слушаем события активности
     window.addEventListener('mousemove', handleActivity);
     window.addEventListener('keydown', handleActivity);
     window.addEventListener('click', handleActivity);
     window.addEventListener('scroll', handleActivity);
 
-    // Инициализация таймера
     resetActivity();
 
     return () => {
@@ -169,7 +154,6 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [resetActivity]);
 
-  // Установить состояние (постоянное)
   const setState = useCallback((newState: ParmaState, newMessage?: ParmaMessage) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -179,13 +163,11 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setStateInternal(newState);
     setMessage(newMessage || null);
 
-    // Сбросить таймер бездействия (кроме sleeping)
     if (newState !== 'sleeping') {
       resetActivity();
     }
   }, [state, resetActivity]);
 
-  // Временное состояние (вернётся к idle)
   const setTemporaryState = useCallback((
     newState: ParmaState,
     newMessage?: ParmaMessage,
@@ -207,17 +189,14 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     resetActivity();
   }, [state, resetActivity]);
 
-  // Скрыть маскота
   const hide = useCallback(() => {
     setIsVisible(false);
   }, []);
 
-  // Показать маскота
   const show = useCallback(() => {
     setIsVisible(true);
   }, []);
 
-  // Обновить настройки
   const updateSettings = useCallback((newSettings: Partial<ParmaSettings>) => {
     setSettings(prev => {
       const updated = { ...prev, ...newSettings };
@@ -226,7 +205,6 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   }, []);
 
-  // Очистка при размонтировании
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -238,7 +216,6 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
-  // Если маскот отключен в настройках
   if (!settings.enabled) {
     return <>{children}</>;
   }
@@ -263,7 +240,6 @@ export const ParmaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
-// Хук для использования контекста
 export const useParmaContext = () => {
   const context = useContext(ParmaContext);
   if (!context) {

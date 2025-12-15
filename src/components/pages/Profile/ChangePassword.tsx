@@ -55,8 +55,7 @@ const ChangePassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Сбрасываем ошибки
+
     setPasswordError('');
     setConfirmPasswordError('');
     setSamePasswordError('');
@@ -66,7 +65,6 @@ const ChangePassword = () => {
       return;
     }
 
-    // Валидация
     if (!validatePassword(newPassword)) {
       return;
     }
@@ -98,7 +96,6 @@ const ChangePassword = () => {
 
       toast.success(t('changePassword.success'));
 
-      // Очищаем поля
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -119,7 +116,6 @@ const ChangePassword = () => {
       </div>
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Текущий пароль */}
           <div>
             <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-300 mb-2">
               {t('changePassword.currentPassword')}
@@ -135,7 +131,6 @@ const ChangePassword = () => {
                 onChange={(e) => {
                   const password = e.target.value;
                   setCurrentPassword(password);
-                  // Проверяем, что новый пароль отличается от старого, если новый пароль уже введен
                   if (newPassword) {
                     validateDifferentPasswords(password, newPassword);
                   }
@@ -158,7 +153,6 @@ const ChangePassword = () => {
             </div>
           </div>
 
-          {/* Новый пароль */}
           <div>
             <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-2">
               {t('changePassword.newPassword')}
@@ -176,11 +170,9 @@ const ChangePassword = () => {
                   setNewPassword(password);
                   if (password) {
                     validatePassword(password);
-                    // Проверяем совпадение с подтверждением, если оно уже введено
                     if (confirmPassword) {
                       validatePasswordMatch(password, confirmPassword);
                     }
-                    // Проверяем, что новый пароль отличается от старого
                     if (currentPassword) {
                       validateDifferentPasswords(currentPassword, password);
                     }
@@ -222,7 +214,6 @@ const ChangePassword = () => {
             </div>
           </div>
 
-          {/* Подтверждение пароля */}
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
               {t('changePassword.confirmPassword')}
@@ -265,7 +256,6 @@ const ChangePassword = () => {
             )}
           </div>
 
-          {/* Кнопка отправки */}
           <div className="flex gap-4">
             <button
               type="submit"

@@ -42,7 +42,6 @@ const ResetPassword: React.FC = () => {
       toast.success(response.data.message || 'Пароль успешно изменён');
       setIsSuccess(true);
 
-      // Редирект через 3 секунды
       setTimeout(() => {
         navigate('/login');
       }, 3000);

@@ -75,15 +75,13 @@ const AudioInterview = () => {
   // Sending state to prevent double-clicks
   const [isSending, setIsSending] = useState(false);
 
-  // Web Speech API for recognition
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const isListeningRef = useRef(false); // Ref для отслеживания состояния
-  const confirmedTextRef = useRef<string>(''); // Храним подтверждённый текст
-  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Для отмены таймера перезапуска
-  const isRestartingRef = useRef(false); // Флаг что идёт перезапуск
+  const isListeningRef = useRef(false);
+  const confirmedTextRef = useRef<string>('');
+  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isRestartingRef = useRef(false);
 
-  // Инициализация Audio один раз
   useEffect(() => {
     audioRef.current = new Audio();
     audioRef.current.onended = () => setIsSpeaking(false);
@@ -97,7 +95,6 @@ const AudioInterview = () => {
     };
   }, []);
 
-  // Инициализация Speech Recognition один раз (без зависимостей от языка)
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -131,7 +128,6 @@ const AudioInterview = () => {
     recognition.onerror = (event: any) => {
       console.warn('Speech recognition error:', event.error);
 
-      // Критические ошибки - полностью останавливаем
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         isListeningRef.current = false;
         setIsListening(false);
@@ -145,21 +141,15 @@ const AudioInterview = () => {
         toast.error(t('toasts.networkError'));
         return;
       }
-
-      // Остальные ошибки (aborted, no-speech, audio-capture) - игнорируем
-      // onend сам перезапустит если нужно
     };
 
     recognition.onend = () => {
-      // Если это был запланированный перезапуск - игнорируем
       if (isRestartingRef.current) {
         isRestartingRef.current = false;
         return;
       }
 
-      // Если пользователь всё ещё хочет слушать - перезапускаем
       if (isListeningRef.current) {
-        // Отменяем предыдущий таймер если есть
         if (restartTimeoutRef.current) {
           clearTimeout(restartTimeoutRef.current);
         }
@@ -170,7 +160,6 @@ const AudioInterview = () => {
               isRestartingRef.current = true;
               recognitionRef.current.start();
             } catch (e: any) {
-              // Если уже запущен - это нормально
               if (e.message?.includes('already started')) {
                 isRestartingRef.current = false;
                 return;
@@ -198,24 +187,20 @@ const AudioInterview = () => {
         }
       }
     };
-  }, []); // Пустой массив зависимостей!
+  }, []);
 
-  // Обновляем язык recognition при смене языка (без пересоздания)
   useEffect(() => {
     if (recognitionRef.current) {
       recognitionRef.current.lang = i18n.language === 'en' ? 'en-US' : 'ru-RU';
     }
   }, [i18n.language]);
 
-  // Маппинг персоны на гендер голоса
   const personaGender: Record<string, 'male' | 'female'> = {
     strict_hr: 'female',
     friendly_tech: 'male',
     direct_ceo: 'male'
   };
 
-  // Синтез речи через Yandex SpeechKit (без браузерного fallback)
-  // Используем useRef для хранения voiceId, чтобы избежать проблем с зависимостями useCallback
   const voiceIdRef = useRef<string | null>(null);
 
   const speak = useCallback(async (text: string) => {
@@ -223,32 +208,24 @@ const AudioInterview = () => {
     setIsSpeaking(true);
 
     try {
-      // Передаём гендер в зависимости от выбранной персоны
       const gender = personaGender[persona] || 'male';
-      // Определяем язык для TTS
       const lang = i18n.language === 'en' ? 'en' : 'ru';
 
-      // Если у нас уже есть выбранный голос для этой сессии - используем его
-      // Иначе передаём только gender для первого вызова
       const requestData: { text: string; gender?: string; voiceId?: string; lang?: string } = { text, lang };
 
       if (voiceIdRef.current) {
-        // Используем сохранённый голос для консистентности в рамках сессии
         requestData.voiceId = voiceIdRef.current;
       } else {
-        // Первый вызов - передаём gender, сервер выберет случайный голос
         requestData.gender = gender;
       }
 
       const response = await $api.post('/interviews/tts', requestData);
 
       if (response.data.audio && audioRef.current) {
-        // Сохраняем voiceId для использования в следующих запросах
         if (response.data.voice && !voiceIdRef.current) {
           voiceIdRef.current = response.data.voice.id;
         }
 
-        // Декодируем base64 аудио и воспроизводим
         const audioData = `data:${response.data.format};base64,${response.data.audio}`;
         audioRef.current.src = audioData;
         audioRef.current.play().catch((err) => {
@@ -273,17 +250,14 @@ const AudioInterview = () => {
       return;
     }
 
-    // Сбрасываем текст
     confirmedTextRef.current = '';
     setCurrentMessage('');
 
-    // Отменяем любой pending таймер перезапуска
     if (restartTimeoutRef.current) {
       clearTimeout(restartTimeoutRef.current);
       restartTimeoutRef.current = null;
     }
 
-    // Устанавливаем флаги ПЕРЕД запуском
     isListeningRef.current = true;
     isRestartingRef.current = false;
     setIsListening(true);
@@ -291,7 +265,6 @@ const AudioInterview = () => {
     try {
       recognitionRef.current.start();
     } catch (e: any) {
-      // Если уже запущен - это нормально
       if (e.message?.includes('already started')) {
         return;
       }
@@ -302,11 +275,9 @@ const AudioInterview = () => {
   };
 
   const stopListening = () => {
-    // Сначала сбрасываем все флаги
     isListeningRef.current = false;
     isRestartingRef.current = false;
 
-    // Отменяем таймер перезапуска
     if (restartTimeoutRef.current) {
       clearTimeout(restartTimeoutRef.current);
       restartTimeoutRef.current = null;
@@ -318,7 +289,6 @@ const AudioInterview = () => {
       try {
         recognitionRef.current.stop();
       } catch (e) {
-        // Ignore - может быть уже остановлен
       }
     }
   };
@@ -330,7 +300,6 @@ const AudioInterview = () => {
     }
 
     try {
-      // Сбрасываем голос для новой сессии
       voiceIdRef.current = null;
 
       const response = await $api.post('/interviews/audio', {
@@ -355,12 +324,10 @@ const AudioInterview = () => {
   const sendAnswer = async () => {
     if (!currentMessage.trim() || !session || isSending) return;
 
-    // Сохраняем ответ и сразу очищаем поле ввода
     const answerToSend = currentMessage.trim();
     setCurrentMessage('');
     setIsSending(true);
 
-    // Останавливаем запись если она активна
     if (isListening) {
       stopListening();
     }
@@ -372,16 +339,13 @@ const AudioInterview = () => {
 
       setMessages(prev => [...prev, response.data.userMessage, response.data.aiMessage]);
 
-      // Speak next question
       speak(response.data.aiMessage.content);
 
-      // Update session
       setSession({
         ...session,
         currentQuestionIndex: response.data.questionNumber
       });
 
-      // Check if interview is complete
       if (response.data.isLastQuestion) {
         setTimeout(() => {
           completeInterview();
@@ -390,7 +354,6 @@ const AudioInterview = () => {
     } catch (error) {
       console.error('Error sending answer:', error);
       toast.error(t('audioInterview.answerSendError'));
-      // Восстанавливаем текст при ошибке
       setCurrentMessage(answerToSend);
     } finally {
       setIsSending(false);
@@ -580,7 +543,6 @@ const AudioInterview = () => {
               </div>
             )}
 
-            {/* Кнопка досрочного завершения */}
             <div className="mt-6 text-center">
               <button
                 onClick={completeInterview}

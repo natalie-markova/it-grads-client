@@ -51,7 +51,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Функция для загрузки непрочитанных сообщений
     const loadUnreadCount = useCallback(() => {
         if (user) {
             chatAPI.getUnreadCount()
@@ -65,7 +64,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
         }
     }, [user]);
 
-    // Загрузка количества непрочитанных сообщений и WebSocket подключение
     useEffect(() => {
         if (!user) {
             setUnreadCount(0);
@@ -73,17 +71,14 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
             return;
         }
 
-        // Загрузить начальное количество
         loadUnreadCount();
 
-        // Подключиться к WebSocket если еще не подключены
         const token = localStorage.getItem('accessToken');
         if (token && !socketService.isConnected()) {
             console.log('🔌 Connecting to WebSocket from Navbar');
             socketService.connect(token);
         }
 
-        // Создать обработчики событий
         const handleNotificationUnread = (data: any) => {
             console.log('📬 Navbar: Получено уведомление о новом сообщении', data);
             loadUnreadCount();
@@ -94,17 +89,15 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
             loadUnreadCount();
         };
 
-        // Подписаться на события
         socketService.onNotificationUnread(handleNotificationUnread);
         socketService.onMessagesRead(handleMessagesRead);
 
-        // Fallback: периодическое обновление только если WebSocket не работает
         const interval = setInterval(() => {
             if (!socketService.isConnected()) {
                 console.log('⚠️ WebSocket disconnected, polling for updates');
                 loadUnreadCount();
             }
-        }, 60000); // 1 минута вместо 30 секунд
+        }, 60000);
 
         return () => {
             socketService.off('notification-unread');
@@ -122,7 +115,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
 
     const baseNavLinks: { path: string; label: string }[] = []
 
-    // Ссылки для выпадающего меню "Области тьмы"
     const darkZonesLinks = [
         { path: '/interview', label: t('navbar.interviews') },
         { path: '/roadmap', label: t('navbar.roadmap') },
@@ -134,7 +126,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
         { path: '/interview/tracker', label: t('navbar.interviewTracker') },
     ]
 
-    // Code Battle отдельно (после Областей тьмы)
     const codeBattleLink = { path: '/codebattle', label: 'Code Battle' }
 
     const employerNavLinks = [
@@ -158,7 +149,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
         })
         .catch((err) => {
             console.error(err);
-            // Даже при ошибке очищаем данные
             setUser(null)
             localStorage.removeItem('user')
             localStorage.removeItem('accessToken')
@@ -193,7 +183,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                             </Link>
                         ))}
 
-                        {/* Выпадающее меню "Области тьмы" для выпускников */}
                         {userType === 'graduate' && (
                             <div className="relative" ref={darkZonesDropdownRef}>
                                 <button
@@ -228,7 +217,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                             </div>
                         )}
 
-                        {/* Code Battle (справа от Областей тьмы) */}
                         {userType === 'graduate' && (
                             <Link
                                 to={codeBattleLink.path}
@@ -377,7 +365,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                             </Link>
                         ))}
 
-                        {/* Области тьмы для выпускников (мобильная версия) */}
                         {userType === 'graduate' && (
                             <div>
                                 <button
@@ -415,7 +402,6 @@ const Navbar = ({ user, setUser }: NavbarProps) => {
                             </div>
                         )}
 
-                        {/* Code Battle для выпускников (мобильная версия) */}
                         {userType === 'graduate' && (
                             <Link
                                 to={codeBattleLink.path}

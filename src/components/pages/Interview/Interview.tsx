@@ -9,7 +9,6 @@ import { useParmaEvents } from '../../mascot'
 import { useTranslation } from 'react-i18next'
 import { questions as allQuestions, getLocalizedQuestion, getLocalizedCategoryName } from './quizQuestions'
 
-// Локализованный интерфейс вопроса для отображения
 interface LocalizedQuestion {
   id: number
   category: string
@@ -19,7 +18,6 @@ interface LocalizedQuestion {
   explanation: string
 }
 
-// Функция для перемешивания массива (Fisher-Yates shuffle)
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array]
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -47,35 +45,27 @@ const Interview = () => {
   const [, setIsSaving] = useState(false)
   const startTimeRef = useRef<number>(0)
 
-  // Текущий язык
   const currentLang = i18n.language
 
-  // Получаем уникальные категории
   const categories = useMemo(() => {
     return Array.from(new Set(allQuestions.map(q => q.category)))
   }, [])
 
   const currentQuestion = shuffledQuestions[currentQuestionIndex]
 
-  // Функция для локализации названий категорий
   const getCategoryName = (cat: string): string => {
     return getLocalizedCategoryName(cat, currentLang)
   }
 
   const handleStart = () => {
     if (!category) return
-    // Перемешиваем вопросы выбранной категории при каждом старте
     const categoryQuestions = allQuestions.filter(q => q.category === category)
-    // Локализуем вопросы
     const localizedQuestions = categoryQuestions.map(q => getLocalizedQuestion(q, currentLang))
 
-    // Перемешиваем ответы внутри каждого вопроса и корректируем индекс правильного ответа
     const questionsWithShuffledOptions = localizedQuestions.map(q => {
-      // Создаём массив с индексами для отслеживания позиции правильного ответа
       const optionsWithIndices = q.options.map((option, idx) => ({ option, originalIndex: idx }))
       const shuffledOptions = shuffleArray(optionsWithIndices)
 
-      // Находим новый индекс правильного ответа после перемешивания
       const newCorrectAnswerIndex = shuffledOptions.findIndex(o => o.originalIndex === q.correctAnswer)
 
       return {
@@ -97,11 +87,10 @@ const Interview = () => {
     startTimeRef.current = Date.now()
   }
 
-  // Сохранение результатов практики на сервер
   const savePracticeResults = async (finalScore: number, answers: {questionId: number, correct: boolean}[]) => {
     try {
       setIsSaving(true)
-      const duration = Math.round((Date.now() - startTimeRef.current) / 1000) // в секундах
+      const duration = Math.round((Date.now() - startTimeRef.current) / 1000)
       const percentage = Math.round((finalScore / shuffledQuestions.length) * 100)
 
       await $api.post('/interviews/practice/complete', {
@@ -143,12 +132,10 @@ const Interview = () => {
       setSelectedAnswer(null)
       setShowExplanation(false)
     } else {
-      // Тест завершён - сохраняем результаты и показываем их
       const finalAnswers = [...userAnswers]
       const finalScore = finalAnswers.filter(a => a.correct).length
       const percentage = Math.round((finalScore / shuffledQuestions.length) * 100)
 
-      // Уведомляем маскота о результате
       if (percentage >= 70) {
         onTrainerSuccess(percentage, 'practice')
       } else {
@@ -160,7 +147,6 @@ const Interview = () => {
     }
   }
 
-  // Прокручиваем страницу наверх при завершении интервью
   useEffect(() => {
     if (isFinished) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -215,7 +201,6 @@ const Interview = () => {
     }
   }
 
-  // Экран результатов
   if (isFinished) {
     const percentage = Math.round((score / shuffledQuestions.length) * 100)
     const result = getResultComment(percentage)
@@ -228,7 +213,6 @@ const Interview = () => {
           className="bg-dark-bg py-0"
         >
           <Card className="max-w-3xl mx-auto" hover={false}>
-            {/* Основной результат */}
             <div className="text-center mb-8">
               <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-accent-cyan/20 flex items-center justify-center">
                 <Trophy className="w-12 h-12 text-accent-cyan" />
@@ -241,7 +225,6 @@ const Interview = () => {
               </p>
             </div>
 
-            {/* Комментарий к результату */}
             <div className={`p-6 rounded-xl ${result.bgColor} border ${result.borderColor} mb-8`}>
               <h3 className={`text-xl font-bold ${result.color} mb-2 flex items-center gap-2`}>
                 <Target className="w-5 h-5" />
@@ -252,7 +235,6 @@ const Interview = () => {
               </p>
             </div>
 
-            {/* Статистика */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-dark-surface rounded-xl p-4 text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
@@ -270,7 +252,6 @@ const Interview = () => {
               </div>
             </div>
 
-            {/* Рекомендации */}
             <div className="bg-dark-surface rounded-xl p-6 mb-8">
               <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-accent-cyan" />
@@ -294,7 +275,6 @@ const Interview = () => {
               </ul>
             </div>
 
-            {/* Кнопки действий */}
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={handleReset}
@@ -413,13 +393,11 @@ const Interview = () => {
             </div>
           </div>
 
-          {/* Question */}
           <div className="mb-6">
             <h3 className="text-2xl font-bold text-white mb-6">
               {currentQuestion?.question}
             </h3>
 
-            {/* Answers */}
             <div className="space-y-3">
               {currentQuestion?.options.map((option, index) => {
                 const isSelected = selectedAnswer === index
@@ -455,7 +433,6 @@ const Interview = () => {
               })}
             </div>
 
-            {/* Explanation */}
             {showExplanation && currentQuestion && (
               <div className="mt-6 p-4 bg-dark-surface rounded-lg border border-accent-cyan/30">
                 <h4 className="text-lg font-semibold text-white mb-2">{t('practiceQuizUI.explanation')}:</h4>
@@ -464,7 +441,6 @@ const Interview = () => {
             )}
           </div>
 
-          {/* Navigation */}
           <div className="flex justify-between items-center pt-6 border-t border-dark-surface">
             <button
               onClick={handleReset}

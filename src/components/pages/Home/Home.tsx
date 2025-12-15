@@ -27,7 +27,6 @@ const Home = () => {
 
   useScrollAnimation()
 
-  // Функция скролла к следующему блоку
   const scrollToNextSection = () => {
     const nextSection = document.querySelector('section:nth-of-type(2)')
     if (nextSection) {
@@ -35,7 +34,6 @@ const Home = () => {
     }
   }
 
-  // Загрузка статистики пользователей
   useEffect(() => {
     const loadUserStats = async () => {
       try {
@@ -57,7 +55,6 @@ const Home = () => {
     }
   }, [user])
 
-  // Анимация счетчика
   const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?: number }) => {
     const [displayValue, setDisplayValue] = useState(0)
 
@@ -86,7 +83,6 @@ const Home = () => {
     return <span>{displayValue.toLocaleString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')}</span>
   }
 
-  // Преимущества для студентов
   const graduateFeatures = [
     {
       icon: <MessageCircle className="h-6 w-6" />,
@@ -114,7 +110,6 @@ const Home = () => {
     },
   ]
 
-  // Преимущества для работодателей
   const employerFeatures = [
     {
       icon: <MapPin className="h-6 w-6" />,
@@ -144,15 +139,12 @@ const Home = () => {
 
   return (
     <div className="bg-dark-bg overflow-hidden">
-      {/* Hero Section */}
       <section className="relative min-h-screen flex items-center bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg py-20 md:py-32">
-        {/* Декоративные элементы */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-72 h-72 bg-accent-cyan/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-20 left-10 w-96 h-96 bg-accent-blue/10 rounded-full blur-3xl"></div>
         </div>
 
-        {/* Scroll indicator - LEFT */}
         <div className="absolute bottom-8 left-8 flex flex-col items-center gap-3 text-gray-400 animate-bounce-slow">
           <Mouse className="w-6 h-6 text-accent-cyan" />
           <div className="flex flex-col items-center">
@@ -161,7 +153,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Scroll indicator - RIGHT */}
         <div className="absolute bottom-8 right-8 flex flex-col items-center gap-3 text-gray-400 animate-bounce-slow">
           <Mouse className="w-6 h-6 text-accent-cyan" />
           <div className="flex flex-col items-center">
@@ -172,7 +163,6 @@ const Home = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-4xl mx-auto scroll-scale">
-            {/* Main Headline */}
             <h1 className="text-[40px] md:text-[56px] lg:text-[64px] font-bold leading-tight mb-6 text-white">
               {user?.role === 'employer' ? (
                 <>
@@ -193,7 +183,6 @@ const Home = () => {
               )}
             </h1>
 
-            {/* Subtitle */}
             <p className="text-lg md:text-xl text-gray-300 mb-10 leading-relaxed max-w-3xl mx-auto">
               {user?.role === 'employer' ? (
                 t('home.heroSubtitleEmployer')
@@ -202,7 +191,6 @@ const Home = () => {
               )}
             </p>
 
-            {/* Stats for logged users */}
             {user && (
               <div className="flex flex-col sm:flex-row gap-8 justify-center items-center mb-10">
                 <div className="flex items-center gap-3">
@@ -230,7 +218,6 @@ const Home = () => {
               </div>
             )}
 
-            {/* CTAs */}
             {!user && (
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link
@@ -249,7 +236,6 @@ const Home = () => {
               </div>
             )}
 
-            {/* Trust badges */}
             <div className="mt-12 flex flex-wrap justify-center gap-6 items-center text-gray-400 text-sm">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-accent-cyan" />
@@ -267,7 +253,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Кнопка "Узнать больше" */}
         <button
           onClick={scrollToNextSection}
           className="absolute bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-accent-cyan hover:text-accent-cyan/80 transition-all duration-300 group cursor-pointer"
@@ -278,11 +263,9 @@ const Home = () => {
         </button>
       </section>
 
-      {/* Для студентов - Cards Grid */}
       {user?.role !== 'employer' && (
         <Section className="bg-dark-surface">
           <div className="max-w-7xl mx-auto">
-            {/* Section Header */}
             <div className="text-center mb-16 scroll-animate-item">
               <h2 className="text-[36px] md:text-[44px] font-bold text-white mb-4">
                 {t('home.graduatesTitle')} <span className="text-accent-cyan">{t('home.graduatesTitleHighlight')}</span>
@@ -304,16 +287,12 @@ const Home = () => {
                 onMouseLeave={() => setHoveredCard(null)}
               >
                 <Card className="h-full p-8 bg-dark-card/50 hover:bg-dark-card border-2 border-dark-card hover:border-accent-cyan/50 transition-all duration-300 relative overflow-hidden backdrop-blur-sm">
-                  {/* Matrix Rain Animation для первой карточки (index === 0) */}
                   {index === 0 && <MatrixRain isActive={hoveredCard === 0} />}
 
-                  {/* AI Scanner Animation для второй карточки (index === 1) */}
                   {index === 1 && <AIScanner isActive={hoveredCard === 1} />}
 
-                  {/* Career Graph Animation для третьей карточки (index === 2) */}
                   {index === 2 && <CareerGraph isActive={hoveredCard === 2} />}
 
-                  {/* Rating Stars Animation для четвертой карточки (index === 3) */}
                   {index === 3 && <RatingStars isActive={hoveredCard === 3} />}
 
                   <div className="flex items-start gap-6 relative z-10">
@@ -347,11 +326,9 @@ const Home = () => {
         </Section>
       )}
 
-      {/* Для работодателей - Cards Grid (показывается только работодателям и неавторизованным) */}
       {(user?.role === 'employer' || !user) && (
       <Section className={user?.role === 'employer' ? "bg-dark-surface" : "bg-dark-bg"}>
         <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
           <div className="text-center mb-16 scroll-animate-item">
             <h2 className="text-[36px] md:text-[44px] font-bold text-white mb-4">
               {t('home.employersTitle')} <span className="text-accent-blue">{t('home.employersTitleHighlight')}</span>
@@ -373,16 +350,12 @@ const Home = () => {
                 onMouseLeave={() => setHoveredEmployerCard(null)}
               >
                 <Card className="h-full p-8 bg-dark-card/50 hover:bg-dark-card border-2 border-dark-card hover:border-accent-blue/50 transition-all duration-300 relative overflow-hidden backdrop-blur-sm">
-                  {/* Radar Scan Animation для первой карточки (index === 0) */}
                   {index === 0 && <RadarScan isActive={hoveredEmployerCard === 0} />}
 
-                  {/* Filter Funnel Animation для второй карточки (index === 1) */}
                   {index === 1 && <FilterFunnel isActive={hoveredEmployerCard === 1} />}
 
-                  {/* CheckMarks Animation для третьей карточки (index === 2) */}
                   {index === 2 && <CheckMarks isActive={hoveredEmployerCard === 2} />}
 
-                  {/* Tower Building Animation для четвертой карточки (index === 3) */}
                   {index === 3 && <TowerBuilding isActive={hoveredEmployerCard === 3} />}
 
                   <div className="flex items-start gap-6 relative z-10">
@@ -416,12 +389,10 @@ const Home = () => {
       </Section>
       )}
 
-      {/* Радар навыков - Showcase */}
       {user?.role !== 'employer' && (
         <Section className="bg-dark-surface">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Content */}
               <div className="scroll-fade-left">
                 <h2 className="text-[32px] md:text-[40px] font-bold text-white mb-4">
                   {t('home.skillsRadarTitle')} <span className="text-accent-cyan">{t('home.skillsRadarTitleHighlight')}</span>
@@ -451,13 +422,10 @@ const Home = () => {
                 </Link>
               </div>
 
-              {/* Visual */}
               <Link to="/skills" className="block scroll-fade-right">
                 <div className="relative rounded-2xl bg-gradient-to-br from-dark-bg to-dark-card p-12 border border-dark-card hover:border-accent-cyan/50 transition-all duration-500 overflow-hidden group">
-                  {/* Glowing effect */}
                   <div className="absolute inset-0 bg-gradient-to-br from-accent-cyan/5 to-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                  {/* Skills Radar Animation */}
                   <div className="relative h-80">
                     <SkillsRadar isActive={true} />
                   </div>
@@ -468,10 +436,8 @@ const Home = () => {
         </Section>
       )}
 
-      {/* Final CTA */}
       {!user && (
         <section className="relative py-24 bg-gradient-to-br from-accent-cyan/10 via-accent-blue/10 to-dark-bg border-y border-accent-cyan/20 scroll-scale overflow-hidden">
-          {/* Background decoration */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-0 right-0 w-96 h-96 bg-accent-cyan/5 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent-blue/5 rounded-full blur-3xl"></div>

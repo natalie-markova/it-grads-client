@@ -2,28 +2,18 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useParmaContext } from './ParmaProvider';
 
 interface UseParmaFormWatcherOptions {
-  /** Таймаут до показа thinking при заполнении (мс) */
   thinkingTimeout?: number;
-  /** Показывать pointing при открытии формы */
   showPointingOnOpen?: boolean;
-  /** Сообщение при долгом заполнении */
   thinkingMessage?: string;
-  /** Сообщение при открытии формы */
   pointingMessage?: string;
 }
 
-/**
- * Хук для отслеживания работы с формами
- * - При открытии формы показывает pointing
- * - При долгом заполнении показывает thinking
- * - При завершении возвращает в idle
- */
 export const useParmaFormWatcher = (
   isFormOpen: boolean,
   options: UseParmaFormWatcherOptions = {}
 ) => {
   const {
-    thinkingTimeout = 30000, // 30 секунд
+    thinkingTimeout = 30000,
     showPointingOnOpen = true,
     thinkingMessage = 'Не торопись, подумай хорошо... 🤔',
     pointingMessage = 'Заполни форму! 📝',
@@ -34,13 +24,11 @@ export const useParmaFormWatcher = (
   const wasOpenRef = useRef(false);
   const activityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Сброс таймера активности при взаимодействии с формой
   const resetActivityTimer = useCallback(() => {
     if (activityTimerRef.current) {
       clearTimeout(activityTimerRef.current);
     }
 
-    // Если форма открыта и пользователь перестал взаимодействовать на 30 сек - thinking
     if (isFormOpen) {
       activityTimerRef.current = setTimeout(() => {
         setState('thinking', { text: thinkingMessage });
@@ -49,7 +37,6 @@ export const useParmaFormWatcher = (
   }, [isFormOpen, thinkingTimeout, thinkingMessage, setState]);
 
   useEffect(() => {
-    // Форма только что открылась
     if (isFormOpen && !wasOpenRef.current) {
       wasOpenRef.current = true;
 
@@ -57,14 +44,11 @@ export const useParmaFormWatcher = (
         setTemporaryState('pointing', { text: pointingMessage }, 3000);
       }
 
-      // Запускаем таймер на thinking
       thinkingTimerRef.current = setTimeout(() => {
         setState('thinking', { text: thinkingMessage });
       }, thinkingTimeout);
 
-      // Слушаем активность в форме
       const handleFormActivity = () => {
-        // Если был thinking - возвращаем в idle
         setState('idle');
         resetActivityTimer();
       };
@@ -80,7 +64,6 @@ export const useParmaFormWatcher = (
       };
     }
 
-    // Форма закрылась
     if (!isFormOpen && wasOpenRef.current) {
       wasOpenRef.current = false;
 
@@ -110,9 +93,6 @@ export const useParmaFormWatcher = (
   return { resetActivityTimer };
 };
 
-/**
- * Хук для отслеживания долгого решения задачи (CodeBattle)
- */
 export const useParmaTaskWatcher = (
   isTaskActive: boolean,
   taskStartTime?: number
@@ -122,10 +102,9 @@ export const useParmaTaskWatcher = (
 
   useEffect(() => {
     if (isTaskActive) {
-      // Через 2 минуты - thinking
       thinkingTimerRef.current = setTimeout(() => {
         setState('thinking', { text: 'Подумай ещё... Ты справишься! 🤔' });
-      }, 120000); // 2 минуты
+      }, 120000);
 
       return () => {
         if (thinkingTimerRef.current) {
@@ -141,12 +120,10 @@ export const useParmaTaskWatcher = (
     }
   }, [isTaskActive, setState]);
 
-  // Метод для вызова при успешном решении
   const onTaskSuccess = useCallback(() => {
     setTemporaryState('celebration', { text: 'Отлично! Задача решена! 🎉' }, 4000);
   }, [setTemporaryState]);
 
-  // Метод для вызова при неудаче
   const onTaskFail = useCallback(() => {
     setTemporaryState('idle', { text: 'Попробуй ещё раз! 💪' }, 3000);
   }, [setTemporaryState]);

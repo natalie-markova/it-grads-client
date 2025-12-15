@@ -30,7 +30,6 @@ const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: Gra
   const [customSkillInput, setCustomSkillInput] = useState('')
   const [validationError, setValidationError] = useState(false)
 
-  // Блокируем скролл body при открытии модального окна
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -95,19 +94,19 @@ const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: Gra
 
   const validateCurrentStep = (): boolean => {
     switch (currentStep) {
-      case 0: // Формат работы
+      case 0:
         return filters.workFormat.length > 0
-      case 1: // Опыт работы
+      case 1:
         return filters.experience !== ''
-      case 2: // Регион/Город и знание языка
+      case 2:
         return filters.region !== '' || filters.englishLevel !== ''
-      case 3: // Образование
+      case 3:
         return filters.education !== '' || filters.educationInstitutions.length > 0
-      case 4: // Языки программирования
+      case 4:
         return filters.programmingLanguages.length > 0
-      case 5: // Технологическое направление
+      case 5:
         return filters.technology.length > 0
-      case 6: // Дополнительные навыки
+      case 6:
         return filters.additionalSkills.length > 0
       default:
         return true
@@ -384,7 +383,6 @@ const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: Gra
             <div>
               <h3 className="text-xl font-semibold text-white mb-4">Популярные учебные заведения</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Вузы */}
                 <div>
                   <h4 className="text-lg font-medium text-gray-300 mb-3">Вузы с IT образованием</h4>
                   <div className="space-y-2">
@@ -408,7 +406,6 @@ const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: Gra
                   </div>
                 </div>
 
-                {/* IT Курсы */}
                 <div>
                   <h4 className="text-lg font-medium text-gray-300 mb-3">IT Курсы</h4>
                   <div className="space-y-2">
@@ -436,7 +433,7 @@ const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: Gra
           </div>
         )
 
-      case 4: // Языки программирования
+      case 4:
         return (
           <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
@@ -464,7 +461,7 @@ const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: Gra
           </div>
         )
 
-      case 5: // Технологическое направление
+      case 5:
         return (
           <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>
@@ -492,7 +489,7 @@ const GraduatesFilterWizard = ({ isOpen, onClose, onApply, initialFilters }: Gra
           </div>
         )
 
-      case 6: // Дополнительные навыки
+      case 6:
         return (
           <div className="space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
             <div>

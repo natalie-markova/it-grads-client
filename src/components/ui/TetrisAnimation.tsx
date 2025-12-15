@@ -14,7 +14,6 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Устанавливаем размеры канваса
     const resizeCanvas = () => {
       const parent = canvas.parentElement
       if (parent) {
@@ -25,23 +24,20 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
     resizeCanvas()
     window.addEventListener('resize', resizeCanvas)
 
-    // Размер блока
     const blockSize = 24
     const cols = Math.floor(canvas.width / blockSize)
     const rows = Math.floor(canvas.height / blockSize)
 
-    // Фигуры тетриса с градиентными цветами
     const tetrominoes = [
-      { shape: [[1, 1, 1, 1]], color: '#3b82f6', gradient: ['#3b82f6', '#2563eb'] }, // I - синий
-      { shape: [[1, 1], [1, 1]], color: '#60a5fa', gradient: ['#60a5fa', '#3b82f6'] }, // O - светло-синий
-      { shape: [[0, 1, 0], [1, 1, 1]], color: '#93c5fd', gradient: ['#93c5fd', '#60a5fa'] }, // T - очень светло-синий
-      { shape: [[1, 0, 0], [1, 1, 1]], color: '#2563eb', gradient: ['#2563eb', '#1d4ed8'] }, // L - темно-синий
-      { shape: [[0, 0, 1], [1, 1, 1]], color: '#1e40af', gradient: ['#1e40af', '#1e3a8a'] }, // J - еще темнее
-      { shape: [[0, 1, 1], [1, 1, 0]], color: '#60a5fa', gradient: ['#60a5fa', '#3b82f6'] }, // S
-      { shape: [[1, 1, 0], [0, 1, 1]], color: '#3b82f6', gradient: ['#3b82f6', '#2563eb'] }, // Z
+      { shape: [[1, 1, 1, 1]], color: '#3b82f6', gradient: ['#3b82f6', '#2563eb'] },
+      { shape: [[1, 1], [1, 1]], color: '#60a5fa', gradient: ['#60a5fa', '#3b82f6'] },
+      { shape: [[0, 1, 0], [1, 1, 1]], color: '#93c5fd', gradient: ['#93c5fd', '#60a5fa'] },
+      { shape: [[1, 0, 0], [1, 1, 1]], color: '#2563eb', gradient: ['#2563eb', '#1d4ed8'] },
+      { shape: [[0, 0, 1], [1, 1, 1]], color: '#1e40af', gradient: ['#1e40af', '#1e3a8a'] },
+      { shape: [[0, 1, 1], [1, 1, 0]], color: '#60a5fa', gradient: ['#60a5fa', '#3b82f6'] },
+      { shape: [[1, 1, 0], [0, 1, 1]], color: '#3b82f6', gradient: ['#3b82f6', '#2563eb'] }
     ]
 
-    // Падающие фигуры
     interface FallingPiece {
       shape: number[][]
       color: string
@@ -54,7 +50,6 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
 
     const fallingPieces: FallingPiece[] = []
 
-    // Сетка для размещенных блоков
     const grid: { filled: boolean; color: string; gradient: string[] }[][] = []
     for (let i = 0; i < rows; i++) {
       grid[i] = []
@@ -63,7 +58,6 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
       }
     }
 
-    // Создание новой фигуры
     const createPiece = () => {
       const tetromino = tetrominoes[Math.floor(Math.random() * tetrominoes.length)]
       return {
@@ -77,7 +71,6 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
       }
     }
 
-    // Проверка столкновения
     const checkCollision = (piece: FallingPiece, offsetY = 0) => {
       for (let row = 0; row < piece.shape.length; row++) {
         for (let col = 0; col < piece.shape[row].length; col++) {
@@ -94,7 +87,6 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
       return false
     }
 
-    // Размещение фигуры на сетке
     const placePiece = (piece: FallingPiece) => {
       for (let row = 0; row < piece.shape.length; row++) {
         for (let col = 0; col < piece.shape[row].length; col++) {
@@ -109,7 +101,6 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
       }
     }
 
-    // Проверка и удаление заполненных линий
     const clearLines = () => {
       for (let row = rows - 1; row >= 0; row--) {
         let isFull = true
@@ -121,28 +112,24 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
         }
 
         if (isFull) {
-          // Удаляем линию и сдвигаем все вниз
           for (let r = row; r > 0; r--) {
             for (let c = 0; c < cols; c++) {
               grid[r][c] = grid[r - 1][c]
             }
           }
-          // Очищаем верхнюю линию
           for (let c = 0; c < cols; c++) {
             grid[0][c] = { filled: false, color: '', gradient: [] }
           }
-          row++ // Проверяем эту же линию еще раз
+          row++
         }
       }
     }
 
-    // Рисование блока с градиентом
     const drawBlock = (x: number, y: number, color: string, gradientColors?: string[]) => {
       const px = x * blockSize
       const py = y * blockSize
       const size = blockSize - 2
 
-      // Основной блок с градиентом
       if (gradientColors && gradientColors.length === 2) {
         const gradient = ctx.createLinearGradient(px, py, px + size, py + size)
         gradient.addColorStop(0, gradientColors[0])
@@ -152,7 +139,6 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
         ctx.fillStyle = color
       }
 
-      // Скругленные углы
       ctx.beginPath()
       const radius = 3
       ctx.moveTo(px + radius, py)
@@ -167,15 +153,12 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
       ctx.closePath()
       ctx.fill()
 
-      // Светлая подсветка сверху
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
       ctx.fillRect(px + 2, py + 2, size - 4, 3)
 
-      // Темная тень снизу
       ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'
       ctx.fillRect(px + 2, py + size - 4, size - 4, 2)
 
-      // Свечение по краю
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'
       ctx.lineWidth = 1
       ctx.stroke()
@@ -183,7 +166,7 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
 
     let animationId: number
     let lastSpawnTime = 0
-    const spawnInterval = 2000 // Создаем новую фигуру каждые 2 секунды
+    const spawnInterval = 2000
 
     const draw = (currentTime: number) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -192,18 +175,15 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
         return
       }
 
-      // Создание новых фигур
       if (currentTime - lastSpawnTime > spawnInterval && fallingPieces.length < 3) {
         fallingPieces.push(createPiece())
         lastSpawnTime = currentTime
       }
 
-      // Обновление падающих фигур
       for (let i = fallingPieces.length - 1; i >= 0; i--) {
         const piece = fallingPieces[i]
         piece.y += piece.speed * 0.1
 
-        // Проверка столкновения
         if (checkCollision(piece, 1)) {
           placePiece(piece)
           fallingPieces.splice(i, 1)
@@ -211,7 +191,6 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
         }
       }
 
-      // Рисование сетки
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
           if (grid[row][col].filled) {
@@ -220,7 +199,6 @@ const TetrisAnimation = ({ isActive }: TetrisAnimationProps) => {
         }
       }
 
-      // Рисование падающих фигур
       fallingPieces.forEach((piece) => {
         for (let row = 0; row < piece.shape.length; row++) {
           for (let col = 0; col < piece.shape[row].length; col++) {

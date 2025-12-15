@@ -14,7 +14,6 @@ const RadarScan = ({ isActive }: RadarScanProps) => {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Устанавливаем размеры канваса
     const resizeCanvas = () => {
       const parent = canvas.parentElement
       if (parent) {
@@ -28,7 +27,6 @@ const RadarScan = ({ isActive }: RadarScanProps) => {
     let animationId: number
     let angle = 0
 
-    // Объекты на радаре (кандидаты)
     const targets = [
       { angle: 0.3, distance: 0.4, detected: false, pulsePhase: 0 },
       { angle: 1.2, distance: 0.6, detected: false, pulsePhase: 0 },
@@ -57,11 +55,9 @@ const RadarScan = ({ isActive }: RadarScanProps) => {
 
       const centerX = canvas.width / 2
       const centerY = canvas.height / 2
-      // Увеличиваем радиус, чтобы радар выходил за границы
       const maxRadius = Math.max(canvas.width, canvas.height) * 0.65
 
-      // Рисуем концентрические круги радара (5 кругов)
-      ctx.strokeStyle = 'rgba(59, 130, 246, 0.15)' // accent-blue
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.15)'
       ctx.lineWidth = 1
 
       for (let i = 1; i <= 5; i++) {
@@ -71,41 +67,34 @@ const RadarScan = ({ isActive }: RadarScanProps) => {
         ctx.stroke()
       }
 
-      // Рисуем перекрестие в центре
       ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)'
       ctx.lineWidth = 1.5
 
-      // Горизонтальная линия
       ctx.beginPath()
       ctx.moveTo(centerX - maxRadius, centerY)
       ctx.lineTo(centerX + maxRadius, centerY)
       ctx.stroke()
 
-      // Вертикальная линия
       ctx.beginPath()
       ctx.moveTo(centerX, centerY - maxRadius)
       ctx.lineTo(centerX, centerY + maxRadius)
       ctx.stroke()
 
-      // Центральная точка
       ctx.fillStyle = 'rgba(59, 130, 246, 0.8)'
       ctx.beginPath()
       ctx.arc(centerX, centerY, 3, 0, Math.PI * 2)
       ctx.fill()
 
-      // Рисуем сканирующий луч (более широкий)
       ctx.save()
       ctx.translate(centerX, centerY)
       ctx.rotate(angle)
 
-      // Создаем клип в форме сектора для луча
       ctx.beginPath()
       ctx.moveTo(0, 0)
       ctx.arc(0, 0, maxRadius, -Math.PI / 4, Math.PI / 4)
       ctx.closePath()
       ctx.clip()
 
-      // Градиент луча от центра к краю
       const sweepGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, maxRadius)
       sweepGradient.addColorStop(0, 'rgba(59, 130, 246, 0.6)')
       sweepGradient.addColorStop(0.4, 'rgba(59, 130, 246, 0.3)')
@@ -116,7 +105,6 @@ const RadarScan = ({ isActive }: RadarScanProps) => {
 
       ctx.restore()
 
-      // Яркая линия на переднем крае луча
       ctx.save()
       ctx.translate(centerX, centerY)
       ctx.rotate(angle + Math.PI / 4)
@@ -130,25 +118,20 @@ const RadarScan = ({ isActive }: RadarScanProps) => {
 
       ctx.restore()
 
-      // Обнаружение и отрисовка целей
       targets.forEach((target) => {
-        // Проверяем, прошел ли луч над целью
         const angleDiff = ((target.angle - angle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)
         if (angleDiff < 0.1 && !target.detected) {
           target.detected = true
           target.pulsePhase = 0
         }
 
-        // Рисуем обнаруженные цели
         if (target.detected) {
           const targetX = centerX + Math.cos(target.angle) * (maxRadius * target.distance)
           const targetY = centerY + Math.sin(target.angle) * (maxRadius * target.distance)
 
-          // Пульсация
           target.pulsePhase += 0.05
           const pulseScale = 1 + Math.sin(target.pulsePhase) * 0.3
 
-          // Свечение вокруг точки
           const glowGradient = ctx.createRadialGradient(targetX, targetY, 0, targetX, targetY, 8 * pulseScale)
           glowGradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)')
           glowGradient.addColorStop(0.5, 'rgba(59, 130, 246, 0.4)')
@@ -159,13 +142,11 @@ const RadarScan = ({ isActive }: RadarScanProps) => {
           ctx.arc(targetX, targetY, 8 * pulseScale, 0, Math.PI * 2)
           ctx.fill()
 
-          // Основная точка
           ctx.fillStyle = 'rgba(59, 130, 246, 1)'
           ctx.beginPath()
           ctx.arc(targetX, targetY, 3, 0, Math.PI * 2)
           ctx.fill()
 
-          // Внешний пульсирующий круг
           ctx.strokeStyle = `rgba(59, 130, 246, ${0.6 - (target.pulsePhase % 2) * 0.3})`
           ctx.lineWidth = 1.5
           ctx.beginPath()
@@ -174,7 +155,6 @@ const RadarScan = ({ isActive }: RadarScanProps) => {
         }
       })
 
-      // Увеличиваем угол для вращения (медленнее)
       angle += 0.015
 
       animationId = requestAnimationFrame(draw)

@@ -173,14 +173,12 @@ const InterviewTracker = () => {
     }
   }, [user, isEmployer])
 
-  // Загружаем выпускников при открытии вкладки "Доступ" для работодателя
   useEffect(() => {
     if (viewMode === 'access' && isEmployer && allGraduates.length === 0) {
       loadAllGraduates()
     }
   }, [viewMode, isEmployer])
 
-  // WebSocket подключение для real-time обновлений
   useEffect(() => {
     if (!user) return
 
@@ -205,31 +203,25 @@ const InterviewTracker = () => {
       console.log('✅ Interview Tracker WebSocket подключен')
     })
 
-    // Обработчик обновлений доступа
     socket.on('interview-tracker-access:update', (data: { type: string; access: any }) => {
       console.log('📨 Получено обновление доступа:', data)
       
       const { type, access } = data
-      
+
       if (type === 'deleted' || type === 'updated') {
-        // Обновляем список доступов
         loadAccess()
       } else if (type === 'created') {
-        // Обновляем список доступов при создании нового доступа
         loadAccess()
       }
     })
 
     socket.on('interview-tracker:update', (data: { type: string; interview: Interview }) => {
       console.log('📨 Получено обновление собеседования:', data)
-      
+
       const { type, interview } = data
 
-      // Обновляем календарь в модальном окне ПЕРЕД другими проверками
-      // Это важно для событий удаления, чтобы они обрабатывались независимо от других условий
       if (viewingCalendar.isOpen && viewingCalendar.userId != null) {
         const interviewUserId = interview.userId
-        // Сравниваем как числа, чтобы избежать проблем с типами (число vs строка)
         const isViewingThisUserCalendar = interviewUserId != null && Number(interviewUserId) === Number(viewingCalendar.userId)
         
         console.log(`🔍 Проверка обновления календаря в модальном окне:`, {
@@ -295,53 +287,37 @@ const InterviewTracker = () => {
         }
       }
 
-      // Для выпускника: не обрабатываем записи работодателя, которые связаны с записями выпускника
-      // НО: для событий удаления обрабатываем все записи, так как они могут быть удалены работодателем
       if (!isEmployer && interview.userId !== user?.id && type !== 'deleted') {
-        // Это запись работодателя (не принадлежит выпускнику)
-        // Если у записи работодателя есть linkedInterviewId, это означает, что есть связанная запись выпускника
-        // Не обрабатываем это событие, так как связанная запись выпускника будет обработана отдельно
         if (interview.linkedInterviewId) {
-          return // Не обрабатываем запись работодателя, если есть связанная запись выпускника
+          return
         }
       }
 
       if (type === 'created') {
-        // Добавляем новое собеседование
         setInterviews(prev => {
-          // Проверяем, нет ли уже такого собеседования
           const exists = prev.some(i => i.id === interview.id)
           if (exists) return prev
-          
-          // Для выпускника: проверяем, не связана ли эта запись с записью выпускника
+
           if (!isEmployer && interview.userId !== user?.id) {
-            // Это запись работодателя
-            // Если у записи работодателя есть linkedInterviewId, не добавляем её
             if (interview.linkedInterviewId) {
-              return prev // Не добавляем, так как есть связанная запись выпускника
+              return prev
             }
-            // Проверяем, есть ли уже запись выпускника, связанная с этой записью
-            const hasGraduateInterview = prev.some(i => 
+            const hasGraduateInterview = prev.some(i =>
               i.userId === user?.id && i.linkedInterviewId === interview.id
             )
             if (hasGraduateInterview) {
-              return prev // Не добавляем, так как есть связанная запись выпускника
+              return prev
             }
           }
-          
-          return [...prev, interview].sort((a, b) => 
+
+          return [...prev, interview].sort((a, b) =>
             new Date(a.date + ' ' + a.time).getTime() - new Date(b.date + ' ' + b.time).getTime()
           )
         })
-        // Убираем toast для real-time обновлений
       } else if (type === 'updated' || type === 'status-updated' || type === 'result-updated') {
-        // Обновляем существующее собеседование
         setInterviews(prev => prev.map(i => i.id === interview.id ? interview : i))
-        // Убираем toast для real-time обновлений
       } else if (type === 'deleted') {
-        // Удаляем собеседование
         setInterviews(prev => prev.filter(i => i.id !== interview.id))
-        // Убираем toast для real-time обновлений
       }
     })
 
@@ -404,7 +380,7 @@ const InterviewTracker = () => {
       const firstName = (graduate.firstName || '').toLowerCase()
       const username = (graduate.username || '').toLowerCase()
       const fullName = `${lastName} ${firstName}`.trim().toLowerCase()
-      
+
       console.log('Checking graduate:', {
         lastName,
         firstName,
@@ -412,8 +388,7 @@ const InterviewTracker = () => {
         fullName,
         query
       })
-      
-      // Поиск по вхождению в фамилию, имя, username или полное имя
+
       const matches = lastName.includes(query) || 
              firstName.includes(query) || 
              username.includes(query) ||
@@ -463,11 +438,9 @@ const InterviewTracker = () => {
     
     return employers.filter(employer => {
       const companyName = (employer.companyName || employer.username || '').toLowerCase()
-      // Если введена только одна буква - ищем по первой букве
       if (query.length === 1) {
         return companyName.length > 0 && companyName[0] === query[0]
       }
-      // Если больше одной буквы - обычный поиск по вхождению
       return companyName.includes(query)
     }).sort((a, b) => {
       const nameA = (a.companyName || a.username || '').toLowerCase()
@@ -492,24 +465,20 @@ const InterviewTracker = () => {
     setLoadingAccess(true)
     try {
       const response = await $api.get('/interview-tracker/access')
-      // Загружаем работодателей при загрузке доступа для выпускника
       if (!isEmployer && employers.length === 0) {
         loadEmployers()
       }
-      // Для работодателя ответ содержит два списка: grantedByMe и grantedToMe
       if (isEmployer && response.data.grantedByMe && response.data.grantedToMe) {
         setGrantedByMe(response.data.grantedByMe)
         setGrantedToMe(response.data.grantedToMe)
       } else {
-        // Для выпускника ответ может быть объектом с двумя списками или обычным массивом
         if (response.data && response.data.grantedByMe && response.data.grantedToMe) {
           setGrantedByMe(response.data.grantedByMe)
           setGrantedToMe(response.data.grantedToMe)
         } else {
-          // Если ответ - обычный массив (это те, кому он разрешил доступ)
           const accesses = Array.isArray(response.data) ? response.data : []
           setGrantedByMe(accesses)
-          setGrantedToMe([]) // Для выпускника пока нет списка "Мне разрешили доступ"
+          setGrantedToMe([])
         }
       }
     } catch (error) {
@@ -527,7 +496,6 @@ const InterviewTracker = () => {
 
     try {
       if (isEmployer) {
-        // Для работодателя используем специальные эндпоинты
         const payload = {
           ...formData,
           graduateId: formData.graduateId ? Number(formData.graduateId) : undefined,
@@ -540,7 +508,6 @@ const InterviewTracker = () => {
           toast.success(t('interview.tracker.messages.added'))
         }
       } else {
-        // Для выпускника стандартные эндпоинты
         const payload = {
           ...formData,
           employerId: formData.employerId ? Number(formData.employerId) : undefined,
@@ -554,7 +521,6 @@ const InterviewTracker = () => {
         }
       }
 
-      // Уведомляем маскота о создании нового собеседования
       if (isNewInterview) {
         onInterviewScheduled()
       }
@@ -574,7 +540,6 @@ const InterviewTracker = () => {
 
   const handleDeleteAccess = async (accessId: number) => {
     try {
-      // Находим запись доступа, чтобы проверить, не открыт ли календарь этого пользователя
       const accessToDelete = isEmployer 
         ? grantedByMe.find(a => a.id === accessId) || grantedToMe.find(a => a.id === accessId)
         : grantedByMe.find(a => a.id === accessId) || grantedToMe.find(a => a.id === accessId)
@@ -585,14 +550,12 @@ const InterviewTracker = () => {
       
       await $api.delete(`/interview-tracker/access/${accessId}`)
       toast.success('Доступ запрещен')
-      
-      // Если открыт календарь удаленного пользователя, закрываем его
+
       if (viewingCalendar.isOpen && viewingCalendar.userId === targetUserId) {
         setViewingCalendar({ isOpen: false, userId: null, userName: '' })
         setCalendarInterviews([])
       }
-      
-      // Обновляем список доступов
+
       loadAccess()
     } catch (error: any) {
       console.error('Error deleting access:', error)
@@ -644,12 +607,10 @@ const InterviewTracker = () => {
     }
   }
 
-  // Фильтрация компаний для секции доступа (для выпускника)
   const getFilteredEmployersForAccess = () => {
     const query = accessCompanySearchQuery.toLowerCase().trim()
-    
+
     if (query.length === 0) {
-      // Если запрос пустой, возвращаем всех работодателей, исключая уже добавленных
       const addedEmployerIds = new Set(grantedByMe.map((a: any) => a.employerId).filter(Boolean))
       return employers
         .filter((employer: any) => !addedEmployerIds.has(employer.id))
@@ -659,21 +620,16 @@ const InterviewTracker = () => {
           return nameA.localeCompare(nameB)
         })
     }
-    
-    // Получаем уже добавленные ID
+
     const addedEmployerIds = new Set(grantedByMe.map((a: any) => a.employerId).filter(Boolean))
-    
-    // Исключаем уже добавленных из всех работодателей
+
     let availableEmployers = employers.filter((employer: any) => !addedEmployerIds.has(employer.id))
-    
-    // Фильтруем по запросу
+
     const filtered = availableEmployers.filter((employer: any) => {
       const companyName = (employer.companyName || employer.username || '').toLowerCase()
-      // Если введена только одна буква - ищем по первой букве
       if (query.length === 1) {
         return companyName.length > 0 && companyName[0] === query[0]
       }
-      // Если больше одной буквы - обычный поиск по вхождению
       return companyName.includes(query)
     })
     
@@ -684,12 +640,10 @@ const InterviewTracker = () => {
     })
   }
 
-  // Фильтрация выпускников для секции доступа
   const getFilteredGraduatesForAccess = () => {
     const query = accessSearchQuery.toLowerCase().trim()
-    
+
     if (query.length === 0) {
-      // Если запрос пустой, возвращаем всех выпускников, исключая уже добавленных
       const addedGraduateIds = new Set(grantedByMe.map((a: any) => a.graduateId).filter(Boolean))
       return allGraduates
         .filter((graduate: any) => !addedGraduateIds.has(graduate.id))
@@ -704,28 +658,23 @@ const InterviewTracker = () => {
           return firstNameA.localeCompare(firstNameB)
         })
     }
-    
-    // Получаем уже добавленные ID
+
     const addedGraduateIds = new Set(grantedByMe.map((a: any) => a.graduateId).filter(Boolean))
-    
-    // Исключаем уже добавленных из всех выпускников
+
     let availableGraduates = allGraduates.filter((graduate: any) => !addedGraduateIds.has(graduate.id))
-    
-    // Фильтруем по запросу
+
     const filtered = availableGraduates.filter((graduate: any) => {
       const lastName = (graduate.lastName || '').toLowerCase()
       const firstName = (graduate.firstName || '').toLowerCase()
       const username = (graduate.username || '').toLowerCase()
       const fullName = `${lastName} ${firstName}`.trim().toLowerCase()
-      
-      // Поиск по вхождению в фамилию, имя, username или полное имя
+
       return lastName.includes(query) || 
              firstName.includes(query) || 
              username.includes(query) ||
              fullName.includes(query)
     })
-    
-    // Сортируем по фамилии, затем по имени
+
     return filtered.sort((a: any, b: any) => {
       const lastNameA = (a.lastName || a.username || '').toLowerCase()
       const lastNameB = (b.lastName || b.username || '').toLowerCase()
@@ -801,11 +750,9 @@ const InterviewTracker = () => {
   }
 
   const openModal = (interview?: Interview, date?: Date) => {
-    // Загружаем всех выпускников при открытии модального окна для работодателя
     if (isEmployer && allGraduates.length === 0) {
       loadAllGraduates()
     }
-    // Загружаем всех работодателей при открытии модального окна для выпускника
     if (!isEmployer && employers.length === 0) {
       loadEmployers()
     }
@@ -827,7 +774,6 @@ const InterviewTracker = () => {
         graduateId: interview.graduateId || interview.graduate?.id || '',
         employerId: interview.employerId || interview.employer?.id || '',
       })
-      // Устанавливаем поисковый запрос для редактирования
       if (isEmployer && (interview.graduateId || interview.graduate?.id)) {
         const graduateId = interview.graduateId || interview.graduate?.id
         const graduate = allGraduates.find(g => g.id === Number(graduateId))
@@ -847,7 +793,6 @@ const InterviewTracker = () => {
     } else {
       setEditingInterview(null)
       const dateToUse = date || selectedDate
-      // Форматируем дату в локальном часовом поясе, чтобы избежать сдвига на день
       const year = dateToUse.getFullYear()
       const month = String(dateToUse.getMonth() + 1).padStart(2, '0')
       const day = String(dateToUse.getDate()).padStart(2, '0')
@@ -908,7 +853,6 @@ const InterviewTracker = () => {
   }
 
   const getInterviewsForDate = (date: Date) => {
-    // Форматируем дату в локальном часовом поясе, чтобы избежать сдвига на день
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
@@ -1633,7 +1577,6 @@ const InterviewTracker = () => {
                           const filtered = getFilteredGraduates()
                           console.log('Filtered graduates count:', filtered.length)
                           setCandidateSearchQuery(value)
-                          // Если поле очищено, сбрасываем graduateId
                           if (value === '') {
                             setFormData({ ...formData, graduateId: '' })
                           }
@@ -1720,7 +1663,6 @@ const InterviewTracker = () => {
                           onChange={(e) => {
                             const value = e.target.value
                             setCompanySearchQuery(value)
-                            // Если поле очищено, сбрасываем employerId
                             if (value === '') {
                               setFormData({ ...formData, employerId: '', company: '' })
                             }
@@ -2090,7 +2032,6 @@ const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultCh
   const TypeIcon = INTERVIEW_TYPES[interview.type].icon
   const [showFeedback, setShowFeedback] = useState(false)
 
-  // Определяем отображаемое имя и иконку
   const hasGraduate = interview.graduate || interview.graduateId
   const displayName = hasGraduate && interview.graduate
     ? (interview.graduate.firstName && interview.graduate.lastName
@@ -2099,7 +2040,6 @@ const InterviewCard = ({ interview, onEdit, onDelete, onStatusChange, onResultCh
     : interview.company
   const DisplayIcon = hasGraduate ? Users : Building2
 
-  // Проверяем, является ли это приглашением от работодателя для выпускника
   const isPendingInvitation = interview.invitationStatus === 'pending' && !isEmployer
 
   return (

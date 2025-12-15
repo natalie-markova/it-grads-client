@@ -60,15 +60,14 @@ interface ProgressData {
   completedAt: string | null;
 }
 
-// Конвертация названия roadmap в slug для URL
 const toSlug = (title: string): string => {
   return title
     .toLowerCase()
-    .replace(/\s+/g, '-')           // пробелы в дефисы
-    .replace(/[.]/g, '')            // удаляем точки (Vue.js -> vuejs)
-    .replace(/[^a-z0-9а-яё-]/g, '') // оставляем только буквы, цифры, дефисы
-    .replace(/-+/g, '-')            // множественные дефисы в один
-    .replace(/^-|-$/g, '');         // убираем дефисы в начале/конце
+    .replace(/\s+/g, '-')
+    .replace(/[.]/g, '')
+    .replace(/[^a-z0-9а-яё-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 };
 
 const RoadmapDetail = () => {
@@ -86,7 +85,6 @@ const RoadmapDetail = () => {
   const { user } = useOutletContext<OutletContext>();
   const isAuthenticated = !!user;
 
-  // Mascot events
   const { onRoadmapProgress, onRoadmapComplete } = useParmaEvents();
 
   useEffect(() => {
@@ -154,18 +152,14 @@ const RoadmapDetail = () => {
       setHasUnsavedChanges(false);
       toast.success(t('roadmap.progressSaved'));
 
-      // Если план развития был обновлён, перезагружаем его статус
       if (response.data.planUpdated) {
         dispatch(fetchPlanStatus());
       }
 
-      // Вызываем события маскота
       const newProgress = (completedSteps.size / roadmap.learningPath.length) * 100;
       if (newProgress === 100) {
-        // Roadmap полностью завершён!
         onRoadmapComplete(roadmap.title);
       } else {
-        // Прогресс по roadmap
         onRoadmapProgress(newProgress, roadmap.title);
       }
     } catch (error) {
@@ -242,7 +236,6 @@ const RoadmapDetail = () => {
 
   return (
     <div className="min-h-screen bg-dark-bg">
-      {/* Header */}
       <div
         className="py-16 text-white"
         style={{
@@ -304,9 +297,7 @@ const RoadmapDetail = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Prerequisites */}
             {roadmap.prerequisites && roadmap.prerequisites.length > 0 && (
               <div className="bg-dark-card rounded-xl p-6 border border-dark-surface">
                 <div className="flex items-center gap-2 mb-4">
@@ -324,7 +315,6 @@ const RoadmapDetail = () => {
               </div>
             )}
 
-            {/* Learning Path */}
             <div className="bg-dark-card rounded-xl p-6 border border-dark-surface">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
@@ -336,7 +326,6 @@ const RoadmapDetail = () => {
                 </div>
               </div>
 
-              {/* Progress Bar */}
               <div className="mb-6">
                 <div className="w-full bg-dark-surface rounded-full h-3">
                   <div
@@ -354,7 +343,6 @@ const RoadmapDetail = () => {
                 </div>
               </div>
 
-              {/* Save/Reset Buttons */}
               {isAuthenticated && (
                 <div className="flex gap-3 mb-6">
                   <button
@@ -389,7 +377,6 @@ const RoadmapDetail = () => {
                 </div>
               )}
 
-              {/* Steps */}
               <div className="space-y-4">
                 {roadmap.learningPath.map((step, index) => (
                   <div
@@ -443,9 +430,7 @@ const RoadmapDetail = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Progress Stats */}
             {isAuthenticated && savedProgress && (savedProgress.startedAt || savedProgress.completedAt) && (
               <div className="bg-dark-card rounded-xl p-6 border border-dark-surface">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -498,7 +483,6 @@ const RoadmapDetail = () => {
               </div>
             )}
 
-            {/* Resources */}
             {roadmap.resources && roadmap.resources.length > 0 && (
               <div className="bg-dark-card rounded-xl p-6 border border-dark-surface">
                 <h3 className="text-xl font-bold text-white mb-4">{t('roadmap.usefulResources')}</h3>
@@ -526,7 +510,6 @@ const RoadmapDetail = () => {
               </div>
             )}
 
-            {/* Related Roadmaps */}
             {roadmap.relatedRoadmaps && roadmap.relatedRoadmaps.length > 0 && (
               <div className="bg-dark-card rounded-xl p-6 border border-dark-surface">
                 <h3 className="text-xl font-bold text-white mb-4">{t('roadmap.relatedRoadmaps')}</h3>
@@ -547,7 +530,6 @@ const RoadmapDetail = () => {
         </div>
       </div>
 
-      {/* Модальное окно подтверждения сброса прогресса */}
       <ConfirmModal
         isOpen={resetConfirm}
         title={t('roadmap.resetConfirmTitle') || 'Сброс прогресса'}

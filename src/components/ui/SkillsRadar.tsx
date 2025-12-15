@@ -10,7 +10,6 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
   const [animationKey, setAnimationKey] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
 
-  // Отслеживание видимости компонента при скролле
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -20,7 +19,7 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
         }
       },
       {
-        threshold: 0.3, // Запускаем анимацию когда видно 30% элемента
+        threshold: 0.3,
       }
     )
 
@@ -42,7 +41,6 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Устанавливаем размеры канваса
     const resizeCanvas = () => {
       const parent = canvas.parentElement
       if (parent) {
@@ -53,7 +51,6 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
     resizeCanvas()
     window.addEventListener('resize', resizeCanvas)
 
-    // 12 навыков по кругу
     const skills = [
       { name: 'DEV', value: 0.85 },
       { name: 'DB', value: 0.7 },
@@ -76,11 +73,8 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      // Всегда показываем анимацию (убираем проверку isActive для затухания)
-      // Плавное нарастание
       animationProgress = Math.min(1, animationProgress + 0.008)
 
-      // Прогресс появления сегментов (начинается после появления сетки)
       if (animationProgress > 0.3) {
         segmentProgress = Math.min(1, segmentProgress + 0.006)
       }
@@ -91,7 +85,6 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
       const numSkills = skills.length
       const angleStep = (Math.PI * 2) / numSkills
 
-      // Темный фон круга
       ctx.save()
       ctx.globalAlpha = animationProgress * 0.8
       ctx.fillStyle = 'rgba(20, 25, 35, 0.9)'
@@ -100,7 +93,6 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
       ctx.fill()
       ctx.restore()
 
-      // Рисуем концентрические круги
       ctx.save()
       ctx.globalAlpha = animationProgress * 0.4
 
@@ -117,7 +109,6 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
 
       ctx.restore()
 
-      // Рисуем радиальные линии (оси)
       ctx.save()
       ctx.globalAlpha = animationProgress * 0.3
       ctx.strokeStyle = 'rgba(100, 120, 140, 0.3)'
@@ -136,7 +127,6 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
 
       ctx.restore()
 
-      // Рисуем 3D сегменты (лепестки)
       if (segmentProgress > 0) {
         ctx.save()
 
@@ -145,12 +135,10 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
           const angle = i * angleStep - Math.PI / 2
           const nextAngle = ((i + 1) % numSkills) * angleStep - Math.PI / 2
 
-          // Высота сегмента зависит от значения навыка и прогресса анимации
           const segmentHeight = skill.value * segmentProgress
           const innerRadius = maxRadius * 0.3
           const outerRadius = maxRadius * 0.85
 
-          // Создаем градиент от бирюзового к зеленому
           const gradient = ctx.createLinearGradient(
             centerX + Math.cos(angle) * innerRadius,
             centerY + Math.sin(angle) * innerRadius,
@@ -158,13 +146,11 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
             centerY + Math.sin(angle) * outerRadius
           )
 
-          // Градиент зависит от высоты сегмента
-          const hue1 = 180 + segmentHeight * 20 // От бирюзового
-          const hue2 = 160 + segmentHeight * 30 // К зеленому
+          const hue1 = 180 + segmentHeight * 20
+          const hue2 = 160 + segmentHeight * 30
           gradient.addColorStop(0, `hsla(${hue1}, 70%, 50%, ${0.6 * animationProgress})`)
           gradient.addColorStop(1, `hsla(${hue2}, 60%, 45%, ${0.8 * animationProgress})`)
 
-          // Основной сегмент (верхняя часть)
           ctx.globalAlpha = animationProgress
           ctx.fillStyle = gradient
           ctx.beginPath()
@@ -180,12 +166,10 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
           ctx.closePath()
           ctx.fill()
 
-          // Обводка сегмента для 3D эффекта
           ctx.strokeStyle = `hsla(${hue1}, 70%, 60%, ${0.6 * animationProgress})`
           ctx.lineWidth = 1.5
           ctx.stroke()
 
-          // Темная тень для глубины
           ctx.globalAlpha = animationProgress * 0.3
           ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
           ctx.beginPath()
@@ -205,22 +189,18 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
         ctx.restore()
       }
 
-      // Центральный круг с числом
       ctx.save()
       ctx.globalAlpha = animationProgress
 
-      // Темный внутренний круг
       ctx.fillStyle = 'rgba(30, 35, 45, 0.95)'
       ctx.beginPath()
       ctx.arc(centerX, centerY, maxRadius * 0.25, 0, Math.PI * 2)
       ctx.fill()
 
-      // Обводка центрального круга
       ctx.strokeStyle = 'rgba(6, 182, 212, 0.5)'
       ctx.lineWidth = 2
       ctx.stroke()
 
-      // Вычисляем среднее значение навыков
       if (segmentProgress > 0) {
         const avgValue =
           skills.reduce((sum, skill) => sum + skill.value, 0) / skills.length
@@ -235,7 +215,6 @@ const SkillsRadar = ({ isActive }: SkillsRadarProps) => {
 
       ctx.restore()
 
-      // Рисуем подписи навыков
       ctx.save()
       ctx.globalAlpha = animationProgress
       ctx.fillStyle = 'rgba(6, 182, 212, 0.9)'
